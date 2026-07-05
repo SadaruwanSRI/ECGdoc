@@ -47,6 +47,7 @@ $ProjectRoot  = $PSScriptRoot
 $BackendDir   = Join-Path $ProjectRoot "backend"
 $WsServiceDir = Join-Path $ProjectRoot "mini-services\ws-service"
 $EnvFile      = Join-Path $ProjectRoot ".env"
+$BackendEnvFile = Join-Path $BackendDir ".env"
 $EnvExample   = Join-Path $ProjectRoot ".env.example"
 $VenvDir      = Join-Path $BackendDir "venv"
 
@@ -78,23 +79,145 @@ function Test-Command($cmd) {
     return [bool](Get-Command $cmd -ErrorAction SilentlyContinue)
 }
 
-# Run a native command (npm, npx, pip, bun, prisma, etc.) without letting
-# stderr output kill the script. Many tools write informational messages
-# ("Environment variables loaded from .env", dependency-conflict warnings,
-# etc.) to stderr, which PowerShell's $ErrorActionPreference="Stop" would
-# otherwise treat as a fatal NativeCommandError.
-function Invoke-NativeSafe {
-    param([scriptblock]$Block)
+function Invoke-External {
+    param(
+        [Parameter(Mandatory=$true)][string]$FilePath,
+        [string[]]$ArgumentList = @(),
+        [string]$WorkingDirectory = $null,
+        [switch]$Quiet,
+        [string]$FailureMessage = "Command failed"
+    )
+
     $prev = $ErrorActionPreference
     $ErrorActionPreference = "Continue"
+    $oldLocation = Get-Location
     try {
-        & $Block 2>&1 | Out-Null
-    } catch {
-        # Ignore - the command may have written to stderr but still succeeded
+        if ($WorkingDirectory) {
+            Set-Location $WorkingDirectory
+        }
+
+        $output = & $FilePath @ArgumentList 2>&1
+        $exitCode = $LASTEXITCODE
+
+        if (-not $Quiet -and $output) {
+            $output | ForEach-Object { Write-Host "    $_" -ForegroundColor DarkGray }
+        }
+
+        if ($exitCode -ne 0) {
+            Write-Err "$FailureMessage (exit code $exitCode)"
+            if ($Quiet -and $output) {
+                Write-Host ""
+                Write-Host "  ---- command output ----" -ForegroundColor DarkGray
+                $output | ForEach-Object { Write-Host "  $_" -ForegroundColor DarkGray }
+                Write-Host "  ------------------------" -ForegroundColor DarkGray
+                Write-Host ""
+            }
+            exit $exitCode
+        }
+
     } finally {
+        if ($WorkingDirectory) {
+            Set-Location $oldLocation
+        }
         $ErrorActionPreference = $prev
     }
 }
+
+function Get-EnvValue {
+    param(
+        [Parameter(Mandatory=$true)][string]$Path,
+        [Parameter(Mandatory=$true)][string]$Name,
+        [string]$Default = ""
+    )
+
+    if (-not (Test-Path $Path)) {
+        return $Default
+    }
+
+    $line = Get-Content $Path | Where-Object { $_ -match "^\s*$Name\s*=" } | Select-Object -First 1
+    if (-not $line) {
+        return $Default
+    }
+
+    return (($line -replace "^\s*$Name\s*=\s*", "").Trim().Trim('"').Trim("'"))
+}
+
+function Set-EnvValue {
+    param(
+        [Parameter(Mandatory=$true)][string]$Path,
+        [Parameter(Mandatory=$true)][string]$Name,
+        [Parameter(Mandatory=$true)][string]$Value
+    )
+
+    $escaped = [regex]::Escape($Name)
+    $replacement = "$Name=`"$Value`""
+    if (Test-Path $Path) {
+        $content = Get-Content $Path
+        if ($content | Where-Object { $_ -match "^\s*$escaped\s*=" }) {
+            $content = $content | ForEach-Object {
+                if ($_ -match "^\s*$escaped\s*=") { $replacement } else { $_ }
+            }
+            $content | Set-Content $Path -Encoding ASCII
+        } else {
+            Add-Content -Path $Path -Value $replacement -Encoding ASCII
+        }
+    } else {
+        $replacement | Set-Content $Path -Encoding ASCII
+    }
+}
+
+function Ensure-EnvFiles {
+    param([bool]$Postgres)
+
+    $databaseUrl = "file:./dev.db"
+    if ($Postgres) {
+        $databaseUrl = "postgresql://ecg_user:ecg_password@localhost:5432/ecg_anomaly"
+    }
+
+    if (-not (Test-Path $EnvFile)) {
+        if (Test-Path $EnvExample) {
+            Copy-Item $EnvExample $EnvFile
+            Write-Ok "Created .env from .env.example"
+        } else {
+            @(
+                "# ECG Anomaly Detection local configuration",
+                "DATABASE_URL=`"$databaseUrl`""
+            ) | Set-Content $EnvFile -Encoding ASCII
+            Write-Ok "Created .env with default local settings"
+        }
+    } else {
+        Write-Ok ".env already exists - preserving existing values"
+    }
+
+    if ($Postgres) {
+        Set-EnvValue -Path $EnvFile -Name "DATABASE_URL" -Value $databaseUrl
+        Write-Ok "Configured root .env for PostgreSQL"
+    } elseif (-not (Get-EnvValue -Path $EnvFile -Name "DATABASE_URL" -Default "")) {
+        Set-EnvValue -Path $EnvFile -Name "DATABASE_URL" -Value $databaseUrl
+        Write-Ok "Added SQLite DATABASE_URL to root .env"
+    }
+
+    $effectiveDatabaseUrl = Get-EnvValue -Path $EnvFile -Name "DATABASE_URL" -Default $databaseUrl
+    Set-EnvValue -Path $BackendEnvFile -Name "DATABASE_URL" -Value $effectiveDatabaseUrl
+    Write-Ok "Synced backend .env"
+}
+
+function Set-PrismaProvider {
+    param([bool]$Postgres)
+
+    $schemaPath = Join-Path $ProjectRoot "prisma\schema.prisma"
+    $provider = if ($Postgres) { "postgresql" } else { "sqlite" }
+    (Get-Content $schemaPath) -replace 'provider = "(sqlite|postgresql)"', "provider = `"$provider`"" | Set-Content $schemaPath -Encoding UTF8
+    Write-Ok "Prisma provider: $provider"
+}
+
+# Pick the JavaScript runtime once so setup and launch agree, including -SkipSetup.
+$useBun = $false
+if (Test-Command "bun") {
+    $useBun = $true
+}
+$npmCmd = if (Test-Command "npm.cmd") { "npm.cmd" } else { "npm" }
+$npxCmd = if (Test-Command "npx.cmd") { "npx.cmd" } else { "npx" }
 
 # ============================================================================
 # Step 1: Verify prerequisites
@@ -111,15 +234,22 @@ if (-not $SkipSetup) {
     Write-Header "Step 1/5 - Verifying prerequisites"
 
     # Python
-    if (-not (Test-Command "python")) {
+    $pythonLauncher = $null
+    $pythonArgs = @()
+    if (Test-Command "python") {
+        $pythonLauncher = "python"
+    } elseif (Test-Command "py") {
+        $pythonLauncher = "py"
+        $pythonArgs = @("-3")
+    } else {
         Write-Err "Python not found. Install Python 3.10+ from https://www.python.org/downloads/"
         exit 1
     }
-    $pyVer = (python --version 2>&1) -replace "Python ", ""
+
+    $pyVer = (& $pythonLauncher @pythonArgs --version 2>&1) -replace "Python ", ""
     Write-Ok "Python $pyVer"
 
     # Bun (preferred) or Node
-    $useBun = $false
     if (Test-Command "bun") {
         $bunVer = (bun --version 2>&1)
         Write-Ok "Bun $bunVer"
@@ -147,6 +277,9 @@ if (-not $SkipSetup) {
     } else {
         Write-Ok "Using SQLite (no setup required)"
     }
+} else {
+    $pythonLauncher = if (Test-Command "python") { "python" } elseif (Test-Command "py") { "py" } else { $null }
+    $pythonArgs = if ($pythonLauncher -eq "py") { @("-3") } else { @() }
 }
 
 # ============================================================================
@@ -155,23 +288,8 @@ if (-not $SkipSetup) {
 if (-not $SkipSetup) {
     Write-Header "Step 2/5 - Setting up .env file"
 
-    if (-not (Test-Path $EnvFile)) {
-        Copy-Item $EnvExample $EnvFile
-        Write-Ok "Created .env from .env.example"
-
-        if ($UsePostgres) {
-            # Switch DATABASE_URL to PostgreSQL
-            (Get-Content $EnvFile) -replace 'DATABASE_URL="file:./dev.db"', 'DATABASE_URL="postgresql://ecg_user:ecg_password@localhost:5432/ecg_anomaly"' | Set-Content $EnvFile
-            Write-Ok "Switched DATABASE_URL to PostgreSQL"
-
-            # Update Prisma schema to use postgresql provider
-            $schemaPath = Join-Path $ProjectRoot "prisma\schema.prisma"
-            (Get-Content $schemaPath) -replace 'provider = "sqlite"', 'provider = "postgresql"' | Set-Content $schemaPath
-            Write-Ok "Updated prisma/schema.prisma to use PostgreSQL"
-        }
-    } else {
-        Write-Ok ".env already exists - leaving as-is"
-    }
+    Ensure-EnvFiles -Postgres ([bool]$UsePostgres)
+    Set-PrismaProvider -Postgres ([bool]$UsePostgres)
 }
 
 # ============================================================================
@@ -183,9 +301,7 @@ if (-not $SkipSetup) {
     # Create venv if missing
     if (-not (Test-Path $VenvDir)) {
         Write-Step "Creating Python virtual environment..."
-        Push-Location $BackendDir
-        python -m venv venv
-        Pop-Location
+        Invoke-External -FilePath $pythonLauncher -ArgumentList ($pythonArgs + @("-m", "venv", "venv")) -WorkingDirectory $BackendDir -FailureMessage "Could not create Python virtual environment"
         Write-Ok "Created venv at $VenvDir"
     } else {
         Write-Ok "venv already exists"
@@ -196,32 +312,14 @@ if (-not $SkipSetup) {
 
     # Upgrade pip
     Write-Step "Upgrading pip..."
-    Invoke-NativeSafe { & $pyExe -m pip install --upgrade pip --quiet }
+    Invoke-External -FilePath $pyExe -ArgumentList @("-m", "pip", "install", "--upgrade", "pip", "--quiet") -Quiet -FailureMessage "pip upgrade failed"
     Write-Ok "pip upgraded"
 
     # Install requirements
     Write-Step "Installing Python dependencies (this may take 2-5 minutes on first run)..."
-    # Use cmd.exe to run pip so stderr is not treated as a PowerShell error stream
     $reqPath = Join-Path $BackendDir "requirements.txt"
-    $pipCmd = "`"$pipExe`" install -r `"$reqPath`" 2>&1"
-    $installOutput = cmd /c $pipCmd
-    if ($LASTEXITCODE -eq 0) {
-        Write-Ok "Python dependencies installed"
-    } else {
-        Write-Err "Python dependency installation failed (exit code $LASTEXITCODE):"
-        Write-Host ""
-        Write-Host "  ---- pip output ----" -ForegroundColor DarkGray
-        $installOutput | ForEach-Object { Write-Host "  $_" -ForegroundColor DarkGray }
-        Write-Host "  ---------------------" -ForegroundColor DarkGray
-        Write-Host ""
-        Write-Host "  Common fixes:" -ForegroundColor Yellow
-        Write-Host "    1. Make sure you have Python 3.10 - 3.13 (you have $pyVer)" -ForegroundColor Yellow
-        Write-Host "    2. Try installing the failing package manually:" -ForegroundColor Yellow
-        Write-Host "         .\backend\venv\Scripts\pip.exe install <package-name>" -ForegroundColor Yellow
-        Write-Host "    3. For torch GPU support, see https://pytorch.org/get-started/locally/" -ForegroundColor Yellow
-        Write-Host ""
-        exit 1
-    }
+    Invoke-External -FilePath $pipExe -ArgumentList @("install", "-r", $reqPath) -Quiet -FailureMessage "Python dependency installation failed"
+    Write-Ok "Python dependencies installed"
 
     # Try to install ecg_qc separately (optional - system falls back to simple filter if this fails)
     # IMPORTANT: pip writes dependency-conflict warnings to stderr, which PowerShell's
@@ -292,33 +390,29 @@ def get_suffixes(): return [(".py", "r", PY_SOURCE)]
 # ============================================================================
 # Step 4: Set up frontend + WebSocket service
 # ============================================================================
-# Invoke-NativeSafe helper is defined near the top of the script.
 if (-not $SkipSetup) {
     Write-Header "Step 4/5 - Setting up frontend dependencies"
 
     # Frontend (Next.js)
     Write-Step "Installing frontend dependencies..."
-    Push-Location $ProjectRoot
     if ($useBun) {
-        Invoke-NativeSafe { bun install }
+        Invoke-External -FilePath "bun" -ArgumentList @("install") -WorkingDirectory $ProjectRoot -FailureMessage "Frontend dependency installation failed"
+    } elseif (Test-Path (Join-Path $ProjectRoot "package-lock.json")) {
+        Invoke-External -FilePath $npmCmd -ArgumentList @("ci") -WorkingDirectory $ProjectRoot -FailureMessage "Frontend dependency installation failed"
     } else {
-        Invoke-NativeSafe { npm install --silent }
+        Invoke-External -FilePath $npmCmd -ArgumentList @("install") -WorkingDirectory $ProjectRoot -FailureMessage "Frontend dependency installation failed"
     }
-    Pop-Location
     Write-Ok "Frontend dependencies installed"
 
     # WebSocket service
     Write-Step "Installing WebSocket service dependencies..."
-    Push-Location $WsServiceDir
     if ($useBun) {
-        Invoke-NativeSafe { bun install }
+        Invoke-External -FilePath "bun" -ArgumentList @("install") -WorkingDirectory $WsServiceDir -FailureMessage "WebSocket dependency installation failed"
+    } elseif (Test-Path (Join-Path $WsServiceDir "package-lock.json")) {
+        Invoke-External -FilePath $npmCmd -ArgumentList @("ci") -WorkingDirectory $WsServiceDir -FailureMessage "WebSocket dependency installation failed"
     } else {
-        if (-not (Test-Path "node_modules")) {
-            Invoke-NativeSafe { npm init -y }
-            Invoke-NativeSafe { npm install socket.io --silent }
-        }
+        Invoke-External -FilePath $npmCmd -ArgumentList @("install") -WorkingDirectory $WsServiceDir -FailureMessage "WebSocket dependency installation failed"
     }
-    Pop-Location
     Write-Ok "WebSocket service dependencies installed"
 }
 
@@ -344,13 +438,11 @@ if (-not $SkipSetup) {
     # Run prisma db push to create/update the schema
     # Prisma creates the SQLite file relative to the prisma/ directory,
     # so "file:./dev.db" becomes prisma/dev.db
-    Push-Location $ProjectRoot
     if ($useBun) {
-        Invoke-NativeSafe { bun run db:push }
+        Invoke-External -FilePath "bun" -ArgumentList @("run", "db:push") -WorkingDirectory $ProjectRoot -FailureMessage "Database initialization failed"
     } else {
-        Invoke-NativeSafe { npx prisma db push }
+        Invoke-External -FilePath $npxCmd -ArgumentList @("prisma", "db", "push") -WorkingDirectory $ProjectRoot -FailureMessage "Database initialization failed"
     }
-    Pop-Location
     Write-Ok "Database schema applied"
 
     # Verify the database file exists where we expect it
