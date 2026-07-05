@@ -1,0 +1,54 @@
+# ==========================================================================
+# Optional: ECG Quality Classifier (ecg_qc)
+# ==========================================================================
+#
+# This file installs the ecg_qc library for advanced ECG signal quality
+# classification. The library is OPTIONAL — the system works fine without
+# it (falls back to a simple std-based quality filter).
+#
+# WHY IS THIS SEPARATE FROM requirements.txt?
+# --------------------------------------------
+# ecg_qc 1.0b6 has two install issues on Python 3.12+:
+#
+#   1. It depends on `pathtools`, whose setup.py uses the `imp` module
+#      (removed in Python 3.12). This breaks the standard pip install.
+#
+#   2. The pre-trained RandomForest model (rfc_norm_2s.pkl) was pickled
+#      with sklearn 0.24 and is incompatible with modern sklearn 1.3+
+#      (dtype mismatch in tree node arrays).
+#
+# Our code works around BOTH issues by:
+#   - Providing a stub `imp` module so pathtools can install
+#   - Using the ecg_qc library's SQI feature extractors directly with
+#     heuristic thresholds (instead of loading the broken pickle)
+#
+# INSTALLATION
+# ------------
+# Run this from the project root (after start-all.ps1 has created the venv):
+#
+#   PowerShell:
+#     .\backend\venv\Scripts\python.exe -m pip install -r backend\requirements-ecg-qc.txt
+#
+#   Or use the convenience script:
+#     .\install-ecg-qc.ps1
+#
+# If installation fails, the system will continue to work with the simple
+# std-based quality filter. The UI will show "simple_std" as the QC method
+# instead of "ecg_qc".
+# ==========================================================================
+
+# Note: ecg_qc only has beta versions on PyPI (1.0b1 through 1.0b6)
+ecg-qc>=1.0b1
+
+# Dependencies that ecg_qc needs but may not auto-install correctly
+biosppy>=0.6.1
+py-ecg-detectors>=1.0.2
+scikit-learn>=1.0.0
+peakutils>=1.0.3
+dill>=0.3.4
+
+# pathtools is needed by ecg_qc but its setup.py uses the removed `imp`
+# module on Python 3.12+. The install-ecg-qc.ps1 script provides a stub
+# `imp` module to work around this. If installing manually, see
+# install-ecg-qc.ps1 for the workaround.
+pathtools>=0.1.2

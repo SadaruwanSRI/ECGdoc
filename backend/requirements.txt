@@ -1,0 +1,40 @@
+# FastAPI backend dependencies for ECG Anomaly Detection
+# Install with: pip install -r requirements.txt
+#
+# Versions use ranges (>=) to work across Python 3.10 - 3.13.
+# Tested on Python 3.10, 3.11, 3.12, 3.13.
+
+# Web framework
+fastapi>=0.110,<1.0
+uvicorn[standard]>=0.29,<1.0
+python-multipart>=0.0.9,<1.0
+
+# Database (SQLAlchemy works with SQLite + PostgreSQL)
+sqlalchemy>=2.0.30,<3.0
+psycopg2-binary>=2.9.9,<3.0  # PostgreSQL driver (optional, only needed for PostgreSQL)
+
+# Pydantic
+pydantic>=2.7,<3.0
+pydantic-settings>=2.3,<3.0
+
+# Deep learning + signal processing
+# torch: use the CPU wheel by default. For GPU support, see
+# https://pytorch.org/get-started/locally/ and replace with the CUDA wheel.
+torch>=2.6.0,<3.0
+numpy>=1.26,<3.0
+scipy>=1.13,<2.0
+pandas>=2.2,<3.0
+
+# PhysioNet data loading
+wfdb>=4.1.2,<5.0
+
+# ECG quality classification (ecg_qc) is OPTIONAL — see
+# requirements-ecg-qc.txt for installation. The code automatically
+# falls back to a simple std-based filter if ecg_qc is not installed.
+
+# PDF report generation
+reportlab>=4.2,<5.0
+matplotlib>=3.8,<4.0
+
+# Optional: Experiment tracking (Phase 6 of the research plan)
+# mlflow>=2.15,<3.0

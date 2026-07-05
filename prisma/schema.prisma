@@ -1,0 +1,143 @@
+// ECG Anomaly Detection — Database Schema
+//
+// To switch database providers:
+//
+// 1. SQLite (default, zero setup):
+//    provider = "sqlite"
+//    DATABASE_URL="file:./dev.db"   (in .env)
+//
+// 2. PostgreSQL (production / multi-user):
+//    provider = "postgresql"
+//    DATABASE_URL="postgresql://ecg_user:ecg_password@localhost:5432/ecg_anomaly"  (in .env)
+//    Then run: psql -U postgres -f setup-postgres.sql  (one-time)
+//
+// The start-all.ps1 / start-all.sh launcher handles this switch automatically
+// when you pass the --postgres / -UsePostgres flag.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String         @id @default(cuid())
+  email        String         @unique
+  name         String?
+  role         String         @default("clinician") // clinician | admin | researcher
+  passwordHash String
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  sessions     EcgSession[]
+  trainingRuns TrainingRun[]
+}
+
+// A saved/trained autoencoder model version
+model ModelVersion {
+  id              String         @id @default(cuid())
+  name            String
+  version         String         @unique
+  description     String?
+  architecture    String         // e.g. "1D-Conv-Autoencoder"
+  parameters      Int            // total params (e.g. 9750000)
+  latentDim       Int
+  compressionRatio Float
+  status          String         @default("training") // training | ready | failed | archived
+  modelPath       String?        // path to .pt file on disk
+  threshold       Float?         // anomaly threshold tau
+  thresholdK      Float?         // k value used (1, 2, or 3)
+  configJson      String         // JSON-encoded training config
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  trainingRuns    TrainingRun[]
+  sessions        EcgSession[]
+  metrics         ModelMetric[]
+}
+
+// Per-version evaluation metrics (AUC, F1, Precision, Recall, etc.)
+model ModelMetric {
+  id          String       @id @default(cuid())
+  modelId     String
+  metricName  String       // e.g. "auc", "f1", "precision", "recall", "val_loss"
+  metricValue Float
+  epoch       Int?
+  createdAt   DateTime     @default(now())
+  model       ModelVersion @relation(fields: [modelId], references: [id], onDelete: Cascade)
+
+  @@index([modelId, metricName])
+}
+
+// A training execution record (analog of an MLflow run)
+model TrainingRun {
+  id           String        @id @default(cuid())
+  modelId      String
+  userId       String
+  status       String        @default("queued") // queued | running | completed | failed | stopped
+  datasetName  String        // e.g. "mit-bih-nsr"
+  configJson   String        // JSON-encoded training config
+  startedAt    DateTime      @default(now())
+  completedAt  DateTime?
+  finalLoss    Float?
+  epochsRun    Int?
+  logsJson     String        @default("[]") // JSON-encoded progress logs
+  model        ModelVersion  @relation(fields: [modelId], references: [id], onDelete: Cascade)
+  user         User          @relation(fields: [userId], references: [id])
+
+  @@index([modelId])
+  @@index([status])
+}
+
+// A live or recorded ECG monitoring session
+model EcgSession {
+  id              String        @id @default(cuid())
+  userId          String
+  modelId         String?
+  sourceType      String        // "mit-bih-arrhythmia" | "arduino" | "upload"
+  sourceDetail    String?       // record name / port / filename
+  startedAt       DateTime      @default(now())
+  endedAt         DateTime?
+  status          String        @default("running") // running | completed | aborted
+  totalBeats      Int           @default(0)
+  anomalyBeats    Int           @default(0)
+  summaryJson     String        @default("{}")
+  user            User          @relation(fields: [userId], references: [id])
+  model           ModelVersion? @relation(fields: [modelId], references: [id])
+  alerts          Alert[]
+  dataPoints      EcgDataPoint[]
+
+  @@index([userId])
+  @@index([status])
+}
+
+// Per-alert record (abnormality detected during a session)
+model Alert {
+  id          String     @id @default(cuid())
+  sessionId   String
+  timestamp   DateTime   @default(now())
+  anomalyScore Float
+  threshold   Float
+  severity    String     // "warning" | "critical"
+  message     String
+  contextJson String     @default("{}") // surrounding window, predicted class, etc.
+  session     EcgSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId])
+}
+
+// Sampled ECG data points for session replay (not high-frequency raw stream)
+model EcgDataPoint {
+  id          String     @id @default(cuid())
+  sessionId   String
+  timestamp   DateTime   @default(now())
+  t           Int        // sample index in session
+  value       Float      // mV-normalized ECG value
+  prediction  Float?     // reconstructed value
+  anomalyScore Float?
+  isAnomaly   Boolean    @default(false)
+  session     EcgSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId, t])
+}

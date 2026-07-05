@@ -1,0 +1,92 @@
+# ==========================================================================
+# ECG Anomaly Detection — Docker Compose
+# ==========================================================================
+# Run the entire stack with one command:
+#
+#   docker-compose up
+#
+# This runs:
+#   - PostgreSQL database (port 5432)
+#   - FastAPI backend (port 8000)
+#   - WebSocket service (port 3003)
+#   - Next.js frontend (port 3000)
+#
+# First run will take a few minutes to build the images.
+# After the stack is up, open http://localhost:3000
+# ==========================================================================
+
+services:
+  # ---------- PostgreSQL database ----------
+  db:
+    image: postgres:16-alpine
+    container_name: ecg-db
+    environment:
+      POSTGRES_USER: ecg_user
+      POSTGRES_PASSWORD: ecg_password
+      POSTGRES_DB: ecg_anomaly
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ecg_user -d ecg_anomaly"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # ---------- FastAPI backend ----------
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    container_name: ecg-backend
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: "postgresql://ecg_user:ecg_password@db:5432/ecg_anomaly"
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app/backend
+      - model_storage:/app/backend/app/storage
+    command: >
+      sh -c "cd /app/backend &&
+             python -m uvicorn app.main:app --host 0.0.0.0 --port 8000"
+
+  # ---------- WebSocket service ----------
+  ws-service:
+    image: oven/bun:latest
+    container_name: ecg-ws
+    depends_on:
+      - backend
+    ports:
+      - "3003:3003"
+    volumes:
+      - ./mini-services/ws-service:/app
+    working_dir: /app
+    command: sh -c "bun install && bun run index.ts"
+
+  # ---------- Next.js frontend ----------
+  frontend:
+    image: oven/bun:latest
+    container_name: ecg-frontend
+    depends_on:
+      - backend
+      - ws-service
+    ports:
+      - "3000:3000"
+    environment:
+      NEXT_PUBLIC_API_PORT: 8000
+      NEXT_PUBLIC_WS_PORT: 3003
+      DATABASE_URL: "postgresql://ecg_user:ecg_password@db:5432/ecg_anomaly"
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /app/.next
+    working_dir: /app
+    command: sh -c "bun install && bun run db:push && bun run dev"
+
+volumes:
+  pgdata:
+  model_storage:
