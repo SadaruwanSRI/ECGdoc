@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import json
 import secrets
+import threading
 import time
 from typing import Dict, Optional
 
@@ -28,6 +29,20 @@ router = APIRouter(prefix="/api/sessions", tags=["sessions"])
 # In-memory active sessions (model_id -> session state)
 # This is read by the WebSocket service for live streaming.
 _LIVE_SESSIONS: Dict[str, dict] = {}
+
+
+def _close_session_source(sess: dict) -> None:
+    """Close a session source without racing an in-progress serial read."""
+    source_lock = sess.get("source_lock")
+    if source_lock is None:
+        close_source = getattr(sess.get("source_iter"), "close", None)
+        if callable(close_source):
+            close_source()
+        return
+    with source_lock:
+        close_source = getattr(sess.get("source_iter"), "close", None)
+        if callable(close_source):
+            close_source()
 
 
 @router.post("/start", response_model=OkResponse)
@@ -95,19 +110,14 @@ def start_session(req: StartSessionRequest, user=Depends(require_user)):
     elif req.source_type == "arduino":
         # Simulated Arduino stream — for demo (real hardware would push via serial)
         # We'll generate normal ECG with occasional PVCs
-        from app.ml.data import synthetic_normal_ecg
-        sig_n = synthetic_normal_ecg(duration_s=300.0, seed=7)
-        sig_a = synthetic_arrhythmia_ecg(duration_s=300.0, seed=11)
-        # Mix: 70% normal, 30% arrhythmia
-        mix = sig_n.copy()
-        n = len(mix)
-        for i in range(0, n, 128 * 10):  # every 10s, swap to arrhythmia for 3s
-            if (i // (128 * 10)) % 3 == 0:
-                mix[i:i + 128 * 3] = sig_a[i:i + 128 * 3]
-        mix = preprocess_signal(mix, settings.SAMPLING_RATE_HZ)
-        chunk_size = int(req.chunk_seconds * settings.SAMPLING_RATE_HZ)
-        source_iter = (mix[i:i + chunk_size]
-                       for i in range(0, len(mix) - chunk_size + 1, chunk_size))
+        from app.services.arduino_serial import ArduinoSerialStream
+        port = (req.source_detail or "").strip()
+        if not port:
+            raise HTTPException(400, "Select an Arduino serial port")
+        try:
+            source_iter = ArduinoSerialStream(port=port, chunk_seconds=4.0)
+        except Exception as e:
+            raise HTTPException(400, f"Cannot open Arduino on {port}: {e}") from e
     else:
         raise HTTPException(400, f"Unknown source_type: {req.source_type}")
 
@@ -119,6 +129,7 @@ def start_session(req: StartSessionRequest, user=Depends(require_user)):
         "source_detail": req.source_detail,
         "engine": engine,
         "source_iter": source_iter,
+        "source_lock": threading.RLock(),
         "chunk_seconds": req.chunk_seconds,
         "started_at": time.time(),
         "total_beats": 0,
@@ -145,6 +156,7 @@ def stop_session(session_id: str, user=Depends(require_user)):
     if not sess:
         raise HTTPException(404, "Session not found or already stopped")
     sess["active"] = False
+    _close_session_source(sess)
 
     # Persist final state
     with get_db() as db:
@@ -202,6 +214,7 @@ def delete_session(session_id: str, user=Depends(require_user)):
         # Also remove from live session registry if active
         if session_id in _LIVE_SESSIONS:
             _LIVE_SESSIONS[session_id]["active"] = False
+            _close_session_source(_LIVE_SESSIONS[session_id])
             del _LIVE_SESSIONS[session_id]
 
         # Delete related alerts and data points (cascade)
@@ -291,14 +304,28 @@ def next_live_chunk(session_id: str) -> Optional[dict]:
     if not sess or not sess["active"]:
         return None
 
+    # A four-second hardware read is longer than the WebSocket polling period.
+    # Reject overlapping pulls rather than allowing concurrent PySerial reads.
+    source_lock = sess["source_lock"]
+    if not source_lock.acquire(blocking=False):
+        return {"type": "pending", "session_id": session_id}
     try:
-        chunk = next(sess["source_iter"])
-    except StopIteration:
-        sess["active"] = False
-        return {"type": "end", "session_id": session_id}
-    except Exception as e:
-        sess["active"] = False
-        return {"type": "error", "message": str(e)}
+        try:
+            chunk = next(sess["source_iter"])
+        except StopIteration:
+            sess["active"] = False
+            close_source = getattr(sess.get("source_iter"), "close", None)
+            if callable(close_source):
+                close_source()
+            return {"type": "end", "session_id": session_id}
+        except Exception as e:
+            sess["active"] = False
+            close_source = getattr(sess.get("source_iter"), "close", None)
+            if callable(close_source):
+                close_source()
+            return {"type": "error", "message": str(e)}
+    finally:
+        source_lock.release()
 
     # Score
     # Pass t_offset so the t values increase monotonically across chunks
@@ -425,4 +452,5 @@ def next_live_chunk(session_id: str) -> Optional[dict]:
         "anomaly_beats": sess["anomaly_beats"],
         "threshold": engine.threshold,
         "ecg_metrics": ecg_metrics,
+        "source_status": getattr(sess.get("source_iter"), "last_status", None),
     }

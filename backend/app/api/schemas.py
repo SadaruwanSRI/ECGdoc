@@ -97,6 +97,14 @@ class StartSessionRequest(BaseModel):
     threshold_override: Optional[float] = None  # per-session sensitivity override
 
 
+class ArduinoSerialTestRequest(BaseModel):
+    """Configuration for a short, raw Arduino acquisition test."""
+    port: str = Field(min_length=1, max_length=100)
+    baud_rate: int = Field(default=115200, ge=1200, le=2_000_000)
+    sample_count: int = Field(default=256, ge=16, le=2048)
+    timeout_seconds: float = Field(default=8.0, ge=2.0, le=30.0)
+
+
 class ModelEvaluationRequest(BaseModel):
     model_id: str
     classifier_model_id: Optional[str] = None

@@ -59,8 +59,8 @@ def list_datasets(user=Depends(require_user)):
             },
             {
                 "id": "arduino",
-                "name": "Arduino ECG Module (simulated)",
-                "description": "Simulated Arduino ECG stream - mix of normal beats and occasional PVCs. Replace with real serial input when hardware is connected.",
+                "name": "Arduino Nano + AD8232",
+                "description": "Live 128 Hz ECG acquisition from an Arduino Nano serial port.",
                 "records": [],
             },
         ],

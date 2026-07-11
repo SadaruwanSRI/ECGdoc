@@ -8,6 +8,7 @@
 fastapi>=0.110,<1.0
 uvicorn[standard]>=0.29,<1.0
 python-multipart>=0.0.9,<1.0
+pyserial>=3.5,<4.0
 
 # Database (SQLAlchemy works with SQLite + PostgreSQL)
 sqlalchemy>=2.0.30,<3.0

@@ -48,7 +48,8 @@ const trainingSubs = new Map<string, any>()
 
 async function pollTrainingProgress(run_id: string) {
   const sub = trainingSubs.get(run_id)
-  if (!sub) return
+  if (!sub || sub.polling) return
+  sub.polling = true
   try {
     const data = await fetchJSON(`/api/training/${run_id}`, sub.token)
     const d = data.data || {}
@@ -108,6 +109,9 @@ async function pollSessionChunk(session_id: string) {
     }
   } catch (e: any) {
     console.error(`[session ${session_id}] poll error:`, e.message)
+  } finally {
+    const current = sessionSubs.get(session_id)
+    if (current) current.polling = false
   }
 }
 
@@ -153,7 +157,7 @@ io.on('connection', (socket) => {
     socket.join(`session:${session_id}`)
     let sub = sessionSubs.get(session_id)
     if (!sub) {
-      sub = { token, intervalId: null, socketIds: new Set() }
+      sub = { token, intervalId: null, socketIds: new Set(), polling: false }
       sub.intervalId = setInterval(() => pollSessionChunk(session_id), 1000)
       sessionSubs.set(session_id, sub)
     }

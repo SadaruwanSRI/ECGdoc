@@ -221,6 +221,10 @@ export const api = {
     return request<any>(`/api/sessions/${id}/datapoints?limit=${limit}`)
   },
 
+  async listArduinoPorts() {
+    return request<any>('/api/arduino/ports')
+  },
+
   // ---------- Datasets ----------
   async listDatasets() {
     return request<any>('/api/datasets')

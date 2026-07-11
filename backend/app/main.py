@@ -20,6 +20,7 @@ from app.api.routes_sessions import router as sessions_router
 from app.api.routes_reports import router as reports_router
 from app.api.routes_datasets import router as datasets_router
 from app.api.routes_evaluation import router as evaluation_router
+from app.api.routes_arduino import router as arduino_router
 
 
 @asynccontextmanager
@@ -65,6 +66,7 @@ app.include_router(sessions_router)
 app.include_router(reports_router)
 app.include_router(datasets_router)
 app.include_router(evaluation_router)
+app.include_router(arduino_router)
 
 
 @app.get("/")

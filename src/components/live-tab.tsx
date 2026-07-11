@@ -102,6 +102,11 @@ type EcgMetrics = {
   } | null
 }
 
+type SerialPortInfo = {
+  device: string
+  description: string
+}
+
 export function LiveTab() {
   const [models, setModels] = useState<ModelInfo[]>([])
   const [datasets, setDatasets] = useState<any>(null)
@@ -117,6 +122,8 @@ export function LiveTab() {
   const [error, setError] = useState<string | null>(null)
   const [healthInfo, setHealthInfo] = useState<any>(null)
   const [socket, setSocket] = useState<Socket | null>(null)
+  const [serialPorts, setSerialPorts] = useState<SerialPortInfo[]>([])
+  const [sourceStatus, setSourceStatus] = useState<any>(null)
 
   // Live data
   const [chartData, setChartData] = useState<ChartPoint[]>([])
@@ -142,6 +149,11 @@ export function LiveTab() {
       if (anomalyModels.length > 0) setModelId(anomalyModels[0].id)
     })
     api.listDatasets().then(r => setDatasets(r.data))
+    api.listArduinoPorts().then(r => {
+      const ports = r.data?.ports || []
+      setSerialPorts(ports)
+      if (ports.length === 1) setSourceDetail(ports[0].device)
+    }).catch(() => setSerialPorts([]))
   }, [])
 
   useEffect(() => {
@@ -150,6 +162,16 @@ export function LiveTab() {
       setThresholdOverride(Number(selected.threshold))
     }
   }, [modelId, models])
+
+  useEffect(() => {
+    if (sourceType === 'arduino') {
+      setSourceDetail(current => current || serialPorts[0]?.device || '')
+    } else if (sourceType === 'mit-bih-arrhythmia') {
+      setSourceDetail('100')
+    } else {
+      setSourceDetail('')
+    }
+  }, [sourceType, serialPorts])
 
   useEffect(() => {
     if (!sessionId) return
@@ -191,6 +213,7 @@ export function LiveTab() {
       if (data.ecg_metrics) {
         setEcgMetrics(data.ecg_metrics)
       }
+      if (data.source_status) setSourceStatus(data.source_status)
 
       setStats({
         totalBeats: data.total_beats || 0,
@@ -225,6 +248,7 @@ export function LiveTab() {
     setChartData([])
     setAlerts([])
     setEcgMetrics(null)
+    setSourceStatus(null)
     chartBufferRef.current = []
     setStats({ totalBeats: 0, anomalyBeats: 0, threshold: 0, avgScore: 0, maxScore: 0 })
     try {
@@ -233,7 +257,7 @@ export function LiveTab() {
         classifier_model_id: classifierModelId === '__none__' ? undefined : classifierModelId,
         source_type: sourceType,
         source_detail: sourceDetail || undefined,
-        chunk_seconds: chunkSeconds,
+        chunk_seconds: sourceType === 'arduino' ? 4 : chunkSeconds,
         threshold_override: useThresholdOverride ? thresholdOverride : undefined,
       })
       if (r.ok && r.data?.session_id) {
@@ -355,17 +379,46 @@ export function LiveTab() {
               </div>
             )}
 
+            {sourceType === 'arduino' && (
+              <div className="space-y-2">
+                <Label>Arduino serial port</Label>
+                <Select value={sourceDetail} onValueChange={setSourceDetail} disabled={active}>
+                  <SelectTrigger><SelectValue placeholder="Select COM port" /></SelectTrigger>
+                  <SelectContent>
+                    {serialPorts.map(port => (
+                      <SelectItem key={port.device} value={port.device}>
+                        {port.device} — {port.description || 'Serial device'}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {serialPorts.length === 0 && (
+                  <p className="text-xs text-amber-600">No serial ports found. Connect the Nano and restart the backend.</p>
+                )}
+                {sourceStatus && (
+                  <p className={`text-xs ${sourceStatus.lead_off ? 'text-amber-600' : 'text-emerald-600'}`}>
+                    {sourceStatus.lead_off
+                      ? 'Electrodes disconnected — streaming raw hardware data.'
+                      : 'Electrodes connected'}
+                  </p>
+                )}
+              </div>
+            )}
+
             <div className="space-y-2">
               <div className="flex justify-between">
                 <Label>Chunk size (s)</Label>
-                <span className="text-sm font-mono text-slate-600">{chunkSeconds.toFixed(1)}s</span>
+                <span className="text-sm font-mono text-slate-600">{(sourceType === 'arduino' ? 4 : chunkSeconds).toFixed(1)}s</span>
               </div>
               <Slider
                 min={1} max={8} step={0.5}
                 value={[chunkSeconds]}
                 onValueChange={v => setChunkSeconds(v[0])}
-                disabled={active}
+                disabled={active || sourceType === 'arduino'}
               />
+              {sourceType === 'arduino' && (
+                <p className="text-xs text-slate-500">Fixed at 4 seconds (512 samples) for the trained model.</p>
+              )}
             </div>
 
             <div className="space-y-2 rounded-md border bg-slate-50 p-3">
@@ -404,7 +457,7 @@ export function LiveTab() {
               {!active ? (
                 <Button
                   onClick={start}
-                  disabled={!modelId}
+                  disabled={!modelId || (sourceType === 'arduino' && !sourceDetail)}
                   className="w-full bg-rose-600 hover:bg-rose-700"
                 >
                   <Play className="w-4 h-4 mr-2" />
