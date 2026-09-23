@@ -1,0 +1,164 @@
+
+\usepackage[numbers]{natbib}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{algorithmic}
+\usepackage{textcomp}
+\usepackage{xcolor}
+\usepackage{epigraph}
+\usepackage[ngerman,english]{babel}
+\usepackage[final]{pdfpages}
+
+
+\usepackage[hyphens]{url}
+
+\usepackage{balance}
+\usepackage{lipsum}
+\usepackage{xspace}
+\usepackage{listings}
+\usepackage{paralist}
+\usepackage{fancyvrb}
+\usepackage{enumitem}
+\usepackage{datetime2}
+\usepackage{silence}
+
+\usepackage{caption}
+\usepackage{subcaption}
+
+
+\usepackage{placeins}
+\usepackage[pdftex,
+            pdfauthor={A.K.S.S. Wimalasena},
+            pdftitle={ECG Anomaly Detection and Arrhythmia Classification},
+            pdfsubject={Normal-only autoencoding with temporal-holdout evaluation},
+            pdfkeywords={ECG, anomaly detection, autoencoder, arrhythmia, temporal holdout, patient-adapted classification},
+            pdfproducer={pdfLaTeX},
+            pdfcreator=pdfTeX{}, hidelinks, pdfdisplaydoctitle, pagebackref]{hyperref}
+
+\usepackage{multirow}
+\usepackage{makecell} 
+\usepackage{siunitx}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{float}
+\usepackage{microtype}
+\microtypesetup{expansion=false}
+
+\usepackage{geometry} %% --> is defined in 1_title.tex
+
+\definecolor{jsoncomment}{RGB}{163,21,21}
+\definecolor{pseudofunc}{RGB}{121,94,38}
+\definecolor{pseudoenum}{RGB}{0,16,128}
+\definecolor{pseudonumber}{RGB}{9,136,90}
+\definecolor{pseudoenum}{RGB}{0,16,128}
+\definecolor{scred}{RGB}{255,1,1}
+\definecolor{scgreen}{RGB}{6,130,6}
+\definecolor{scblue}{RGB}{0,0,255}
+
+
+\usepackage[]{graphicx}
+\graphicspath{{pic/},{pic/generated/}}
+\DeclareGraphicsExtensions{.pdf,.png}
+\pdfminorversion=7
+
+\input{tex/listingconfig.tex}
+\input{tex/cmd.tex}
+
+
+\usepackage[normalem]{ulem}
+
+
+
+%% Coherent thesis typography: Libertine for long-form reading, matching NewTX
+%% mathematics, and Source Sans Pro for navigation and headings.
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{libertine}
+\usepackage[libertine]{newtxmath}
+\usepackage[scaled=0.92]{helvet}
+
+% Cascadia Code's Type 1 font generation fails on some MiKTeX installations.
+% Courier is bundled with pdfLaTeX and avoids on-the-fly font generation.
+\usepackage{courier}
+\usepackage{tocbasic}
+\usepackage{scrhack}
+\usepackage[automark,headsepline]{scrlayer-scrpage}
+\usepackage{tikz}
+\usetikzlibrary{patterns,positioning,shapes.geometric,calc,decorations.pathreplacing}
+
+\usepackage[most]{tcolorbox}
+
+
+\usepackage{nicefrac}
+\usepackage{wrapfig}
+
+%% Restrained academic colour system.
+\definecolor{thesisnavy}{HTML}{17324D}
+\definecolor{thesisteal}{HTML}{168C8C}
+\definecolor{thesisslate}{HTML}{5E6B75}
+\definecolor{thesislight}{HTML}{EDF3F5}
+
+%% Modern KOMA-Script hierarchy. Chapter numbers remain prominent without the
+%% oversized magazine-style treatment used by the original template.
+\renewcommand*{\chapterformat}{%
+  {\color{black}\fontsize{30}{32}\selectfont\bfseries\thechapter\autodot\enskip}}
+\renewcommand*{\chapterlinesformat}[3]{%
+  \raggedchapter #2{\color{black}#3}\par\nobreak
+  \vspace{0.35\baselineskip}{\color{thesisteal}\rule{\textwidth}{1.2pt}}}
+\RedeclareSectionCommand[beforeskip=-1.25\baselineskip,afterskip=0.85\baselineskip]{chapter}
+\RedeclareSectionCommand[beforeskip=1.3\baselineskip,afterskip=0.45\baselineskip]{section}
+\RedeclareSectionCommand[beforeskip=1.05\baselineskip,afterskip=0.35\baselineskip]{subsection}
+\setkomafont{chapter}{\sffamily\bfseries\fontsize{29}{34}\selectfont}
+\setkomafont{section}{\sffamily\bfseries\Large\color{black}}
+\setkomafont{subsection}{\sffamily\bfseries\large\color{black}}
+\setkomafont{subsubsection}{\sffamily\bfseries\normalsize\color{black}}
+\setkomafont{chapterentry}{\sffamily\bfseries\color{black}}
+
+%% Quiet running furniture: one fine rule, short chapter/section title, and a
+%% page number at the outside edge.
+\clearpairofpagestyles
+\automark[section]{chapter}
+\ihead{\headmark}
+\ohead{\pagemark}
+\cfoot{}
+\setkomafont{pageheadfoot}{\sffamily\small\color{black}}
+\setkomafont{pagenumber}{\sffamily\bfseries\color{black}}
+\addtokomafont{headsepline}{\color{thesisteal}}
+\renewcommand*{\chaptermarkformat}{\thechapter\autodot\enskip}
+
+%% Captions and lists use the same navigation typography and colour.
+\captionsetup{
+  font={small,color=black},
+  labelfont={bf,sf,color=black},
+  format=hang,
+  justification=justified,
+  singlelinecheck=false,
+  skip=7pt
+}
+\setkomafont{caption}{\small\color{black}}
+\setkomafont{captionlabel}{\sffamily\bfseries\color{black}}
+\setkomafont{disposition}{\sffamily\bfseries}
+\setlist{itemsep=0.25\baselineskip,topsep=0.45\baselineskip}
+\linespread{1.04}
+
+\raggedbottom 
+
+\makeatletter
+\usepackage{etoolbox,refcount}
+\pretocmd{\tableofcontents}{%
+  \if@openright\cleardoublepage\else\clearpage\fi
+  \pdfbookmark[0]{\contentsname}{toc}%
+}{}{}%
+\makeatother
+
+
+% colors for textboxes
+\definecolor{arsenic}{rgb}{0.23, 0.27, 0.29}
+\definecolor{beige}{rgb}{0.96, 0.96, 0.86}
+\definecolor{camel}{rgb}{0.76, 0.6, 0.42}
+\definecolor{eggshell}{rgb}{0.94, 0.92, 0.84}
+
+
+\patchcmd{\thebibliography}
+  {\clubpenalty 4000\widowpenalty 4000}
+  {\clubpenalties 1 10000 \widowpenalties 1 10000 }
+  {}{}

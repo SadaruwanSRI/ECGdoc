@@ -1,0 +1,60 @@
+{
+  "prediction_reproduction": "passed",
+  "confusion_and_macro_f1": "passed",
+  "bootstrap_reproduction": "passed",
+  "parameter_count": 2680641,
+  "actual_tensor_shapes": {
+    "enc1": [
+      1,
+      32,
+      256
+    ],
+    "enc2": [
+      1,
+      64,
+      128
+    ],
+    "enc3": [
+      1,
+      128,
+      64
+    ],
+    "enc4": [
+      1,
+      256,
+      32
+    ],
+    "up1": [
+      1,
+      128,
+      32
+    ],
+    "up2": [
+      1,
+      64,
+      64
+    ],
+    "up3": [
+      1,
+      32,
+      128
+    ],
+    "up4": [
+      1,
+      32,
+      256
+    ],
+    "final": [
+      1,
+      1,
+      256
+    ],
+    "output": [
+      1,
+      1,
+      512
+    ]
+  },
+  "model_sha256": "b14b38024d6c39d2f382ee92b1a72964f6e10d7a9807bc69fe298ab6903ddd1e",
+  "test_predictions_sha256": "846109f8cb0ebfe1614596ab1d33b6561d89cffb24c23b8c9cd22f1305ad9669"
+}

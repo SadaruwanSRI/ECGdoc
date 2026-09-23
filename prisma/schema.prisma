@@ -1,4 +1,4 @@
-// ECG Anomaly Detection — Database Schema
+// ECG Anomaly Detection - Database Schema
 //
 // To switch database providers:
 //
@@ -11,8 +11,8 @@
 //    DATABASE_URL="postgresql://ecg_user:ecg_password@localhost:5432/ecg_anomaly"  (in .env)
 //    Then run: psql -U postgres -f setup-postgres.sql  (one-time)
 //
-// The start-all.ps1 / start-all.sh launcher handles this switch automatically
-// when you pass the --postgres / -UsePostgres flag.
+// The run-app.ps1 launcher handles this switch automatically
+// when you pass the -UsePostgres flag.
 
 generator client {
   provider = "prisma-client-js"

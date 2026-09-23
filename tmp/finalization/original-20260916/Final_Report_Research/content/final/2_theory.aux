@@ -1,0 +1,102 @@
+\relax 
+\providecommand\hyper@newdestlabel[2]{}
+\citation{dechazal2004heartbeat,mousavi2019seq2seq}
+\@writefile{toc}{\contentsline {chapter}{\numberline {4}Theoretical Foundations}{20}{chapter.4}\protected@file@percent }
+\@writefile{lof}{\addvspace {10\p@ }}
+\@writefile{lot}{\addvspace {10\p@ }}
+\@writefile{lol}{\addvspace {10\p@ }}
+\newlabel{ch:theory}{{4}{20}{Theoretical Foundations}{chapter.4}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {4.1}Why ECG evidence has more than one form}{20}{section.4.1}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {4.1}{\ignorespaces Two evidence scales used by the final model. Morphology describes the local shape of a beat; RR timing describes rhythm context around the beat.}}{20}{figure.caption.22}\protected@file@percent }
+\newlabel{fig:theory-evidence-scales}{{4.1}{20}{Two evidence scales used by the final model. Morphology describes the local shape of a beat; RR timing describes rhythm context around the beat}{figure.caption.22}{}}
+\@writefile{brf}{\backcite{dechazal2004heartbeat}{{20}{4.1}{figure.caption.22}}}
+\@writefile{brf}{\backcite{mousavi2019seq2seq}{{20}{4.1}{figure.caption.22}}}
+\citation{kligfield2007standardization,butterworth1930filter}
+\@writefile{toc}{\contentsline {section}{\numberline {4.2}Feature extraction theory}{21}{section.4.2}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {4.2}{\ignorespaces Feature-extraction operations behind the final 242-value vector. The tree models learn from compact numerical evidence, not from raw ECG samples directly.}}{21}{figure.caption.23}\protected@file@percent }
+\newlabel{fig:theory-feature-math}{{4.2}{21}{Feature-extraction operations behind the final 242-value vector. The tree models learn from compact numerical evidence, not from raw ECG samples directly}{figure.caption.23}{}}
+\citation{hinton2006autoencoder}
+\citation{vincent2008denoising}
+\@writefile{brf}{\backcite{kligfield2007standardization}{{22}{4.2}{equation.4.3}}}
+\@writefile{brf}{\backcite{butterworth1930filter}{{22}{4.2}{equation.4.3}}}
+\@writefile{toc}{\contentsline {section}{\numberline {4.3}RR timing theory}{22}{section.4.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {4.4}Normal-only reconstruction theory}{22}{section.4.4}\protected@file@percent }
+\newlabel{eq:ae-objective}{{4.6}{22}{Normal-only reconstruction theory}{equation.4.6}{}}
+\@writefile{brf}{\backcite{hinton2006autoencoder}{{22}{4.4}{equation.4.6}}}
+\@writefile{brf}{\backcite{vincent2008denoising}{{22}{4.4}{equation.4.6}}}
+\citation{chandola2009anomaly}
+\@writefile{lof}{\contentsline {figure}{\numberline {4.3}{\ignorespaces Normal-only reconstruction principle. A larger residual can indicate novelty, but it is evidence only; the final arrhythmia decision is made by the supervised hierarchy.}}{23}{figure.caption.24}\protected@file@percent }
+\newlabel{fig:theory-reconstruction-principle}{{4.3}{23}{Normal-only reconstruction principle. A larger residual can indicate novelty, but it is evidence only; the final arrhythmia decision is made by the supervised hierarchy}{figure.caption.24}{}}
+\@writefile{brf}{\backcite{chandola2009anomaly}{{23}{4.4}{figure.caption.24}}}
+\@writefile{toc}{\contentsline {section}{\numberline {4.5}Hierarchical classification theory}{23}{section.4.5}\protected@file@percent }
+\citation{zhang2021interpatient}
+\@writefile{lof}{\contentsline {figure}{\numberline {4.4}{\ignorespaces Probability logic of the final hierarchy. The subtype model is conditional: it is used only after the abnormality gate is passed.}}{24}{figure.caption.25}\protected@file@percent }
+\newlabel{fig:theory-hierarchy-probability}{{4.4}{24}{Probability logic of the final hierarchy. The subtype model is conditional: it is used only after the abnormality gate is passed}{figure.caption.25}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {4.6}Why Extra Trees fits this feature design}{24}{section.4.6}\protected@file@percent }
+\citation{cui2019classbalanced}
+\@writefile{brf}{\backcite{zhang2021interpatient}{{25}{4.6}{equation.4.13}}}
+\@writefile{toc}{\contentsline {section}{\numberline {4.7}Class and patient imbalance theory}{25}{section.4.7}\protected@file@percent }
+\newlabel{eq:record-weight}{{4.14}{25}{Class and patient imbalance theory}{equation.4.14}{}}
+\@writefile{brf}{\backcite{cui2019classbalanced}{{25}{4.7}{equation.4.14}}}
+\@writefile{toc}{\contentsline {section}{\numberline {4.8}Temporal patient adaptation theory}{25}{section.4.8}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {4.9}Validation theory}{25}{section.4.9}\protected@file@percent }
+\citation{saito2015pr}
+\citation{rutter2000clustered}
+\@writefile{lof}{\contentsline {figure}{\numberline {4.5}{\ignorespaces Theoretical reason for subject-clustered validation. Clustered resampling prevents one long record from being treated as many independent people.}}{26}{figure.caption.26}\protected@file@percent }
+\newlabel{fig:theory-validation-units}{{4.5}{26}{Theoretical reason for subject-clustered validation. Clustered resampling prevents one long record from being treated as many independent people}{figure.caption.26}{}}
+\@writefile{brf}{\backcite{saito2015pr}{{26}{4.9}{figure.caption.26}}}
+\@writefile{brf}{\backcite{rutter2000clustered}{{26}{4.9}{figure.caption.26}}}
+\@writefile{toc}{\contentsline {section}{\numberline {4.10}Theory-to-system alignment}{27}{section.4.10}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {4.1}{\ignorespaces How the theory maps to the implemented final system.}}{27}{table.caption.27}\protected@file@percent }
+\newlabel{tab:theory-system-alignment}{{4.1}{27}{How the theory maps to the implemented final system}{table.caption.27}{}}
+\@setckpt{content/final/2_theory}{
+\setcounter{page}{28}
+\setcounter{equation}{14}
+\setcounter{enumi}{4}
+\setcounter{enumii}{0}
+\setcounter{enumiii}{0}
+\setcounter{enumiv}{0}
+\setcounter{footnote}{0}
+\setcounter{mpfootnote}{0}
+\setcounter{part}{0}
+\setcounter{chapter}{4}
+\setcounter{section}{10}
+\setcounter{subsection}{0}
+\setcounter{subsubsection}{0}
+\setcounter{paragraph}{0}
+\setcounter{subparagraph}{0}
+\setcounter{figure}{5}
+\setcounter{table}{1}
+\setcounter{NAT@ctr}{0}
+\setcounter{parentequation}{0}
+\setcounter{ALC@unique}{0}
+\setcounter{ALC@line}{0}
+\setcounter{ALC@rem}{0}
+\setcounter{ALC@depth}{0}
+\setcounter{AM@survey}{0}
+\setcounter{lstnumber}{1}
+\setcounter{FancyVerbLine}{0}
+\setcounter{caption@flags}{2}
+\setcounter{continuedfloat}{0}
+\setcounter{subfigure}{0}
+\setcounter{subtable}{0}
+\setcounter{section@level}{0}
+\setcounter{Item}{15}
+\setcounter{Hfootnote}{0}
+\setcounter{bookmark@seq@number}{0}
+\setcounter{nlinenum}{0}
+\setcounter{LT@tables}{1}
+\setcounter{LT@chunks}{3}
+\setcounter{float@type}{16}
+\setcounter{countitems}{4}
+\setcounter{nextitemizecount}{3}
+\setcounter{tcbbreakpart}{1}
+\setcounter{tcblayer}{0}
+\setcounter{tcolorbox@number}{1}
+\setcounter{tcbrastercolumn}{1}
+\setcounter{tcbrasterrow}{1}
+\setcounter{tcbrasternum}{1}
+\setcounter{tcbraster}{0}
+\setcounter{tcblisting}{0}
+\setcounter{lstlisting}{0}
+}

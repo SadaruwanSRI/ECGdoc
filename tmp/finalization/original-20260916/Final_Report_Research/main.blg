@@ -1,0 +1,74 @@
+This is BibTeX, Version 0.99e
+Capacity: max_strings=200000, hash_size=200000, hash_prime=170003
+The top-level auxiliary file: main.aux
+Reallocating 'name_of_file' (item size: 1) to 26 items.
+A level-1 auxiliary file: content/0_pre/1_title.aux
+Reallocating 'name_of_file' (item size: 1) to 30 items.
+A level-1 auxiliary file: content/0_pre/2_affidavit.aux
+Reallocating 'name_of_file' (item size: 1) to 32 items.
+A level-1 auxiliary file: content/0_pre/3_acknowledge.aux
+Reallocating 'name_of_file' (item size: 1) to 29 items.
+A level-1 auxiliary file: content/0_pre/4_abstract.aux
+Reallocating 'name_of_file' (item size: 1) to 33 items.
+A level-1 auxiliary file: content/final/1_introduction.aux
+Reallocating 'name_of_file' (item size: 1) to 38 items.
+A level-1 auxiliary file: content/final/2_literature_review.aux
+Reallocating 'name_of_file' (item size: 1) to 25 items.
+A level-1 auxiliary file: content/final/2_data.aux
+Reallocating 'name_of_file' (item size: 1) to 27 items.
+A level-1 auxiliary file: content/final/2_theory.aux
+Reallocating 'name_of_file' (item size: 1) to 33 items.
+A level-1 auxiliary file: content/final/3_architecture.aux
+Reallocating 'name_of_file' (item size: 1) to 27 items.
+A level-1 auxiliary file: content/final/4_method.aux
+Reallocating 'name_of_file' (item size: 1) to 28 items.
+A level-1 auxiliary file: content/final/5_results.aux
+Reallocating 'name_of_file' (item size: 1) to 31 items.
+A level-1 auxiliary file: content/final/6_conclusion.aux
+Reallocating 'name_of_file' (item size: 1) to 7 items.
+The style file: ieeetr.bst
+Reallocating 'name_of_file' (item size: 1) to 12 items.
+Reallocating 'name_of_file' (item size: 1) to 27 items.
+A level-1 auxiliary file: content/final/appendix.aux
+Database file #1: bib/library.bib
+You've used 26 entries,
+            1876 wiz_defined-function locations,
+            654 strings with 10090 characters,
+and the built_in function-call counts, 8973 in all, are:
+= -- 857
+> -- 469
+< -- 0
++ -- 166
+- -- 140
+* -- 655
+:= -- 1265
+add.period$ -- 26
+call.type$ -- 26
+change.case$ -- 26
+chr.to.int$ -- 0
+cite$ -- 26
+duplicate$ -- 458
+empty$ -- 728
+format.name$ -- 140
+if$ -- 2171
+int.to.chr$ -- 0
+int.to.str$ -- 26
+missing$ -- 24
+newline$ -- 81
+num.names$ -- 26
+pop$ -- 79
+preamble$ -- 1
+purify$ -- 0
+quote$ -- 0
+skip$ -- 384
+stack$ -- 0
+substring$ -- 587
+swap$ -- 242
+text.length$ -- 0
+text.prefix$ -- 0
+top$ -- 0
+type$ -- 0
+warning$ -- 0
+while$ -- 79
+width$ -- 28
+write$ -- 263

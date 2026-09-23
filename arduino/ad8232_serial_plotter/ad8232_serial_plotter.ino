@@ -21,7 +21,7 @@ const uint8_t LO_PLUS_PIN = 10;
 const uint8_t LO_MINUS_PIN = 11;
 
 const unsigned long SERIAL_BAUD = 115200;
-const unsigned long SAMPLE_INTERVAL_US = 7813; // approximately 1 / 128 second
+const unsigned long SAMPLE_INTERVAL_US = 7813;  // approximately 1 / 128 second
 
 unsigned long nextSampleUs;
 
@@ -51,8 +51,7 @@ void loop() {
     nextSampleUs = now + SAMPLE_INTERVAL_US;
   }
 
-  const bool leadOff = digitalRead(LO_PLUS_PIN) == HIGH ||
-                       digitalRead(LO_MINUS_PIN) == HIGH;
+  const bool leadOff = digitalRead(LO_PLUS_PIN) == HIGH || digitalRead(LO_MINUS_PIN) == HIGH;
   const int ecg = analogRead(ECG_PIN);
 
   digitalWrite(LED_BUILTIN, leadOff ? HIGH : LOW);

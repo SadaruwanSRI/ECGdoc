@@ -222,6 +222,12 @@ class ArduinoSerialStream(Iterator[np.ndarray]):
             "clipped_low_samples": sum(value <= 2 for value in values),
             "clipped_high_samples": sum(value >= 1021 for value in values),
         }
+        if lead_off_count:
+            raise RuntimeError("Electrode lead-off detected; reconnect electrodes before starting a new session")
+        if malformed:
+            raise RuntimeError("Malformed serial samples create a timing gap; check the serial format and restart acquisition")
+        if max(values) == min(values):
+            raise RuntimeError("Flat sensor signal; check the electrodes and sensor connection")
         return np.asarray(values, dtype=np.float32)
 
     def close(self) -> None:

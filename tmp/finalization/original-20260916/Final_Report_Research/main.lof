@@ -1,0 +1,46 @@
+\babel@toc {english}{}\relax 
+\addvspace {10\p@ }
+\contentsline {figure}{\numberline {1.1}{\ignorespaces Main components of a simplified ECG beat. Shape features describe the P--QRS--T pattern, while RR features describe timing between beats. This is an educational drawing, not a diagnostic template.}}{1}{figure.caption.11}%
+\contentsline {figure}{\numberline {1.2}{\ignorespaces Real four-second ECG examples from the MIT--BIH Arrhythmia Database: normal record 100, PVC record 208, PAC record 232, LBBB record 109, RBBB record 118, and AFib record 203. The dashed line marks the annotated central R peak. The examples are used for explanation and are not clinical diagnostic templates.}}{3}{figure.caption.13}%
+\addvspace {10\p@ }
+\addvspace {10\p@ }
+\contentsline {figure}{\numberline {3.1}{\ignorespaces Dataset roles and evaluation boundaries. The healthy NSRDB channel creates the frozen normal model. MITDB MLII creates the supervised feature table and is split chronologically into development and temporal-test regions.}}{12}{figure.caption.15}%
+\contentsline {figure}{\numberline {3.2}{\ignorespaces Physical MLII placement and the exact one-channel rule. The normal autoencoder uses only the first stored NSRDB ECG channel, whose anatomical placement is unspecified. The supervised and deployed system uses only MLII: negative electrode on the right upper chest, positive electrode on the left lower chest/rib region, and reference electrode on the lower right torso.}}{13}{figure.caption.16}%
+\contentsline {figure}{\numberline {3.3}{\ignorespaces Cleaning real ECG for the two roles. The healthy example is the first channel of NSRDB record 16265. The unseen-use example is MLII from MITDB record 100. Both become one 512-sample input, but their documented channel identities remain different.}}{16}{figure.caption.19}%
+\contentsline {figure}{\numberline {3.4}{\ignorespaces Data preparation during model development and use. Panel A separates normal-only autoencoder development from labeled MLII development. Panel B shows one new MLII signal passing through the frozen abnormality gate and then, only when abnormal, the subtype classifier.}}{19}{figure.caption.21}%
+\addvspace {10\p@ }
+\contentsline {figure}{\numberline {4.1}{\ignorespaces Two evidence scales used by the final model. Morphology describes the local shape of a beat; RR timing describes rhythm context around the beat.}}{20}{figure.caption.22}%
+\contentsline {figure}{\numberline {4.2}{\ignorespaces Feature-extraction operations behind the final 242-value vector. The tree models learn from compact numerical evidence, not from raw ECG samples directly.}}{21}{figure.caption.23}%
+\contentsline {figure}{\numberline {4.3}{\ignorespaces Normal-only reconstruction principle. A larger residual can indicate novelty, but it is evidence only; the final arrhythmia decision is made by the supervised hierarchy.}}{23}{figure.caption.24}%
+\contentsline {figure}{\numberline {4.4}{\ignorespaces Probability logic of the final hierarchy. The subtype model is conditional: it is used only after the abnormality gate is passed.}}{24}{figure.caption.25}%
+\contentsline {figure}{\numberline {4.5}{\ignorespaces Theoretical reason for subject-clustered validation. Clustered resampling prevents one long record from being treated as many independent people.}}{26}{figure.caption.26}%
+\addvspace {10\p@ }
+\contentsline {figure}{\numberline {5.1}{\ignorespaces Exact runtime order of the final ECG system. The autoencoder supplies features; the supervised tree models make the final class decision.}}{28}{figure.caption.28}%
+\contentsline {figure}{\numberline {5.2}{\ignorespaces R-peak-aligned beat window used by the final model. The R peak is at sample index 200, giving the model pre-QRS context and post-QRS recovery information.}}{29}{figure.caption.29}%
+\contentsline {figure}{\numberline {5.3}{\ignorespaces Separation between normal-reference training, supervised temporal development, final testing, and installed use. Live/session use applies the frozen bundle; it does not update model weights.}}{30}{figure.caption.30}%
+\contentsline {figure}{\numberline {5.4}{\ignorespaces Layer flow of the 2,680,641-parameter dilated U-Net autoencoder. The encoder compresses the window, the dilated bottleneck expands temporal context, and the decoder reconstructs the original 512-sample signal.}}{31}{figure.caption.31}%
+\contentsline {figure}{\numberline {5.5}{\ignorespaces Autoencoder fitting and validation loss.}}{32}{figure.caption.32}%
+\contentsline {figure}{\numberline {5.6}{\ignorespaces Real healthy and abnormal ECG examples through the frozen autoencoder. The residual between input and reconstruction is converted into four numerical features for the supervised detector.}}{33}{figure.caption.33}%
+\contentsline {figure}{\numberline {5.7}{\ignorespaces Feature-vector layout used by both supervised models. The same 242-value vector is passed first to the abnormality detector and, if required, to the subtype classifier.}}{34}{figure.caption.34}%
+\addvspace {10\p@ }
+\contentsline {figure}{\numberline {6.1}{\ignorespaces Experimental workflow for the final run. The method keeps source data, feature construction, temporal splitting, model selection, final fitting, temporal scoring, and subject-clustered validation as separate steps.}}{38}{figure.caption.37}%
+\contentsline {figure}{\numberline {6.2}{\ignorespaces Temporal split audit for every eligible MITDB MLII record. Blue beats are available for final fitting, yellow beats are the boundary gap before the test, and red beats are the held-out final 20\% temporal test.}}{40}{figure.caption.39}%
+\contentsline {figure}{\numberline {6.3}{\ignorespaces Model selection on the 64--80\% validation region. The binary detector is selected by balanced accuracy and F1; the subtype classifier is selected by macro F1 and accuracy.}}{41}{figure.caption.40}%
+\contentsline {figure}{\numberline {6.4}{\ignorespaces Evaluation order used by the final method. Binary, conditional subtype, and whole-system evaluations answer different questions and therefore use different supports.}}{42}{figure.caption.41}%
+\addvspace {10\p@ }
+\contentsline {figure}{\numberline {7.1}{\ignorespaces Final testing protocol. Each eligible MITDB MLII record is split in time. Candidate fitting and validation use only earlier beats; the final 20\% timeline is held out for scoring.}}{45}{figure.caption.42}%
+\contentsline {figure}{\numberline {7.2}{\ignorespaces Composition of the held-out temporal test data. The binary test uses all accepted held-out beats. The six-class whole-system test uses normal beats and the five supported abnormal classes.}}{46}{figure.caption.44}%
+\contentsline {figure}{\numberline {7.3}{\ignorespaces Pooled temporal-test results. Binary accuracy, conditional subtype accuracy, whole-system accuracy, and whole-system macro F1 are all above 90\%.}}{47}{figure.caption.46}%
+\contentsline {figure}{\numberline {7.4}{\ignorespaces Subject-clustered confidence intervals.}}{48}{figure.caption.47}%
+\contentsline {figure}{\numberline {7.5}{\ignorespaces Whole-system accuracy for all 45 subject clusters. Red bars are below 90\%; 42 clusters are above the target.}}{49}{figure.caption.48}%
+\contentsline {figure}{\numberline {7.6}{\ignorespaces Reference and correctly classified arrhythmia counts. PAC is the only supported abnormal class with end-to-end recall far below 90\%.}}{50}{figure.caption.50}%
+\contentsline {figure}{\numberline {7.7}{\ignorespaces Confusion matrix for 20,062 supported temporal-test beats. Counts and row percentages are shown together.}}{51}{figure.caption.51}%
+\contentsline {figure}{\numberline {7.8}{\ignorespaces Separation between the main MITDB temporal result and the INCART external check. The external result is reported after model selection and is not used to tune the frozen system.}}{52}{figure.caption.52}%
+\contentsline {figure}{\numberline {7.9}{\ignorespaces Metric bars and binary confusion matrix for the limited INCART external check. Balanced accuracy is shown beside pooled accuracy because the subset is class-imbalanced.}}{53}{figure.caption.54}%
+\contentsline {figure}{\numberline {7.10}{\ignorespaces Class-level precision and recall for classes that appear in the limited INCART subset. Missing classes are not plotted because they have zero support in this saved evaluation.}}{53}{figure.caption.55}%
+\contentsline {figure}{\numberline {7.11}{\ignorespaces Example INCART ECG segments centred on annotated beats. Each panel shows the real annotation type, the model's abnormal/normal decision, the predicted anomaly type, and the score-threshold comparison.}}{54}{figure.caption.57}%
+\addvspace {10\p@ }
+\addvspace {10\p@ }
+\def \@chapapp {\appendixname }
+\addvspace {10\p@ }
+\providecommand \tocbasic@end@toc@file {}\tocbasic@end@toc@file 

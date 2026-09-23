@@ -16,9 +16,12 @@ from app.api.routes_auth import require_user
 from app.core.config import settings
 from app.db.session import get_db
 from app.ml.inference import get_engine
+from app.ml.live_hierarchical import BeatStreamAnalyzer
 from app.ml.ecg_metrics import compute_ecg_metrics
 from app.ml.data import (
+    INCART_RECORDS,
     synthetic_arrhythmia_ecg,
+    stream_incart_record,
     stream_mitbih_record,
     preprocess_signal,
 )
@@ -45,8 +48,55 @@ def _close_session_source(sess: dict) -> None:
             close_source()
 
 
+def _persist_terminal_session(sess: dict, status: str, error: str | None = None) -> None:
+    """Persist natural stream completion or failure."""
+    summary = {
+        "duration_s": time.time() - sess["started_at"],
+        "alerts": len(sess["alerts"]),
+        "analysis_mode": sess["analysis_mode"],
+        "count_unit": sess["count_unit"],
+        "total_samples": sess["total_samples"],
+        "decision_threshold": sess["engine"].decision_threshold,
+        "classifier_model_id": sess.get("classifier_model_id"),
+    }
+    if error:
+        summary["error"] = error
+    with get_db() as db:
+        db.execute(text("""
+            UPDATE EcgSession
+            SET status = :status, endedAt = datetime('now'),
+                totalBeats = :total, anomalyBeats = :anomalies,
+                summaryJson = :summary
+            WHERE id = :id
+        """), {
+            "status": status,
+            "total": sess["total_beats"],
+            "anomalies": sess["anomaly_beats"],
+            "summary": json.dumps(summary),
+            "id": sess["session_id"],
+        })
+        db.commit()
+
+def _require_session_owner(session_id: str, user_id: str) -> None:
+    """Reject access to missing sessions or sessions owned by another user."""
+    with get_db() as db:
+        row = db.execute(
+            text("SELECT userId FROM EcgSession WHERE id = :id"),
+            {"id": session_id},
+        ).fetchone()
+    if not row:
+        raise HTTPException(404, "Session not found")
+    if row[0] != user_id:
+        raise HTTPException(403, "Not authorized to access this session")
+
 @router.post("/start", response_model=OkResponse)
 def start_session(req: StartSessionRequest, user=Depends(require_user)):
+    if req.lead_name.strip().upper() != "MLII":
+        raise HTTPException(
+            400,
+            "The installed model accepts MLII only. Use the Lead-II-axis "
+            "electrode placement and declare lead_name='MLII'.",
+        )
     user_id, _ = user
 
     # Load autoencoder model info from DB
@@ -69,7 +119,82 @@ def start_session(req: StartSessionRequest, user=Depends(require_user)):
                 raise HTTPException(404, "Ready classifier model not found")
             classifier_path = c[1]
 
-        session_id = secrets.token_hex(12)
+
+    # Spin up engine with the optional final MLII hierarchy.
+    threshold = req.threshold_override if req.threshold_override is not None else m[2]
+    engine = get_engine(
+        m[1],
+        threshold=threshold,
+        classifier_path=classifier_path,
+        improved_threshold=req.threshold_override,
+    )
+    analysis_mode = (
+        "beat-aligned-hierarchical"
+        if engine.improved_system is not None
+        else "sliding-reconstruction"
+    )
+    corrected_preparation = (
+        getattr(engine.improved_system, "preprocessing_version", None) == "beat-local-bandpass-zscore-v1"
+    )
+
+    # Build the source iterator based on source_type
+    if req.source_type == "mit-bih-arrhythmia":
+        record = req.source_detail or "100"
+        try:
+            # Test load to fail fast
+            from app.ml.data import _download_record
+            _download_record(record, "mitdb", required_lead="MLII")
+        except Exception as e:
+            raise HTTPException(400, f"Cannot load MIT-BIH record {record}: {e}")
+        source_iter = stream_mitbih_record(
+            record,
+            chunk_seconds=req.chunk_seconds,
+            raw_resampled=corrected_preparation,
+        )
+        source_preprocessed = True
+    elif req.source_type == "incartdb":
+        record = req.source_detail or INCART_RECORDS[0]
+        try:
+            # INCART uses standard lead II, the closest external counterpart
+            # to the MLII lead used to develop the installed final model.
+            from app.ml.data import _download_record
+            _download_record(record, "incartdb", required_lead="II")
+        except Exception as e:
+            raise HTTPException(400, f"Cannot load INCART record {record}: {e}")
+        source_iter = stream_incart_record(
+            record,
+            chunk_seconds=req.chunk_seconds,
+            raw_resampled=corrected_preparation,
+        )
+        source_preprocessed = True
+    elif req.source_type == "synthetic-arrhythmia":
+        # Generate a 5-minute arrhythmia signal and chunk it
+        sig = synthetic_arrhythmia_ecg(duration_s=300.0, seed=42)
+        from app.ml.data import windowize
+        # Chunk in 4s windows
+        chunk_size = int(req.chunk_seconds * settings.SAMPLING_RATE_HZ)
+        # The synthetic generator already applies the project preprocessing.
+        sig_pp = np.asarray(sig, dtype=np.float32)
+        source_iter = (sig_pp[i:i + chunk_size]
+                       for i in range(0, len(sig_pp) - chunk_size + 1, chunk_size))
+        source_preprocessed = True
+    elif req.source_type == "arduino":
+        # Simulated Arduino stream — for demo (real hardware would push via serial)
+        # We'll generate normal ECG with occasional PVCs
+        from app.services.arduino_serial import ArduinoSerialStream
+        port = (req.source_detail or "").strip()
+        if not port:
+            raise HTTPException(400, "Select an Arduino serial port")
+        try:
+            source_iter = ArduinoSerialStream(port=port, chunk_seconds=4.0)
+            source_preprocessed = False
+        except Exception as e:
+            raise HTTPException(400, f"Cannot open Arduino on {port}: {e}") from e
+    else:
+        raise HTTPException(400, f"Unknown source_type: {req.source_type}")
+
+    session_id = secrets.token_hex(12)
+    with get_db() as db:
         db.execute(text("""
             INSERT INTO EcgSession
                 (id, userId, modelId, sourceType, sourceDetail, startedAt,
@@ -83,58 +208,35 @@ def start_session(req: StartSessionRequest, user=Depends(require_user)):
         })
         db.commit()
 
-    # Spin up engine
-    # Spin up engine (with optional classifier for two-step inference)
-    threshold = req.threshold_override if req.threshold_override is not None else m[2]
-    engine = get_engine(m[1], threshold=threshold, classifier_path=classifier_path)
-
-    # Build the source iterator based on source_type
-    if req.source_type == "mit-bih-arrhythmia":
-        record = req.source_detail or "100"
-        try:
-            # Test load to fail fast
-            from app.ml.data import _download_record
-            _download_record(record, "mitdb")
-        except Exception as e:
-            raise HTTPException(400, f"Cannot load MIT-BIH record {record}: {e}")
-        source_iter = stream_mitbih_record(record, chunk_seconds=req.chunk_seconds)
-    elif req.source_type == "synthetic-arrhythmia":
-        # Generate a 5-minute arrhythmia signal and chunk it
-        sig = synthetic_arrhythmia_ecg(duration_s=300.0, seed=42)
-        from app.ml.data import windowize
-        # Chunk in 4s windows
-        chunk_size = int(req.chunk_seconds * settings.SAMPLING_RATE_HZ)
-        sig_pp = preprocess_signal(sig, settings.SAMPLING_RATE_HZ)
-        source_iter = (sig_pp[i:i + chunk_size]
-                       for i in range(0, len(sig_pp) - chunk_size + 1, chunk_size))
-    elif req.source_type == "arduino":
-        # Simulated Arduino stream — for demo (real hardware would push via serial)
-        # We'll generate normal ECG with occasional PVCs
-        from app.services.arduino_serial import ArduinoSerialStream
-        port = (req.source_detail or "").strip()
-        if not port:
-            raise HTTPException(400, "Select an Arduino serial port")
-        try:
-            source_iter = ArduinoSerialStream(port=port, chunk_seconds=4.0)
-        except Exception as e:
-            raise HTTPException(400, f"Cannot open Arduino on {port}: {e}") from e
-    else:
-        raise HTTPException(400, f"Unknown source_type: {req.source_type}")
-
     _LIVE_SESSIONS[session_id] = {
         "session_id": session_id,
         "user_id": user_id,
         "model_id": req.model_id,
+        "classifier_model_id": req.classifier_model_id,
         "source_type": req.source_type,
         "source_detail": req.source_detail,
         "engine": engine,
         "source_iter": source_iter,
         "source_lock": threading.RLock(),
+        "processing_lock": threading.Lock(),
         "chunk_seconds": req.chunk_seconds,
+        "source_preprocessed": source_preprocessed,
+        "corrected_preparation": corrected_preparation,
+        "analysis_mode": analysis_mode,
+        "count_unit": "beats" if engine.improved_system is not None else "samples",
+        "beat_analyzer": (
+            BeatStreamAnalyzer(engine)
+            if engine.improved_system is not None
+            else None
+        ),
         "started_at": time.time(),
         "total_beats": 0,
         "anomaly_beats": 0,
+        "total_samples": 0,
         "alerts": [],
+        # Defensive guard: a beat may be returned again when adjacent live
+        # buffers overlap. Each R peak is allowed to create at most one alert.
+        "alerted_peak_times": set(),
         "last_t": 0,
         "active": True,
         # ECG metrics tracking
@@ -142,18 +244,35 @@ def start_session(req: StartSessionRequest, user=Depends(require_user)):
         "ecg_metrics": None,                            # last computed metrics
         "ecg_metrics_chunk_count": 0,                   # recompute every 5 chunks
     }
+    with get_db() as db:
+        db.execute(text("""
+            UPDATE EcgSession SET summaryJson = :summary WHERE id = :id
+        """), {
+            "id": session_id,
+            "summary": json.dumps({
+                "analysis_mode": analysis_mode,
+                "count_unit": "beats" if engine.improved_system is not None else "samples",
+                "decision_threshold": engine.decision_threshold,
+                "classifier_model_id": req.classifier_model_id,
+            }),
+        })
+        db.commit()
 
     return OkResponse(ok=True, message="Session started", data={
         "session_id": session_id,
         "model_info": engine.info(),
+        "analysis_mode": analysis_mode,
+        "count_unit": "beats" if engine.improved_system is not None else "samples",
         "threshold_override": req.threshold_override,
     })
 
 
 @router.post("/{session_id}/stop", response_model=OkResponse)
 def stop_session(session_id: str, user=Depends(require_user)):
+    user_id, _ = user
+    _require_session_owner(session_id, user_id)
     sess = _LIVE_SESSIONS.get(session_id)
-    if not sess:
+    if not sess or not sess["active"]:
         raise HTTPException(404, "Session not found or already stopped")
     sess["active"] = False
     _close_session_source(sess)
@@ -171,10 +290,22 @@ def stop_session(session_id: str, user=Depends(require_user)):
             "sj": json.dumps({
                 "duration_s": time.time() - sess["started_at"],
                 "alerts": len(sess["alerts"]),
+                "analysis_mode": sess["analysis_mode"],
+                "count_unit": sess["count_unit"],
+                "total_samples": sess["total_samples"],
+                "decision_threshold": sess["engine"].decision_threshold,
+                "classifier_model_id": sess.get("classifier_model_id"),
+                "live_inference_note": (
+                    "R-peak-aligned inference with RR context; results are delayed "
+                    "until the next RR interval and post-peak waveform are available."
+                    if sess["analysis_mode"] == "beat-aligned-hierarchical"
+                    else "Legacy sliding reconstruction inference."
+                ),
             }),
             "id": session_id,
         })
         db.commit()
+    _LIVE_SESSIONS.pop(session_id, None)
     return OkResponse(ok=True, message="Session stopped")
 
 
@@ -227,6 +358,8 @@ def delete_session(session_id: str, user=Depends(require_user)):
 
 @router.get("/{session_id}", response_model=OkResponse)
 def get_session(session_id: str, user=Depends(require_user)):
+    user_id, _ = user
+    _require_session_owner(session_id, user_id)
     with get_db() as db:
         row = db.execute(text("""
             SELECT id, userId, modelId, sourceType, sourceDetail,
@@ -264,6 +397,8 @@ def next_chunk(session_id: str, user=Depends(require_user)):
       - {type: 'end'}     — session exhausted
       - {type: 'error'}   — session error
     """
+    user_id, _ = user
+    _require_session_owner(session_id, user_id)
     from app.api.routes_sessions import next_live_chunk
     result = next_live_chunk(session_id)
     if result is None:
@@ -276,6 +411,9 @@ def get_datapoints(session_id: str,
                    limit: int = 2000,
                    user=Depends(require_user)):
     """Retrieve stored ECG data points for a session (for report/replay)."""
+    user_id, _ = user
+    _require_session_owner(session_id, user_id)
+    limit = max(1, min(limit, 10_000))
     with get_db() as db:
         rows = db.execute(text("""
             SELECT t, value, prediction, anomalyScore, isAnomaly
@@ -296,6 +434,23 @@ def get_live_session(session_id: str) -> Optional[dict]:
 
 
 def next_live_chunk(session_id: str) -> Optional[dict]:
+    """Serialize chunk processing so overlapping pollers cannot race state."""
+    sess = _LIVE_SESSIONS.get(session_id)
+    if not sess or not sess["active"]:
+        return None
+    processing_lock = sess["processing_lock"]
+    if not processing_lock.acquire(blocking=False):
+        return {"type": "pending", "session_id": session_id}
+    try:
+        result = _next_live_chunk(session_id)
+        if result and result.get("type") in {"end", "error"}:
+            _LIVE_SESSIONS.pop(session_id, None)
+        return result
+    finally:
+        processing_lock.release()
+
+
+def _next_live_chunk(session_id: str) -> Optional[dict]:
     """Pull the next chunk from the live session's source iterator, score it,
     persist data points + any alerts, and return the data + diagnostics.
     Returns None when the session is exhausted or stopped.
@@ -311,31 +466,137 @@ def next_live_chunk(session_id: str) -> Optional[dict]:
         return {"type": "pending", "session_id": session_id}
     try:
         try:
-            chunk = next(sess["source_iter"])
+            source_item = next(sess["source_iter"])
         except StopIteration:
             sess["active"] = False
             close_source = getattr(sess.get("source_iter"), "close", None)
             if callable(close_source):
                 close_source()
+            _persist_terminal_session(sess, "completed")
             return {"type": "end", "session_id": session_id}
-        except Exception as e:
+        except Exception as exc:
             sess["active"] = False
             close_source = getattr(sess.get("source_iter"), "close", None)
             if callable(close_source):
                 close_source()
-            return {"type": "error", "message": str(e)}
+            _persist_terminal_session(sess, "failed", str(exc))
+            return {"type": "error", "message": str(exc)}
     finally:
         source_lock.release()
 
-    # Score
-    # Pass t_offset so the t values increase monotonically across chunks
-    # (otherwise the chart overlaps on itself because every chunk restarts at t=0)
+    # The final system accepts one ECG lead only.
+    chunk = source_item
+
+    # Prepare the display signal and run the active inference mode.
     engine = sess["engine"]
-    points = engine.score_stream_chunk(chunk, t_offset=sess["last_t"])
-    sess["total_beats"] += len(points)
+    if sess["analysis_mode"] == "beat-aligned-hierarchical":
+        display_chunk = (
+            np.asarray(chunk, dtype=np.float32).reshape(-1)
+            if sess["source_preprocessed"]
+            else preprocess_signal(chunk, settings.SAMPLING_RATE_HZ)
+        )
+        points = [
+            {
+                "t": sess["last_t"] + index,
+                "value": float(value),
+                "prediction": 0.0,
+                "anomaly_score": 0.0,
+                "is_anomaly": False,
+            }
+            for index, value in enumerate(display_chunk)
+        ]
+        beat_input = np.asarray(chunk, dtype=np.float32).reshape(-1) if sess.get("corrected_preparation") else display_chunk
+        beat_results = sess["beat_analyzer"].append(beat_input)
+        sess["total_beats"] += len(beat_results)
+        sess["anomaly_beats"] += sum(
+            1 for event in beat_results if event["is_anomaly"]
+        )
+    else:
+        points = engine.score_stream_chunk(
+            chunk,
+            t_offset=sess["last_t"],
+            already_preprocessed=sess["source_preprocessed"],
+        )
+        beat_results = []
+        # The legacy mode has no beat detector, so its historical sample counts
+        # are preserved and explicitly labelled as samples in the API.
+        sess["total_beats"] += len(points)
+    sess["total_samples"] += len(points)
 
     new_alerts = []
-    for p in points:
+    if sess["analysis_mode"] == "beat-aligned-hierarchical":
+        for event in beat_results:
+            if not event["is_anomaly"]:
+                continue
+            beat_t = int(event["t"])
+            if beat_t in sess["alerted_peak_times"]:
+                continue
+            sess["alerted_peak_times"].add(beat_t)
+            probability = float(event["anomaly_probability"])
+            decision_threshold = float(event["threshold"])
+            severity = (
+                "critical"
+                if probability >= max(0.75, decision_threshold + 0.25)
+                else "warning"
+            )
+            classification = {
+                "class": event["class"],
+                "class_name": event["class_name"],
+                "confidence": event["confidence"],
+                "probabilities": event["probabilities"],
+                "mode": event["classification_mode"],
+            }
+            if event["class"] == "Unclassified abnormal":
+                message = (
+                    "Unclassified abnormal beat detected "
+                    f"(probability={probability:.1%})"
+                )
+            else:
+                message = (
+                    f"{event['class_name']} detected "
+                    f"(abnormal probability={probability:.1%}, "
+                    f"class confidence={event['confidence']:.1%})"
+                )
+            alert = {
+                "timestamp": time.time(),
+                "anomaly_score": probability,
+                "threshold": decision_threshold,
+                "severity": severity,
+                "message": message,
+                "classification": classification,
+                "context": {
+                    "beat_id": f"{session_id}:{beat_t}",
+                    "t": beat_t,
+                    "signal": event["signal"][::2].tolist(),
+                    "reconstruction": [],
+                    "classification": classification,
+                    "fs": settings.SAMPLING_RATE_HZ // 2,
+                    "r_peak_index": 200 // 2,
+                    "score_type": "abnormal_probability",
+                    "analysis_mode": sess["analysis_mode"],
+                    "rr_seconds": event["rr_seconds"],
+                    "rr_features": event["rr_features"],
+                    "classification_mode": event["classification_mode"],
+                },
+            }
+            new_alerts.append(alert)
+            sess["alerts"].append(alert)
+            with get_db() as db:
+                db.execute(text("""
+                    INSERT INTO Alert
+                        (id, sessionId, timestamp, anomalyScore, threshold,
+                         severity, message, contextJson)
+                    VALUES
+                        (:id, :sid, datetime('now'), :as, :thr, :sev, :msg, :ctx)
+                """), {
+                    "id": secrets.token_hex(12), "sid": session_id,
+                    "as": probability, "thr": decision_threshold,
+                    "sev": severity, "msg": message,
+                    "ctx": json.dumps(alert["context"]),
+                })
+                db.commit()
+
+    for p in points if sess["analysis_mode"] != "beat-aligned-hierarchical" else []:
         if p["is_anomaly"]:
             sess["anomaly_beats"] += 1
             # Emit an alert once per ~64 samples (avoid spamming)
@@ -414,9 +675,28 @@ def next_live_chunk(session_id: str) -> Optional[dict]:
                 "id": secrets.token_hex(12), "sid": session_id,
                 "t": p["t"],  # already includes t_offset from score_stream_chunk
                 "v": p["value"],
-                "pr": p["prediction"], "as": p["anomaly_score"],
+                "pr": (
+                    None
+                    if sess["analysis_mode"] == "beat-aligned-hierarchical"
+                    else p["prediction"]
+                ),
+                "as": p["anomaly_score"],
                 "ia": 1 if p["is_anomaly"] else 0,
             })
+        if beat_results:
+            for event in beat_results:
+                half_width = int(0.08 * settings.SAMPLING_RATE_HZ)
+                db.execute(text("""
+                    UPDATE EcgDataPoint
+                    SET anomalyScore = :score, isAnomaly = :is_anomaly
+                    WHERE sessionId = :sid AND t BETWEEN :start_t AND :end_t
+                """), {
+                    "score": event["anomaly_probability"],
+                    "is_anomaly": 1 if event["is_anomaly"] else 0,
+                    "sid": session_id,
+                    "start_t": event["t"] - half_width,
+                    "end_t": event["t"] + half_width,
+                })
         db.commit()
 
     sess["last_t"] += len(points)
@@ -450,7 +730,18 @@ def next_live_chunk(session_id: str) -> Optional[dict]:
         "alerts": new_alerts,
         "total_beats": sess["total_beats"],
         "anomaly_beats": sess["anomaly_beats"],
-        "threshold": engine.threshold,
+        "threshold": engine.decision_threshold,
+        "analysis_mode": sess["analysis_mode"],
+        "count_unit": sess["count_unit"],
+        "total_samples": sess["total_samples"],
+        "beat_results": [
+            {
+                key: value
+                for key, value in event.items()
+                if key != "signal"
+            }
+            for event in beat_results
+        ],
         "ecg_metrics": ecg_metrics,
         "source_status": getattr(sess.get("source_iter"), "last_status", None),
     }

@@ -37,7 +37,7 @@ class ClassifierTrainConfig:
     epochs: int = 30
     batch_size: int = 64
     learning_rate: float = 1e-3
-    max_records: int = 48                 # how many MIT-BIH records to use (1-48)
+    max_records: int = 46                 # eligible MIT-BIH MLII records (1-46)
     duration_per_record: float = 1800.0   # 30 minutes per record
     train_split: float = 0.8
     val_split: float = 0.1                # test = 1 - train - val
@@ -71,6 +71,99 @@ class ClassifierTrainResult:
     n_beats: int = 0
     class_distribution: Dict[str, int] = field(default_factory=dict)
     architecture: Dict[str, Any] = field(default_factory=dict)
+    split_protocol: str = "patient-level stratified search"
+    train_records: List[str] = field(default_factory=list)
+    validation_records: List[str] = field(default_factory=list)
+    test_records: List[str] = field(default_factory=list)
+    train_subjects: List[str] = field(default_factory=list)
+    validation_subjects: List[str] = field(default_factory=list)
+    test_subjects: List[str] = field(default_factory=list)
+
+
+def _subject_id(record_id: str) -> str:
+    """Return the MITDB subject identifier used for leakage-safe splitting.
+
+    MITDB records 201 and 202 are two recordings from the same person and must
+    never be assigned to different partitions.
+    """
+    return "201-202" if record_id in {"201", "202"} else record_id
+
+
+def _patient_level_split(
+    record_ids: np.ndarray,
+    labels: np.ndarray,
+    train_fraction: float,
+    validation_fraction: float,
+    seed: int,
+    candidates: int = 4000,
+) -> Dict[str, List[str]]:
+    """Choose disjoint patient partitions with similar class distributions.
+
+    A deterministic random search operates only on subject-level class counts.
+    Test labels are used only to construct a representative research split;
+    model fitting, early stopping, and parameter selection never use test
+    beats. The final report uses the stronger all-subject out-of-fold study.
+    """
+    if not 0 < train_fraction < 1 or not 0 < validation_fraction < 1:
+        raise ValueError("train_split and val_split must be between zero and one")
+    if train_fraction + validation_fraction >= 1:
+        raise ValueError("train_split + val_split must be less than one")
+
+    subjects = np.asarray([_subject_id(str(record)) for record in record_ids])
+    unique_subjects = np.asarray(sorted(np.unique(subjects).tolist()))
+    n_subjects = len(unique_subjects)
+    if n_subjects < 3:
+        raise RuntimeError(
+            f"Need at least 3 patients for train/validation/test splitting; got {n_subjects}. "
+            "Increase max_records."
+        )
+
+    n_train = max(1, int(round(n_subjects * train_fraction)))
+    n_validation = max(1, int(round(n_subjects * validation_fraction)))
+    if n_train + n_validation >= n_subjects:
+        n_train = max(1, n_subjects - 2)
+        n_validation = 1
+
+    counts = np.zeros((n_subjects, len(ARRHYTHMIA_CLASSES)), dtype=np.float64)
+    subject_index = {subject: i for i, subject in enumerate(unique_subjects)}
+    for subject, label in zip(subjects, labels):
+        counts[subject_index[str(subject)], int(label)] += 1
+    overall = counts.sum(axis=0)
+    overall_distribution = overall / max(1.0, overall.sum())
+    class_subject_support = np.sum(counts > 0, axis=0)
+    feasible_everywhere = class_subject_support >= 3
+
+    rng = np.random.default_rng(seed)
+    best_score = float("inf")
+    best_partition: tuple[np.ndarray, np.ndarray, np.ndarray] | None = None
+    for _ in range(max(1, candidates)):
+        order = rng.permutation(n_subjects)
+        train = order[:n_train]
+        validation = order[n_train:n_train + n_validation]
+        test = order[n_train + n_validation:]
+        score = 0.0
+        for partition in (train, validation, test):
+            partition_counts = counts[partition].sum(axis=0)
+            distribution = partition_counts / max(1.0, partition_counts.sum())
+            score += float(np.mean(np.abs(distribution - overall_distribution)))
+            score += 2.0 * float(np.sum((partition_counts == 0) & feasible_everywhere))
+        if score < best_score:
+            best_score = score
+            best_partition = (train, validation, test)
+
+    assert best_partition is not None
+    split: Dict[str, List[str]] = {}
+    for name, indices in zip(("train", "validation", "test"), best_partition):
+        selected_subjects = set(unique_subjects[indices].tolist())
+        split[f"{name}_subjects"] = sorted(selected_subjects)
+        split[f"{name}_records"] = sorted(
+            np.unique(record_ids[np.isin(subjects, list(selected_subjects))]).tolist()
+        )
+
+    assert set(split["train_subjects"]).isdisjoint(split["validation_subjects"])
+    assert set(split["train_subjects"]).isdisjoint(split["test_subjects"])
+    assert set(split["validation_subjects"]).isdisjoint(split["test_subjects"])
+    return split
 
 
 def _extract_beats_from_record(record_name: str,
@@ -84,7 +177,9 @@ def _extract_beats_from_record(record_name: str,
         labels is a list of class codes ("N", "PVC", "PAC", "LBBB", "RBBB").
     """
     try:
-        signal, src_fs = _download_record(record_name, "mitdb")
+        signal, src_fs = _download_record(
+            record_name, "mitdb", required_lead="MLII"
+        )
     except Exception as e:
         print(f"[warn] Could not load MITDB record {record_name}: {e}")
         return [], []
@@ -328,23 +423,19 @@ def train_classifier(cfg: ClassifierTrainConfig,
 
     beats, labels, class_dist, record_ids = gather_training_data(cfg, on_progress=on_progress)
 
-    # ---------- Step 3: Record-wise train/val/test split ----------
-    unique_records = np.array(sorted(set(record_ids.tolist())))
-    shuffled_records = unique_records[np.random.permutation(len(unique_records))]
-    n_records = len(shuffled_records)
-    if n_records < 3:
-        raise RuntimeError(
-            f"Need at least 3 records for record-wise train/val/test split; got {n_records}. "
-            "Increase max_records."
-        )
-    n_train_records = max(1, int(n_records * cfg.train_split))
-    n_val_records = max(1, int(n_records * cfg.val_split))
-    if n_train_records + n_val_records >= n_records:
-        n_train_records = max(1, n_records - 2)
-        n_val_records = 1
-    train_records = set(shuffled_records[:n_train_records])
-    val_records = set(shuffled_records[n_train_records:n_train_records + n_val_records])
-    test_records = set(shuffled_records[n_train_records + n_val_records:])
+    # ---------- Step 3: Patient-wise train/val/test split ----------
+    # Records 201 and 202 belong to the same person. Splitting only by record
+    # would leak that person's morphology across partitions.
+    split = _patient_level_split(
+        record_ids,
+        labels,
+        cfg.train_split,
+        cfg.val_split,
+        cfg.seed,
+    )
+    train_records = set(split["train_records"])
+    val_records = set(split["validation_records"])
+    test_records = set(split["test_records"])
 
     train_idx = np.where(np.isin(record_ids, list(train_records)))[0]
     val_idx = np.where(np.isin(record_ids, list(val_records)))[0]
@@ -402,6 +493,8 @@ def train_classifier(cfg: ClassifierTrainConfig,
             "n_val": len(val_idx),
             "n_test": len(test_idx),
             "class_weights": class_weights.tolist(),
+            "split_protocol": "patient-level stratified search",
+            **split,
         })
 
     history: List[Dict[str, Any]] = []
@@ -527,6 +620,8 @@ def train_classifier(cfg: ClassifierTrainConfig,
         "per_class_metrics": per_class,
         "class_names": ARRHYTHMIA_CLASSES,
         "history": history,
+        "split_protocol": "patient-level stratified search",
+        **split,
     }, model_path)
 
     return ClassifierTrainResult(
@@ -545,4 +640,11 @@ def train_classifier(cfg: ClassifierTrainConfig,
         n_beats=len(beats),
         class_distribution=class_dist,
         architecture=classifier.architecture_summary(),
+        split_protocol="patient-level stratified search",
+        train_records=split["train_records"],
+        validation_records=split["validation_records"],
+        test_records=split["test_records"],
+        train_subjects=split["train_subjects"],
+        validation_subjects=split["validation_subjects"],
+        test_subjects=split["test_subjects"],
     )

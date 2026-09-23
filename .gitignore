@@ -54,6 +54,10 @@ local-*
 *.log
 dev.log
 dev.out.log
+.zscripts/
+runtime/logs/
+runtime/pids.json
+runtime/corrupt-node-modules/
 test
 prompt
 

@@ -1,12 +1,15 @@
-"""Inference engine — load a saved model and score ECG windows in real time.
+"""Inference engine - load saved ECG models and score ECG windows.
 
-Supports two-step inference:
-  Step 1: Autoencoder → anomaly detection (reconstruction error > threshold)
-  Step 2: Classifier → arrhythmia type identification (if anomaly detected)
+The final research pathway uses a beat-aligned MLII hierarchy. A frozen
+normal-only autoencoder supplies four residual features, while supervised
+Extra Trees models make the abnormality and subtype decisions. The older
+sliding reconstruction mode remains available as a fallback for legacy
+autoencoder-only models.
 """
 from __future__ import annotations
 
 from pathlib import Path
+import hashlib
 from typing import Tuple, List, Optional, Dict, Any
 
 import numpy as np
@@ -22,13 +25,19 @@ from app.ml.data import preprocess_signal
 class InferenceEngine:
     """Load once, score many. Thread-safe enough for single-worker FastAPI.
 
-    Supports an optional classifier model for two-step inference:
-    1. Autoencoder detects anomaly (reconstruction error > threshold)
-    2. Classifier identifies arrhythmia type (only if anomaly detected)
+    Supports the final classifier bundle as an optional second artifact:
+    1. The autoencoder reconstructs the beat to supply residual features.
+    2. The MLII hierarchy combines morphology, RR timing, and residuals.
+    3. Legacy autoencoder-only detection is used only when no hierarchy exists.
     """
 
-    def __init__(self, model_path: str, threshold: Optional[float] = None,
-                 classifier_path: Optional[str] = None) -> None:
+    def __init__(
+        self,
+        model_path: str,
+        threshold: Optional[float] = None,
+        classifier_path: Optional[str] = None,
+        improved_threshold: Optional[float] = None,
+    ) -> None:
         self.model_path = model_path
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -49,9 +58,28 @@ class InferenceEngine:
 
         # Load classifier (Model 2) — optional
         self.classifier = None
+        self.improved_system = None
+        self.improved_threshold = improved_threshold
         self.classifier_architecture = None
         if classifier_path:
             try:
+                if str(classifier_path).lower().endswith(".joblib"):
+                    from app.ml.feature_system import ImprovedECGSystem
+
+                    self.improved_system = ImprovedECGSystem(classifier_path)
+                    expected_hash = self.improved_system.autoencoder_sha256
+                    if expected_hash and hashlib.sha256(Path(model_path).read_bytes()).hexdigest() != expected_hash:
+                        raise ValueError("The classifier requires its paired frozen autoencoder checkpoint")
+                    self.classifier_architecture = {
+                        "name": self.improved_system.system_kind,
+                        "lead_count": self.improved_system.lead_count,
+                        "binary_threshold": self.improved_system.binary_threshold,
+                        "active_binary_threshold": self.decision_threshold,
+                        "requires_rr_context": True,
+                        "requires_autoencoder_features": self.improved_system.requires_ae_features,
+                    }
+                    self.class_names = self.improved_system.class_names
+                    return
                 from app.ml.classifier import ECGClassifier, ARRHYTHMIA_CLASSES
                 clf_ckpt = torch.load(classifier_path, map_location=self.device,
                                        weights_only=False)
@@ -70,9 +98,10 @@ class InferenceEngine:
                 self.classifier.eval()
                 self.classifier_architecture = clf_arch
                 self.class_names = ARRHYTHMIA_CLASSES
-            except Exception as e:
-                print(f"[inference] Failed to load classifier: {e}")
-                self.classifier = None
+            except Exception as exc:
+                raise RuntimeError(
+                    f"Failed to load requested classifier {classifier_path}: {exc}"
+                ) from exc
 
     @torch.no_grad()
     def score_window(self, window: np.ndarray) -> Tuple[float, np.ndarray, bool]:
@@ -94,6 +123,7 @@ class InferenceEngine:
     def score_stream_chunk(self, chunk: np.ndarray,
                            src_fs: int = settings.SAMPLING_RATE_HZ,
                            t_offset: int = 0,
+                           already_preprocessed: bool = False,
                            ) -> List[dict]:
         """Score a chunk of arbitrary length by sliding a 512-sample window.
 
@@ -117,8 +147,13 @@ class InferenceEngine:
         the alert renderer to capture the abnormal waveform).
         """
         # Preprocess the chunk (resample → bandpass → z-score)
-        chunk = preprocess_signal(chunk, src_fs)
-        n = len(chunk)
+        chunk = (
+            np.asarray(chunk, dtype=np.float32).reshape(-1)
+            if already_preprocessed
+            else preprocess_signal(chunk, src_fs)
+        )
+        original_n = len(chunk)
+        n = original_n
         win = settings.WINDOW_SAMPLES
         if n < win:
             # Pad with zeros if too short
@@ -135,7 +170,11 @@ class InferenceEngine:
 
         # Slide with stride = 64 (~0.5 s at 128 Hz) for smooth updates
         stride = 64
-        for i in range(0, n - win + 1, stride):
+        window_starts = list(range(0, n - win + 1, stride))
+        final_start = n - win
+        if not window_starts or window_starts[-1] != final_start:
+            window_starts.append(final_start)
+        for i in window_starts:
             window = chunk[i:i + win]
             x = torch.from_numpy(window).float().unsqueeze(0).unsqueeze(0).to(self.device)
             x_hat = self.model(x)
@@ -149,7 +188,7 @@ class InferenceEngine:
             per_sample_anomaly[i:i + win] = is_anomaly
 
         out = []
-        for i in range(n):
+        for i in range(original_n):
             out.append({
                 "t": i + t_offset,   # monotonically increasing across chunks
                 "value": float(chunk[i]),
@@ -200,9 +239,65 @@ class InferenceEngine:
             "architecture": self.architecture,
             "val_loss": self.val_loss,
             "device": str(self.device),
-            "has_classifier": self.classifier is not None,
+            "has_classifier": (
+                self.classifier is not None or self.improved_system is not None
+            ),
+            "has_improved_system": self.improved_system is not None,
+            "decision_threshold": self.decision_threshold,
+            "analysis_mode": (
+                "beat-aligned-hierarchical"
+                if self.improved_system is not None
+                else "sliding-reconstruction"
+            ),
             "classifier_architecture": self.classifier_architecture,
         }
+
+    @property
+    def decision_threshold(self) -> float:
+        """Return the cut-off used by the active anomaly decision stage."""
+        if self.improved_system is not None:
+            if self.improved_threshold is not None:
+                return float(self.improved_threshold)
+            return float(self.improved_system.binary_threshold)
+        return float(self.threshold)
+
+    def classify_beat(
+        self,
+        window: np.ndarray,
+        rr_features: np.ndarray,
+    ) -> Optional[Dict[str, Any]]:
+        """Classify one R-peak-aligned lead with the improved hierarchy.
+
+        The first seven RR values are previous RR, next RR, local RR mean,
+        previous/local, next/local, local coefficient of variation, and heart
+        rate. Newer bundles append eight causal rhythm-history values. A
+        separate method is necessary because an arbitrary sliding window does
+        not contain explicit R-peak interval context.
+        """
+        if self.improved_system is None:
+            return None
+        ae_features = None
+        if self.improved_system.requires_ae_features:
+            x = torch.from_numpy(window).float().unsqueeze(0).unsqueeze(0).to(self.device)
+            with torch.no_grad():
+                reconstruction = self.model(x)
+                residual = x - reconstruction
+                absolute = residual.abs()
+                ae_features = np.asarray(
+                    [
+                        float(absolute.mean().item()),
+                        float(residual.square().mean().item()),
+                        float(absolute[:, :, 104:344].mean().item()),
+                        float(torch.diff(residual, dim=2).abs().mean().item()),
+                    ],
+                    dtype=np.float32,
+                )
+        return self.improved_system.predict(
+            window,
+            rr_features,
+            threshold=self.decision_threshold,
+            ae_features=ae_features,
+        )
 
     @torch.no_grad()
     def classify_window(self, window: np.ndarray) -> Optional[Dict[str, Any]]:
@@ -246,10 +341,18 @@ class InferenceEngine:
 _ENGINES: dict[str, InferenceEngine] = {}
 
 
-def get_engine(model_path: str, threshold: Optional[float] = None,
-               classifier_path: Optional[str] = None) -> InferenceEngine:
-    key = f"{model_path}:{threshold}:{classifier_path}"
+def get_engine(
+    model_path: str,
+    threshold: Optional[float] = None,
+    classifier_path: Optional[str] = None,
+    improved_threshold: Optional[float] = None,
+) -> InferenceEngine:
+    key = f"{model_path}:{threshold}:{classifier_path}:{improved_threshold}"
     if key not in _ENGINES:
-        _ENGINES[key] = InferenceEngine(model_path, threshold=threshold,
-                                         classifier_path=classifier_path)
+        _ENGINES[key] = InferenceEngine(
+            model_path,
+            threshold=threshold,
+            classifier_path=classifier_path,
+            improved_threshold=improved_threshold,
+        )
     return _ENGINES[key]

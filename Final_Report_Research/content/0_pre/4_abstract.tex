@@ -1,0 +1,41 @@
+\chapter*{Abstract}\label{abstract}
+\phantomsection
+\pdfbookmark[1]{Abstract}{abstract}
+\prevspace
+This thesis develops a single-lead electrocardiogram (ECG) research system.
+A binary Extra Trees model detects abnormal beats, and a second ensemble
+assigns a supported abnormal subtype. Its six output codes are N, PVC, PAC,
+LBBB, RBBB and AFib. These are project annotation groups: AFib includes
+atrial flutter, and N/PVC/PAC include selected escape or supraventricular
+symbols rather than representing pure clinical diagnoses.
+
+A frozen dilated U-Net autoencoder was developed from the first stored ECG
+channel of all 18 MIT--BIH Normal Sinus Rhythm Database subjects, with
+15 fitting and three validation subjects. The anatomical identity of that
+channel is unspecified. The supervised models use MIT--BIH Arrhythmia
+Database MLII from 46 records representing 45 subject clusters. Each beat
+provides 223 waveform/statistical features, 15 RR features and four
+autoencoder residuals. The corrected pipeline filters and standardises
+each four-second window locally and requires observed neighbouring R peaks.
+
+The final rerun uses the last 20\% of chronologically ordered accepted beats
+per record for scoring, with earlier regions for model selection and fitting
+and a 16-beat boundary gap. The test segment had been observed during earlier
+development. The results therefore describe a retrospective known-patient
+evaluation with possible selection optimism, not confirmatory performance
+on new patients.
+
+Binary accuracy was 98.81\% on 20,969 beats. Conditional subtype accuracy was
+97.63\% on 7,958 supported abnormal beats. Whole-system accuracy was 98.07\%
+and macro F1 was 0.9524 on 20,043 supported beats. Equal-subject accuracy was
+98.03\%, with a 10,000-replicate subject-clustered 95\% interval of
+96.29--99.25\%. Its 2.95-percentage-point width meets the three-point target.
+However, PAC end-to-end recall was only 70.63\%.
+
+A post-fit check on complete INCART records I01 and I02, both from one source
+patient, used 5,416 annotated beats and a fixed threshold. Binary accuracy
+was 94.11\%, whole-system accuracy was 92.85\%, and binary precision was
+64.22\%. Only N and PVC had reference support. These results expose external
+false alarms but cannot establish population generalisation. The prototype
+and its reproducible evaluation are complete; class recall, independent
+validation, and real sensor performance remain research limitations.

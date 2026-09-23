@@ -1,0 +1,55 @@
+{
+  "selection_rule": "Within the fixed final 20% of the stated record and class, choose the window with minimum mean squared distance to the class-record mean waveform.",
+  "sampling_rate_hz": 128,
+  "r_peak_index": 200,
+  "examples": [
+    {
+      "class": "Normal",
+      "record": "100",
+      "class_index": 0,
+      "global_cache_index": 2031,
+      "eligible_held_out_segments": 445,
+      "rr_seconds": 0.78125
+    },
+    {
+      "class": "PVC",
+      "record": "208",
+      "class_index": 1,
+      "global_cache_index": 64331,
+      "eligible_held_out_segments": 205,
+      "rr_seconds": 0.546875
+    },
+    {
+      "class": "PAC",
+      "record": "232",
+      "class_index": 2,
+      "global_cache_index": 103145,
+      "eligible_held_out_segments": 288,
+      "rr_seconds": 0.7578125
+    },
+    {
+      "class": "LBBB",
+      "record": "109",
+      "class_index": 3,
+      "global_cache_index": 21233,
+      "eligible_held_out_segments": 497,
+      "rr_seconds": 0.71875
+    },
+    {
+      "class": "RBBB",
+      "record": "118",
+      "class_index": 4,
+      "global_cache_index": 37816,
+      "eligible_held_out_segments": 433,
+      "rr_seconds": 0.8515625
+    },
+    {
+      "class": "AFib",
+      "record": "203",
+      "class_index": 5,
+      "global_cache_index": 56875,
+      "eligible_held_out_segments": 510,
+      "rr_seconds": 0.4296875
+    }
+  ]
+}

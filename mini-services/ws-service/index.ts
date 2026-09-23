@@ -81,7 +81,8 @@ const sessionSubs = new Map<string, any>()
 
 async function pollSessionChunk(session_id: string) {
   const sub = sessionSubs.get(session_id)
-  if (!sub) return
+  if (!sub || sub.polling) return
+  sub.polling = true
   try {
     // Pull next chunk by calling an internal endpoint on FastAPI.
     // We piggyback on the existing GET /api/sessions/{id} for status,

@@ -1,0 +1,29 @@
+\babel@toc {english}{}\relax 
+\addvspace {10\p@ }
+\contentsline {table}{\numberline {1.1}{\ignorespaces Normal rhythm and the five arrhythmia types considered in this study.}}{2}{table.caption.12}%
+\addvspace {10\p@ }
+\contentsline {table}{\numberline {2.1}{\ignorespaces Main papers referenced in this study and their contribution.}}{9}{table.2.1}%
+\addvspace {10\p@ }
+\contentsline {table}{\numberline {3.1}{\ignorespaces Data sources and their strictly separated roles.}}{11}{table.caption.14}%
+\contentsline {table}{\numberline {3.2}{\ignorespaces Mapping from MITDB expert annotations to project outputs.}}{13}{table.caption.17}%
+\contentsline {table}{\numberline {3.3}{\ignorespaces Cleaning checklist applied before a signal can become a model input.}}{14}{table.caption.18}%
+\contentsline {table}{\numberline {3.4}{\ignorespaces Training, validation, and temporal-test data supplied to each model.}}{18}{table.caption.20}%
+\addvspace {10\p@ }
+\contentsline {table}{\numberline {4.1}{\ignorespaces How the theory maps to the implemented final system.}}{27}{table.caption.27}%
+\addvspace {10\p@ }
+\contentsline {table}{\numberline {5.1}{\ignorespaces Organised feature groups in the final architecture.}}{34}{table.caption.35}%
+\contentsline {table}{\numberline {5.2}{\ignorespaces Reason for each major final-architecture decision.}}{37}{table.caption.36}%
+\addvspace {10\p@ }
+\contentsline {table}{\numberline {6.1}{\ignorespaces Exact evidence supplied to the final supervised models.}}{39}{table.caption.38}%
+\addvspace {10\p@ }
+\contentsline {table}{\numberline {7.1}{\ignorespaces Data used by each final evaluation.}}{46}{table.caption.43}%
+\contentsline {table}{\numberline {7.2}{\ignorespaces Final temporal results. Confidence intervals use equal-subject scores, not pooled beats.}}{47}{table.caption.45}%
+\contentsline {table}{\numberline {7.3}{\ignorespaces End-to-end class performance on real labeled temporal test beats.}}{50}{table.caption.49}%
+\contentsline {table}{\numberline {7.4}{\ignorespaces Limited external INCART check on the latest saved evaluation artifact.}}{52}{table.caption.53}%
+\contentsline {table}{\numberline {7.5}{\ignorespaces Example annotated INCART beats used for visual inspection.}}{54}{table.caption.56}%
+\addvspace {10\p@ }
+\addvspace {10\p@ }
+\def \@chapapp {\appendixname }
+\addvspace {10\p@ }
+\contentsline {table}{\numberline {A.1}{\ignorespaces Settings used for the final experiment.}}{62}{table.caption.59}%
+\providecommand \tocbasic@end@toc@file {}\tocbasic@end@toc@file 

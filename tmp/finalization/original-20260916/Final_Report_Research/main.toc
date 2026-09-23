@@ -1,0 +1,83 @@
+\babel@toc {english}{}\relax 
+\contentsline {chapter}{List of Figures}{x}{chapter*.9}%
+\contentsline {chapter}{List of Tables}{xi}{chapter*.10}%
+\contentsline {chapter}{\numberline {1}Introduction}{1}{chapter.1}%
+\contentsline {section}{\numberline {1.1}Introduction}{1}{section.1.1}%
+\contentsline {section}{\numberline {1.2}Research Problem}{4}{section.1.2}%
+\contentsline {section}{\numberline {1.3}Objective and Expected Outcomes}{4}{section.1.3}%
+\contentsline {chapter}{\numberline {2}Literature Review}{6}{chapter.2}%
+\contentsline {chapter}{\numberline {3}Data}{11}{chapter.3}%
+\contentsline {section}{\numberline {3.1}Data Sources and Roles}{11}{section.3.1}%
+\contentsline {section}{\numberline {3.2}Data Cleaning}{14}{section.3.2}%
+\contentsline {subsection}{\numberline {3.2.1}Cleaning Checklist}{14}{subsection.3.2.1}%
+\contentsline {subsection}{\numberline {3.2.2}Window Construction}{14}{subsection.3.2.2}%
+\contentsline {subsection}{\numberline {3.2.3}Cleaning Yield}{15}{subsection.3.2.3}%
+\contentsline {subsection}{\numberline {3.2.4}Installed Use}{15}{subsection.3.2.4}%
+\contentsline {section}{\numberline {3.3}Data Preparation}{16}{section.3.3}%
+\contentsline {subsection}{\numberline {3.3.1}Prepared Objects}{16}{subsection.3.3.1}%
+\contentsline {subsection}{\numberline {3.3.2}Splits}{17}{subsection.3.3.2}%
+\contentsline {subsection}{\numberline {3.3.3}Exact Model Allocation}{18}{subsection.3.3.3}%
+\contentsline {subsection}{\numberline {3.3.4}Feeding the Frozen System}{19}{subsection.3.3.4}%
+\contentsline {chapter}{\numberline {4}Theoretical Foundations}{20}{chapter.4}%
+\contentsline {section}{\numberline {4.1}Why ECG evidence has more than one form}{20}{section.4.1}%
+\contentsline {section}{\numberline {4.2}Feature extraction theory}{21}{section.4.2}%
+\contentsline {section}{\numberline {4.3}RR timing theory}{22}{section.4.3}%
+\contentsline {section}{\numberline {4.4}Normal-only reconstruction theory}{22}{section.4.4}%
+\contentsline {section}{\numberline {4.5}Hierarchical classification theory}{23}{section.4.5}%
+\contentsline {section}{\numberline {4.6}Why Extra Trees fits this feature design}{24}{section.4.6}%
+\contentsline {section}{\numberline {4.7}Class and patient imbalance theory}{25}{section.4.7}%
+\contentsline {section}{\numberline {4.8}Temporal patient adaptation theory}{25}{section.4.8}%
+\contentsline {section}{\numberline {4.9}Validation theory}{25}{section.4.9}%
+\contentsline {section}{\numberline {4.10}Theory-to-system alignment}{27}{section.4.10}%
+\contentsline {chapter}{\numberline {5}Final Model Architecture}{28}{chapter.5}%
+\contentsline {section}{\numberline {5.1}Architecture in one sentence}{28}{section.5.1}%
+\contentsline {section}{\numberline {5.2}Input signal and beat window}{28}{section.5.2}%
+\contentsline {section}{\numberline {5.3}Three trained components}{29}{section.5.3}%
+\contentsline {section}{\numberline {5.4}Normal-only autoencoder}{30}{section.5.4}%
+\contentsline {subsection}{\numberline {5.4.1}Purpose}{30}{subsection.5.4.1}%
+\contentsline {subsection}{\numberline {5.4.2}Network structure}{31}{subsection.5.4.2}%
+\contentsline {subsection}{\numberline {5.4.3}Normal-reference data and checkpoint}{31}{subsection.5.4.3}%
+\contentsline {subsection}{\numberline {5.4.4}Four autoencoder residual features}{32}{subsection.5.4.4}%
+\contentsline {section}{\numberline {5.5}Final 242-value feature vector}{33}{section.5.5}%
+\contentsline {section}{\numberline {5.6}Binary abnormality detector}{34}{section.5.6}%
+\contentsline {section}{\numberline {5.7}Abnormal-subtype classifier}{35}{section.5.7}%
+\contentsline {section}{\numberline {5.8}Final decision logic}{36}{section.5.8}%
+\contentsline {section}{\numberline {5.9}Why this architecture was selected}{37}{section.5.9}%
+\contentsline {chapter}{\numberline {6}Experimental Method}{38}{chapter.6}%
+\contentsline {section}{\numberline {6.1}Method overview}{38}{section.6.1}%
+\contentsline {section}{\numberline {6.2}Research objective and success conditions}{38}{section.6.2}%
+\contentsline {section}{\numberline {6.3}Input data and feature construction}{39}{section.6.3}%
+\contentsline {section}{\numberline {6.4}Temporal split}{40}{section.6.4}%
+\contentsline {section}{\numberline {6.5}Model selection and final fitting}{41}{section.6.5}%
+\contentsline {section}{\numberline {6.6}Evaluation order}{41}{section.6.6}%
+\contentsline {section}{\numberline {6.7}Metrics}{42}{section.6.7}%
+\contentsline {section}{\numberline {6.8}Subject-clustered confidence interval}{43}{section.6.8}%
+\contentsline {section}{\numberline {6.9}Tests against the 90\% target}{43}{section.6.9}%
+\contentsline {section}{\numberline {6.10}Reproducibility and leakage controls}{44}{section.6.10}%
+\contentsline {chapter}{\numberline {7}Results and Statistical Validation}{45}{chapter.7}%
+\contentsline {section}{\numberline {7.1}What was tested}{45}{section.7.1}%
+\contentsline {section}{\numberline {7.2}Model selection before final testing}{46}{section.7.2}%
+\contentsline {section}{\numberline {7.3}Headline temporal performance}{47}{section.7.3}%
+\contentsline {section}{\numberline {7.4}Subject-clustered validation}{48}{section.7.4}%
+\contentsline {section}{\numberline {7.5}Stage-by-stage results}{49}{section.7.5}%
+\contentsline {section}{\numberline {7.6}Results for each arrhythmia}{50}{section.7.6}%
+\contentsline {section}{\numberline {7.7}Whole-system confusion matrix}{51}{section.7.7}%
+\contentsline {section}{\numberline {7.8}Interpretation of the temporal result}{51}{section.7.8}%
+\contentsline {section}{\numberline {7.9}External INCART unseen-dataset check}{52}{section.7.9}%
+\contentsline {section}{\numberline {7.10}Answers to the research questions}{54}{section.7.10}%
+\contentsline {chapter}{\numberline {8}Discussion and Conclusion}{56}{chapter.8}%
+\contentsline {section}{\numberline {8.1}Core finding}{56}{section.8.1}%
+\contentsline {section}{\numberline {8.2}Were the goals reached?}{56}{section.8.2}%
+\contentsline {section}{\numberline {8.3}Why the final architecture worked}{56}{section.8.3}%
+\contentsline {section}{\numberline {8.4}Remaining weaknesses}{57}{section.8.4}%
+\contentsline {section}{\numberline {8.5}Limitations}{57}{section.8.5}%
+\contentsline {section}{\numberline {8.6}Required next study}{58}{section.8.6}%
+\contentsline {section}{\numberline {8.7}Final statement}{58}{section.8.7}%
+\contentsline {chapter}{\nonumberline Bibliography}{59}{chapter*.58}%
+\def \@chapapp {\appendixname }
+\contentsline {chapter}{\numberline {A}Reproducibility Record}{62}{appendix.A}%
+\contentsline {section}{\numberline {A.1}Final experiment artifacts}{62}{section.A.1}%
+\contentsline {section}{\numberline {A.2}Frozen constants}{62}{section.A.2}%
+\contentsline {section}{\numberline {A.3}Saved success checks}{63}{section.A.3}%
+\contentsline {section}{\numberline {A.4}Safety statement}{63}{section.A.4}%
+\providecommand \tocbasic@end@toc@file {}\tocbasic@end@toc@file 

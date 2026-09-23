@@ -24,13 +24,13 @@
 #
 # INSTALLATION
 # ------------
-# Run this from the project root (after start-all.ps1 has created the venv):
+# Run this from the project root (after run-app.ps1 has created the venv):
 #
 #   PowerShell:
 #     .\backend\venv\Scripts\python.exe -m pip install -r backend\requirements-ecg-qc.txt
 #
-#   Or use the convenience script:
-#     .\install-ecg-qc.ps1
+#   Or use the legacy convenience script:
+#     .\scripts\legacy\install-ecg-qc.ps1
 #
 # If installation fails, the system will continue to work with the simple
 # std-based quality filter. The UI will show "simple_std" as the QC method
@@ -48,7 +48,7 @@ peakutils>=1.0.3
 dill>=0.3.4
 
 # pathtools is needed by ecg_qc but its setup.py uses the removed `imp`
-# module on Python 3.12+. The install-ecg-qc.ps1 script provides a stub
+# module on Python 3.12+. The legacy install-ecg-qc.ps1 script provides a stub
 # `imp` module to work around this. If installing manually, see
-# install-ecg-qc.ps1 for the workaround.
+# scripts\legacy\install-ecg-qc.ps1 for the workaround.
 pathtools>=0.1.2

@@ -1,14 +1,19 @@
 # ECG Anomaly Detection System - Local Guide and Architecture
 
-This project is a local ECG analysis platform for research and clinical decision-support experiments. It trains an anomaly detection autoencoder on normal ECG, optionally trains an arrhythmia classification model on labeled MIT-BIH beats, streams ECG sessions in the browser, raises anomaly alerts, and generates physician-ready PDF reports.
+This project is a local ECG research platform. It includes the original
+normal-only autoencoder and the final beat-aligned hierarchical system. The
+final system combines morphology, spectrum and RR timing for abnormal-beat
+detection and supported-subtype classification using one ECG lead. It
+streams ECG sessions, raises per-beat alerts, and generates reviewable PDF
+reports. It is not a clinical diagnostic device.
 
 The system has three main services:
 
 1. Next.js frontend on `http://localhost:3000`
-2. FastAPI backend on `http://localhost:8000`
+2. FastAPI backend on `http://localhost:8000` by default, or the next free port if `8000` is occupied
 3. Socket.io WebSocket service on `http://localhost:3003`
 
-Use `start-all.ps1` on Windows to install dependencies, initialize the database, and start the full stack.
+Use `run-app.ps1` on Windows to install dependencies, initialize the database, and start the full stack.
 
 ---
 
@@ -16,16 +21,24 @@ Use `start-all.ps1` on Windows to install dependencies, initialize the database,
 
 The objective is to detect abnormal ECG patterns in near real time and support review by clinicians or researchers.
 
-The workflow is:
+The recommended final-system workflow is:
 
-1. Train Model 1, the anomaly detection autoencoder, using normal ECG windows.
-2. Calibrate an anomaly threshold from validation reconstruction error.
-3. Optionally train Model 2, the arrhythmia classifier, using MIT-BIH Arrhythmia Database annotations.
-4. Start a live ECG session from synthetic data, MIT-BIH replay data, or Arduino input.
-5. For each ECG chunk, reconstruct the signal and compare reconstruction error with the threshold.
-6. If an anomaly is detected, optionally classify the arrhythmia type.
-7. Store ECG samples, alerts, metrics, and session summary in the database.
-8. Generate a PDF report for physician review.
+1. Start the stack; the shipped `Final MLII Temporal-Holdout ECG System` is registered
+   automatically when its model artifact is present.
+2. Select an autoencoder as the legacy waveform model and select the final
+   hierarchy as the detection and rhythm model.
+3. Start a session from an eligible MIT-BIH MLII replay, an MLII-like
+   synthetic stream, or an Arduino connected with the MLII torso placement.
+4. Buffer the stream, detect R peaks, and wait until the next RR interval and
+   complete 512-sample R-centred window are available.
+5. Calculate morphology, spectrum and RR features and compare abnormal
+   probability with the saved threshold `0.620833`.
+6. Use the same 242-value MLII feature vector for abnormality detection and
+   supported-subtype classification.
+7. Store true beat counts, per-beat results, alerts, waveforms, RR context and
+   session metadata.
+8. Generate a PDF report that clearly labels probability-based and legacy
+   reconstruction-based results.
 
 ---
 
@@ -58,7 +71,7 @@ Set-ExecutionPolicy -Scope Process Bypass
 
 ---
 
-## 3. Start the System with `start-all.ps1`
+## 3. Start the System with `run-app.ps1`
 
 Open PowerShell in the project root:
 
@@ -69,10 +82,10 @@ cd D:\SANDARUWAN\Research\ECGdoc
 First-time startup:
 
 ```powershell
-.\start-all.ps1
+.\run-app.ps1
 ```
 
-This script performs the full setup:
+This single script performs the full setup and launch:
 
 1. Checks required tools.
 2. Creates `backend\venv\`.
@@ -80,31 +93,41 @@ This script performs the full setup:
 4. Installs frontend dependencies.
 5. Initializes the database.
 6. Starts the backend, frontend, and WebSocket service.
-7. Opens service windows for logs.
+7. Writes logs to `runtime\logs`.
+8. Starts the backend, frontend, and WebSocket service.
 
 For later runs, skip setup:
 
 ```powershell
-.\start-all.ps1 -SkipSetup
+.\run-app.ps1 -SkipSetup
 ```
 
-To start the stack and train a small demo model:
+By default, the launcher opens a separate PowerShell window for the frontend,
+backend, and WebSocket service so their logs are visible live. The same output
+is also saved under `runtime\logs`. To run all services silently in the
+background instead, add `-HiddenServices`:
 
 ```powershell
-.\start-all.ps1 -SkipSetup -TrainDemo
+.\run-app.ps1 -SkipSetup -HiddenServices
+```
+
+Restart the full stack:
+
+```powershell
+.\run-app.ps1 -Restart -SkipSetup
 ```
 
 To use PostgreSQL instead of SQLite:
 
 ```powershell
 psql -U postgres -f setup-postgres.sql
-.\start-all.ps1 -UsePostgres
+.\run-app.ps1 -UsePostgres
 ```
 
 Stop all services:
 
 ```powershell
-.\stop-all.ps1
+.\run-app.ps1 -Stop
 ```
 
 Default login:
@@ -121,8 +144,8 @@ Password: demo1234
 | URL | Purpose |
 | --- | --- |
 | `http://localhost:3000` | Main web application |
-| `http://localhost:8000/docs` | FastAPI Swagger API docs |
-| `http://localhost:8000/health` | Backend health check |
+| `http://localhost:8000/docs` | FastAPI Swagger API docs, unless the runner selects a fallback backend port |
+| `http://localhost:8000/health` | Backend health check, unless the runner selects a fallback backend port |
 | `http://localhost:3003` | Socket.io WebSocket service |
 
 ---
@@ -131,9 +154,7 @@ Password: demo1234
 
 ```text
 ECGdoc/
-|-- start-all.ps1                  # Main Windows launcher
-|-- stop-all.ps1                   # Stops local services
-|-- train-model.ps1                # CLI helper for anomaly model training
+|-- run-app.ps1                    # Single Windows launcher/status/stop script
 |-- package.json                   # Frontend scripts and dependencies
 |-- prisma/
 |   |-- schema.prisma              # Database schema
@@ -159,7 +180,13 @@ ECGdoc/
 |-- mini-services/
 |   `-- ws-service/                # Socket.io bridge for live updates
 |-- db/                            # Optional local database files
-|-- download/                      # Screenshots and generated examples
+|-- docs/
+|   |-- app-screenshots/           # Screenshots and generated example reports
+|   `-- uploads/                   # Manually uploaded research artifacts
+|-- runtime/
+|   `-- logs/                      # Local launcher and service logs
+|-- scripts/
+|   `-- legacy/                    # Old launch/helper scripts kept for reference
 `-- README-LOCAL.md                # This document
 ```
 
@@ -214,7 +241,7 @@ DEFAULT_EPOCHS = 20
 Supported training data sources:
 
 1. Synthetic normal ECG.
-2. MIT-BIH Normal Sinus Rhythm Database.
+2. MIT-BIH Normal Sinus Rhythm Database (all 18 complete records, first stored ECG channel).
 3. Uploaded local WFDB or CSV datasets.
 
 Supported live/testing sources:
@@ -447,8 +474,9 @@ Training data comes from MIT-BIH Arrhythmia Database annotations:
 
 1. Beat annotations map symbols to classes.
 2. AFib is identified from rhythm annotations.
-3. Data is split by record, not randomly by beat, to reduce leakage between train/validation/test.
-4. Class weighting and weighted sampling help handle class imbalance.
+3. Data is split by complete patient, not randomly by beat. MIT-BIH records 201 and 202 are kept in the same patient group.
+4. The checkpoint stores the exact train, validation, and held-out test patient lists, and the UI displays the test patients beside the metrics.
+5. Class weighting and weighted sampling help handle class imbalance.
 
 ---
 
@@ -518,7 +546,7 @@ r_peak_before = 200
 
 Recommended training changes:
 
-1. Use more MIT-BIH records, ideally all 48.
+1. Use all 46 MIT-BIH records that contain MLII; never mix V5/V2 records.
 2. Train for 30-100 epochs.
 3. Check per-class F1, not only overall accuracy.
 4. Inspect the confusion matrix for PVC/PAC confusion.
@@ -530,7 +558,7 @@ Recommended UI settings:
 Epochs: 30-100
 Batch size: 64
 Learning rate: 0.001 for head-only training
-Max records: 48
+Max MLII records: 46
 ```
 
 ---
@@ -542,7 +570,7 @@ Max records: 48
 1. Start the stack:
 
    ```powershell
-   .\start-all.ps1 -SkipSetup
+   .\run-app.ps1 -SkipSetup
    ```
 
 2. Open:
@@ -555,15 +583,16 @@ Max records: 48
 4. Go to `Train Model`.
 5. Choose the dataset:
    - `synthetic` for quick testing.
-   - `mit-bih-nsr` for real normal ECG training.
+   - `mitbih-nsrdb` for all 18 real MIT-BIH normal-sinus subjects.
    - `uploaded` for your own dataset.
 6. Recommended real training settings:
 
    ```text
-   Dataset: MIT-BIH Normal Sinus Rhythm DB
-   Max records: 8 or more
-   Epochs: 50
-   Batch size: 32
+   Dataset: MIT-BIH Normal Sinus Rhythm Database
+   Max records: 18
+   Duration per record: 20 seconds
+   Epochs: 8
+   Batch size: 256
    Learning rate: 0.001
    Threshold k: 2.0
    Use ECG QC: true
@@ -576,7 +605,7 @@ Max records: 48
 ### Train the anomaly detection model from CLI
 
 ```powershell
-.\train-model.ps1 -ModelName "ecg-real-v1" -Epochs 50 -Dataset mit-bih-nsr -MaxRecords 8
+.\scripts\legacy\train-model.ps1 -ModelName "ecg-nsrdb" -Epochs 2 -Dataset mitbih-nsrdb -MaxRecords 18
 ```
 
 ### Train the classification model
@@ -591,7 +620,7 @@ Recommended classifier settings:
 Epochs: 30
 Batch size: 64
 Learning rate: 0.001
-Max records: 48
+Max MLII records: 46
 ```
 
 Classifier training saves a separate `.pt` file in:
@@ -607,7 +636,7 @@ backend/app/storage/models/
 1. Start the system:
 
    ```powershell
-   .\start-all.ps1 -SkipSetup
+   .\run-app.ps1 -SkipSetup
    ```
 
 2. Open `http://localhost:3000`.
@@ -665,10 +694,12 @@ backend/app/storage/reports/
 The report includes:
 
 1. Session metadata.
-2. ECG waveform plots.
-3. Anomaly highlights.
-4. Alert table.
-5. Classification context when available.
+2. The number of unique alerted beats after duplicate R-peak alerts are removed.
+3. A model-output summary with abnormal probability, decision threshold,
+   subtype confidence, RR interval and single-lead mode.
+4. One representative ECG waveform for each distinct predicted anomaly type;
+   repeated occurrences are counted but the same type is not plotted again.
+5. A red R-peak marker and subtype-probability bars on each anomaly example.
 6. Clinical summary.
 7. Physician notes and sign-off section.
 
@@ -820,7 +851,7 @@ Use this checklist before reporting model accuracy:
 2. Validate anomaly detection on records not used for training.
 3. Tune `threshold_k` using validation data.
 4. Report false positives and false negatives, not only loss.
-5. Train classifier using record-wise splits.
+5. Train and test the classifier using disjoint patient groups; keep MIT-BIH records 201 and 202 together.
 6. Report per-class precision, recall, and F1.
 7. Inspect confusion matrix.
 8. Keep dataset versions and model checkpoints.
@@ -851,31 +882,31 @@ Classification model:
 Install/start everything:
 
 ```powershell
-.\start-all.ps1
+.\run-app.ps1
 ```
 
 Start after setup:
 
 ```powershell
-.\start-all.ps1 -SkipSetup
+.\run-app.ps1 -SkipSetup
 ```
 
-Start and train demo:
+Restart services:
 
 ```powershell
-.\start-all.ps1 -SkipSetup -TrainDemo
+.\run-app.ps1 -Restart -SkipSetup
 ```
 
 Stop services:
 
 ```powershell
-.\stop-all.ps1
+.\run-app.ps1 -Stop
 ```
 
 Train anomaly model from CLI:
 
 ```powershell
-.\train-model.ps1 -ModelName "ecg-real-v1" -Epochs 50 -Dataset mit-bih-nsr -MaxRecords 8
+.\scripts\legacy\train-model.ps1 -ModelName "ecg-nsrdb" -Epochs 2 -Dataset mitbih-nsrdb -MaxRecords 18
 ```
 
 Run frontend lint:
@@ -911,7 +942,7 @@ Set-ExecutionPolicy -Scope Process Bypass
 Then retry:
 
 ```powershell
-.\start-all.ps1
+.\run-app.ps1
 ```
 
 ### Port already in use
@@ -919,13 +950,13 @@ Then retry:
 Stop existing services:
 
 ```powershell
-.\stop-all.ps1
+.\run-app.ps1 -Stop
 ```
 
 Then start again:
 
 ```powershell
-.\start-all.ps1 -SkipSetup
+.\run-app.ps1 -SkipSetup
 ```
 
 ### Model does not appear in Live Analysis
@@ -960,8 +991,7 @@ Example:
 ```text
 backend/app/storage/datasets/mitdb/100.dat
 backend/app/storage/datasets/mitdb/100.hea
-backend/app/storage/datasets/nsrdb/16265.dat
-backend/app/storage/datasets/nsrdb/16265.hea
+backend/app/storage/datasets/nsrdb-primary-full/16265_primary_full.npy
 ```
 
 ### `ecg_qc` is unavailable
@@ -971,7 +1001,7 @@ This is acceptable. The system falls back to simple standard-deviation quality c
 To retry optional ECG QC install:
 
 ```powershell
-.\install-ecg-qc.ps1
+.\scripts\legacy\install-ecg-qc.ps1
 ```
 
 ### Frontend build tries to download fonts
@@ -983,7 +1013,7 @@ The app now uses local system font stacks, so `npm.cmd run build` should work wi
 Install backend dependencies through the launcher:
 
 ```powershell
-.\start-all.ps1
+.\run-app.ps1
 ```
 
 Or manually:
@@ -1027,7 +1057,7 @@ When changing model architecture:
 For anomaly detection:
 
 1. Train baseline with synthetic data.
-2. Train real model on MIT-BIH NSR records.
+2. Train the real model on complete MIT-BIH normal-sinus recordings.
 3. Compare skip scales: `0.25`, `0.5`, `0.75`, `1.0`.
 4. Compare threshold values: `1.5`, `2.0`, `2.5`, `3.0`.
 5. Test on MIT-BIH Arrhythmia records.
@@ -1035,7 +1065,7 @@ For anomaly detection:
 
 For classification:
 
-1. Train with all 48 MIT-BIH Arrhythmia records.
+1. Train with all 46 eligible MIT-BIH MLII records.
 2. Use record-wise train/val/test split.
 3. Report confusion matrix.
 4. Focus on per-class F1 because classes are imbalanced.
@@ -1057,4 +1087,3 @@ Classification:
 - per-class F1
 - confusion matrix
 ```
-

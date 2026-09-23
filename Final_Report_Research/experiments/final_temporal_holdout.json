@@ -1,0 +1,1095 @@
+{
+  "protocol": {
+    "name": "Final within-patient temporal holdout",
+    "lead_design": "one channel at every stage: the first stored NSRDB ECG channel for normal-only autoencoder development and MLII for both supervised stages",
+    "autoencoder_training": "frozen checkpoint developed from complete recordings of all 18 MIT-BIH normal-sinus subjects; 15 subjects for fitting and 3 different subjects for validation",
+    "classifier_training": "first 80% timeline of all 46 MIT-BIH records containing MLII, less a 16-beat boundary gap",
+    "temporal_test": "final 20% timeline of every eligible MIT-BIH MLII record",
+    "excluded_records": {
+      "102": "no MLII; V5 and V2 only",
+      "104": "no MLII; V5 and V2 only"
+    },
+    "records": 46,
+    "independent_subjects": 45,
+    "patient_overlap": true,
+    "signal_overlap": false,
+    "test_used_in_this_rerun_selection": false,
+    "test_previously_observed_in_earlier_development": true,
+    "generalization_claim": "unseen temporal signal from known patients; not unseen-patient generalization",
+    "split_audit": {
+      "100": {
+        "accepted_beats": 2267,
+        "development_beats_after_gap": 1797,
+        "boundary_gap_beats": 16,
+        "temporal_test_beats": 454
+      },
+      "101": {
+        "accepted_beats": 1861,
+        "development_beats_after_gap": 1472,
+        "boundary_gap_beats": 16,
+        "temporal_test_beats": 373
+      },
+      "103": {
+        "accepted_beats": 2080,
+        "development_beats_after_gap": 1648,
+        "boundary_gap_beats": 16,
+        "temporal_test_beats": 416
+      },
+      "105": {
+        "accepted_beats": 2567,
+        "development_beats_after_gap": 2037,
+        "boundary_gap_beats": 16,
+        "temporal_test_beats": 514
+      },
+      "106": {
+        "accepted_beats": 2023,
+        "development_beats_after_gap": 1602,
+        "boundary_gap_beats": 16,
+        "temporal_test_beats": 405
+      },
+      "107": {
+        "accepted_beats": 2132,
+        "development_beats_after_gap": 1689,
+        "boundary_gap_beats": 16,
+        "temporal_test_beats": 427
+      },
+      "108": {
+        "accepted_beats": 1758,
+        "development_beats_after_gap": 1390,
+        "boundary_gap_beats": 16,
+        "temporal_test_beats": 352
+      },
+      "109": {
+        "accepted_beats": 2527,
+        "development_beats_after_gap": 2005,
+        "boundary_gap_beats": 16,
+        "temporal_test_beats": 506
+      },
+      "111": {
+        "accepted_beats": 2119,
+        "development_beats_after_gap": 1679,
+        "boundary_gap_beats": 16,
+        "temporal_test_beats": 424
+      },
+      "112": {
+        "accepted_beats": 2534,
+        "development_beats_after_gap": 2011,
+        "boundary_gap_beats": 16,
+        "temporal_test_beats": 507
+      },
+      "113": {
+        "accepted_beats": 1791,
+        "development_beats_after_gap": 1416,
+        "boundary_gap_beats": 16,
+        "temporal_test_beats": 359
+      },
+      "114": {
+        "accepted_beats": 1875,
+        "development_beats_after_gap": 1484,
+        "boundary_gap_beats": 16,
+        "temporal_test_beats": 375
+      },
+      "115": {
+        "accepted_beats": 1948,
+        "development_beats_after_gap": 1542,
+        "boundary_gap_beats": 16,
+        "temporal_test_beats": 390
+      },
+      "116": {
+        "accepted_beats": 2406,
+        "development_beats_after_gap": 1908,
+        "boundary_gap_beats": 16,
+        "temporal_test_beats": 482
+      },
+      "117": {
+        "accepted_beats": 1532,
+        "development_beats_after_gap": 1209,
+        "boundary_gap_beats": 16,
+        "temporal_test_beats": 307
+      },
+      "118": {
+        "accepted_beats": 2273,
+        "development_beats_after_gap": 1802,
+        "boundary_gap_beats": 16,
+        "temporal_test_beats": 455
+      },
+      "119": {
+        "accepted_beats": 1982,
+        "development_beats_after_gap": 1569,
+        "boundary_gap_beats": 16,
+        "temporal_test_beats": 397
+      },
+      "121": {
+        "accepted_beats": 1858,
+        "development_beats_after_gap": 1470,
+        "boundary_gap_beats": 16,
+        "temporal_test_beats": 372
+      },
+      "122": {
+        "accepted_beats": 2470,
+        "development_beats_after_gap": 1960,
+        "boundary_gap_beats": 16,
+        "temporal_test_beats": 494
+      },
+      "123": {
+        "accepted_beats": 1514,
+        "development_beats_after_gap": 1195,
+        "boundary_gap_beats": 16,
+        "temporal_test_beats": 303
+      },
+      "124": {
+        "accepted_beats": 1615,
+        "development_beats_after_gap": 1276,
+        "boundary_gap_beats": 16,
+        "temporal_test_beats": 323
+      },
+      "200": {
+        "accepted_beats": 2595,
+        "development_beats_after_gap": 2060,
+        "boundary_gap_beats": 16,
+        "temporal_test_beats": 519
+      },
+      "201": {
+        "accepted_beats": 1960,
+        "development_beats_after_gap": 1552,
+        "boundary_gap_beats": 16,
+        "temporal_test_beats": 392
+      },
+      "202": {
+        "accepted_beats": 2132,
+        "development_beats_after_gap": 1689,
+        "boundary_gap_beats": 16,
+        "temporal_test_beats": 427
+      },
+      "203": {
+        "accepted_beats": 2975,
+        "development_beats_after_gap": 2364,
+        "boundary_gap_beats": 16,
+        "temporal_test_beats": 595
+      },
+      "205": {
+        "accepted_beats": 2651,
+        "development_beats_after_gap": 2104,
+        "boundary_gap_beats": 16,
+        "temporal_test_beats": 531
+      },
+      "207": {
+        "accepted_beats": 1854,
+        "development_beats_after_gap": 1467,
+        "boundary_gap_beats": 16,
+        "temporal_test_beats": 371
+      },
+      "208": {
+        "accepted_beats": 2948,
+        "development_beats_after_gap": 2342,
+        "boundary_gap_beats": 16,
+        "temporal_test_beats": 590
+      },
+      "209": {
+        "accepted_beats": 2999,
+        "development_beats_after_gap": 2383,
+        "boundary_gap_beats": 16,
+        "temporal_test_beats": 600
+      },
+      "210": {
+        "accepted_beats": 2643,
+        "development_beats_after_gap": 2098,
+        "boundary_gap_beats": 16,
+        "temporal_test_beats": 529
+      },
+      "212": {
+        "accepted_beats": 2742,
+        "development_beats_after_gap": 2177,
+        "boundary_gap_beats": 16,
+        "temporal_test_beats": 549
+      },
+      "213": {
+        "accepted_beats": 3243,
+        "development_beats_after_gap": 2578,
+        "boundary_gap_beats": 16,
+        "temporal_test_beats": 649
+      },
+      "214": {
+        "accepted_beats": 2257,
+        "development_beats_after_gap": 1789,
+        "boundary_gap_beats": 16,
+        "temporal_test_beats": 452
+      },
+      "215": {
+        "accepted_beats": 3356,
+        "development_beats_after_gap": 2668,
+        "boundary_gap_beats": 16,
+        "temporal_test_beats": 672
+      },
+      "217": {
+        "accepted_beats": 2204,
+        "development_beats_after_gap": 1747,
+        "boundary_gap_beats": 16,
+        "temporal_test_beats": 441
+      },
+      "219": {
+        "accepted_beats": 2150,
+        "development_beats_after_gap": 1704,
+        "boundary_gap_beats": 16,
+        "temporal_test_beats": 430
+      },
+      "220": {
+        "accepted_beats": 2043,
+        "development_beats_after_gap": 1618,
+        "boundary_gap_beats": 16,
+        "temporal_test_beats": 409
+      },
+      "221": {
+        "accepted_beats": 2422,
+        "development_beats_after_gap": 1921,
+        "boundary_gap_beats": 16,
+        "temporal_test_beats": 485
+      },
+      "222": {
+        "accepted_beats": 2477,
+        "development_beats_after_gap": 1965,
+        "boundary_gap_beats": 16,
+        "temporal_test_beats": 496
+      },
+      "223": {
+        "accepted_beats": 2600,
+        "development_beats_after_gap": 2064,
+        "boundary_gap_beats": 16,
+        "temporal_test_beats": 520
+      },
+      "228": {
+        "accepted_beats": 2049,
+        "development_beats_after_gap": 1623,
+        "boundary_gap_beats": 16,
+        "temporal_test_beats": 410
+      },
+      "230": {
+        "accepted_beats": 2251,
+        "development_beats_after_gap": 1784,
+        "boundary_gap_beats": 16,
+        "temporal_test_beats": 451
+      },
+      "231": {
+        "accepted_beats": 1566,
+        "development_beats_after_gap": 1236,
+        "boundary_gap_beats": 16,
+        "temporal_test_beats": 314
+      },
+      "232": {
+        "accepted_beats": 1778,
+        "development_beats_after_gap": 1406,
+        "boundary_gap_beats": 16,
+        "temporal_test_beats": 356
+      },
+      "233": {
+        "accepted_beats": 3072,
+        "development_beats_after_gap": 2441,
+        "boundary_gap_beats": 16,
+        "temporal_test_beats": 615
+      },
+      "234": {
+        "accepted_beats": 2748,
+        "development_beats_after_gap": 2182,
+        "boundary_gap_beats": 16,
+        "temporal_test_beats": 550
+      }
+    }
+  },
+  "selected_binary": {
+    "candidate": {
+      "name": "deep",
+      "trees": 240,
+      "max_depth": null,
+      "min_samples_leaf": 1,
+      "max_features": "sqrt",
+      "record_power": 0.35
+    },
+    "threshold_from_64_to_80_validation": 0.6208333333333333
+  },
+  "selected_subtype": {
+    "name": "deep_third",
+    "trees": 260,
+    "max_depth": null,
+    "min_samples_leaf": 1,
+    "max_features": 0.33,
+    "record_power": 0.25
+  },
+  "binary_selection": [
+    {
+      "candidate": {
+        "name": "depth14",
+        "trees": 160,
+        "max_depth": 14,
+        "min_samples_leaf": 2,
+        "max_features": "sqrt",
+        "record_power": 0.5
+      },
+      "threshold": 0.49642368429394185,
+      "validation": {
+        "support": 16043,
+        "normal_support": 9671,
+        "abnormal_support": 6372,
+        "accuracy": 0.9758149971950383,
+        "balanced_accuracy": 0.9772365258303911,
+        "sensitivity": 0.9841494036409291,
+        "specificity": 0.9703236480198532,
+        "precision": 0.9562366575175358,
+        "f1": 0.9699922660479505,
+        "auroc": 0.9957714260566224,
+        "auprc": 0.9934257097247375,
+        "brier": 0.049811887189925595
+      }
+    },
+    {
+      "candidate": {
+        "name": "depth22",
+        "trees": 200,
+        "max_depth": 22,
+        "min_samples_leaf": 2,
+        "max_features": "sqrt",
+        "record_power": 0.5
+      },
+      "threshold": 0.5713638094173594,
+      "validation": {
+        "support": 16043,
+        "normal_support": 9671,
+        "abnormal_support": 6372,
+        "accuracy": 0.9857881942280122,
+        "balanced_accuracy": 0.9861778631216878,
+        "sensitivity": 0.9880728185812931,
+        "specificity": 0.9842829076620825,
+        "precision": 0.9764267990074442,
+        "f1": 0.9822152886115445,
+        "auroc": 0.9988731105213373,
+        "auprc": 0.9983935535013132,
+        "brier": 0.0231777606315223
+      }
+    },
+    {
+      "candidate": {
+        "name": "deep",
+        "trees": 240,
+        "max_depth": null,
+        "min_samples_leaf": 1,
+        "max_features": "sqrt",
+        "record_power": 0.35
+      },
+      "threshold": 0.6208333333333333,
+      "validation": {
+        "support": 16043,
+        "normal_support": 9671,
+        "abnormal_support": 6372,
+        "accuracy": 0.9895904755968336,
+        "balanced_accuracy": 0.9890104137355662,
+        "sensitivity": 0.9861895794099184,
+        "specificity": 0.9918312480612139,
+        "precision": 0.9875844727329876,
+        "f1": 0.9868865331762858,
+        "auroc": 0.9992294674320615,
+        "auprc": 0.9989193241462412,
+        "brier": 0.017464525675787983
+      }
+    }
+  ],
+  "subtype_selection": [
+    {
+      "candidate": {
+        "name": "depth22",
+        "trees": 200,
+        "max_depth": 22,
+        "min_samples_leaf": 2,
+        "max_features": "sqrt",
+        "record_power": 0.35
+      },
+      "validation": {
+        "support": 5657,
+        "accuracy": 0.9853279123210182,
+        "macro_f1": 0.9767217380438977,
+        "balanced_accuracy": 0.9673489145547567,
+        "confusion_matrix": [
+          [
+            1059,
+            0,
+            0,
+            0,
+            15
+          ],
+          [
+            5,
+            356,
+            0,
+            1,
+            54
+          ],
+          [
+            1,
+            0,
+            1296,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0,
+            1088,
+            0
+          ],
+          [
+            2,
+            4,
+            0,
+            0,
+            1775
+          ]
+        ]
+      }
+    },
+    {
+      "candidate": {
+        "name": "deep_sqrt",
+        "trees": 260,
+        "max_depth": null,
+        "min_samples_leaf": 1,
+        "max_features": "sqrt",
+        "record_power": 0.25
+      },
+      "validation": {
+        "support": 5657,
+        "accuracy": 0.9849743680395969,
+        "macro_f1": 0.975849710933109,
+        "balanced_accuracy": 0.9649528255525686,
+        "confusion_matrix": [
+          [
+            1058,
+            0,
+            1,
+            0,
+            15
+          ],
+          [
+            3,
+            350,
+            0,
+            1,
+            62
+          ],
+          [
+            0,
+            0,
+            1297,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            1089,
+            0
+          ],
+          [
+            1,
+            2,
+            0,
+            0,
+            1778
+          ]
+        ]
+      }
+    },
+    {
+      "candidate": {
+        "name": "deep_third",
+        "trees": 260,
+        "max_depth": null,
+        "min_samples_leaf": 1,
+        "max_features": 0.33,
+        "record_power": 0.25
+      },
+      "validation": {
+        "support": 5657,
+        "accuracy": 0.987802722290967,
+        "macro_f1": 0.9802720767864793,
+        "balanced_accuracy": 0.9716147818322307,
+        "confusion_matrix": [
+          [
+            1064,
+            0,
+            1,
+            0,
+            9
+          ],
+          [
+            4,
+            362,
+            0,
+            1,
+            49
+          ],
+          [
+            0,
+            0,
+            1297,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            1089,
+            0
+          ],
+          [
+            1,
+            3,
+            1,
+            0,
+            1776
+          ]
+        ]
+      }
+    }
+  ],
+  "test_binary": {
+    "support": 20988,
+    "normal_support": 12098,
+    "abnormal_support": 8890,
+    "accuracy": 0.9847055460263008,
+    "balanced_accuracy": 0.9822144555868357,
+    "sensitivity": 0.9659167604049493,
+    "specificity": 0.9985121507687221,
+    "precision": 0.9979081929110982,
+    "f1": 0.9816519005430123,
+    "auroc": 0.9995692424502484,
+    "auprc": 0.9993998870351669,
+    "brier": 0.018361050891514727
+  },
+  "test_subtype_on_true_supported_arrhythmias": {
+    "support": 7964,
+    "accuracy": 0.9520341536916123,
+    "macro_f1": 0.9325289702749451,
+    "balanced_accuracy": 0.919552133973327,
+    "confusion_matrix": [
+      [
+        1448,
+        0,
+        67,
+        1,
+        11
+      ],
+      [
+        115,
+        445,
+        1,
+        1,
+        29
+      ],
+      [
+        144,
+        0,
+        1338,
+        0,
+        0
+      ],
+      [
+        0,
+        5,
+        0,
+        1378,
+        0
+      ],
+      [
+        5,
+        3,
+        0,
+        0,
+        2973
+      ]
+    ]
+  },
+  "test_whole_system": {
+    "support": 20062,
+    "accuracy": 0.9686471936995315,
+    "macro_f1": 0.9302682471166553,
+    "confusion_matrix": [
+      [
+        12080,
+        2,
+        0,
+        4,
+        2,
+        10
+      ],
+      [
+        8,
+        1445,
+        0,
+        65,
+        0,
+        9
+      ],
+      [
+        51,
+        109,
+        414,
+        0,
+        1,
+        16
+      ],
+      [
+        11,
+        135,
+        0,
+        1336,
+        0,
+        0
+      ],
+      [
+        28,
+        0,
+        3,
+        0,
+        1352,
+        0
+      ],
+      [
+        169,
+        3,
+        3,
+        0,
+        0,
+        2806
+      ]
+    ],
+    "per_class": {
+      "N": {
+        "support": 12098,
+        "precision": 0.978375313841419,
+        "recall": 0.9985121507687221,
+        "f1": 0.9883411740642258
+      },
+      "PVC": {
+        "support": 1527,
+        "precision": 0.8530106257378984,
+        "recall": 0.9462999345121152,
+        "f1": 0.8972368829556039
+      },
+      "PAC": {
+        "support": 591,
+        "precision": 0.9857142857142858,
+        "recall": 0.700507614213198,
+        "f1": 0.8189910979228486
+      },
+      "LBBB": {
+        "support": 1482,
+        "precision": 0.9508896797153025,
+        "recall": 0.9014844804318488,
+        "f1": 0.9255282299965362
+      },
+      "RBBB": {
+        "support": 1383,
+        "precision": 0.9977859778597786,
+        "recall": 0.9775849602313811,
+        "f1": 0.987582176771366
+      },
+      "AFib": {
+        "support": 2981,
+        "precision": 0.9876803942273847,
+        "recall": 0.9412948674941295,
+        "f1": 0.9639299209893507
+      }
+    }
+  },
+  "arrhythmia_table": [
+    {
+      "type": "PVC",
+      "test_beats": 1527,
+      "detected_abnormal": 1519,
+      "correct_subtype": 1448,
+      "correct_end_to_end": 1445,
+      "detection_recall": 0.9947609692206941,
+      "subtype_accuracy": 0.9482645710543549,
+      "end_to_end_recall": 0.9462999345121152
+    },
+    {
+      "type": "PAC",
+      "test_beats": 591,
+      "detected_abnormal": 540,
+      "correct_subtype": 445,
+      "correct_end_to_end": 414,
+      "detection_recall": 0.9137055837563451,
+      "subtype_accuracy": 0.7529610829103215,
+      "end_to_end_recall": 0.700507614213198
+    },
+    {
+      "type": "LBBB",
+      "test_beats": 1482,
+      "detected_abnormal": 1471,
+      "correct_subtype": 1338,
+      "correct_end_to_end": 1336,
+      "detection_recall": 0.9925775978407557,
+      "subtype_accuracy": 0.902834008097166,
+      "end_to_end_recall": 0.9014844804318488
+    },
+    {
+      "type": "RBBB",
+      "test_beats": 1383,
+      "detected_abnormal": 1355,
+      "correct_subtype": 1378,
+      "correct_end_to_end": 1352,
+      "detection_recall": 0.9797541576283442,
+      "subtype_accuracy": 0.9963846710050615,
+      "end_to_end_recall": 0.9775849602313811
+    },
+    {
+      "type": "AFib",
+      "test_beats": 2981,
+      "detected_abnormal": 2812,
+      "correct_subtype": 2973,
+      "correct_end_to_end": 2806,
+      "detection_recall": 0.9433076148943308,
+      "subtype_accuracy": 0.9973163367997316,
+      "end_to_end_recall": 0.9412948674941295
+    }
+  ],
+  "clustered_uncertainty": {
+    "method": "percentile bootstrap of complete subjects; each subject has equal weight",
+    "replicates": 10000,
+    "seed": 20260801,
+    "independent_subjects": 45,
+    "point_estimate_subject_macro": {
+      "binary": 0.9852934453409461,
+      "subtype": 0.9379628738607979,
+      "whole": 0.9689592744813958
+    },
+    "ci_95": {
+      "binary": [
+        0.9715715760818279,
+        0.9941455850477109
+      ],
+      "subtype": [
+        0.8771281933499946,
+        0.9857594335561553
+      ],
+      "whole": [
+        0.9401985279471115,
+        0.9904584470560533
+      ]
+    },
+    "ci_width": {
+      "binary": 0.02257400896588302,
+      "subtype": 0.10863124020616066,
+      "whole": 0.0502599191089419
+    },
+    "whole_system_tests_against_90_percent": {
+      "exact_sign_test": {
+        "null": "no more than half of subjects exceed 90% accuracy",
+        "subjects_above_90": 42,
+        "subjects_below_90": 3,
+        "p_value_one_sided": 4.327489477873314e-10
+      },
+      "wilcoxon_signed_rank": {
+        "null": "subject accuracy is not shifted above 90%",
+        "statistic": 903.0,
+        "p_value_one_sided": 5.631199022852084e-06,
+        "note": "secondary test; the clustered confidence interval is primary"
+      }
+    },
+    "per_subject": [
+      {
+        "subject": "100",
+        "binary": 0.9933920704845814,
+        "subtype": 1.0,
+        "whole": 0.9933920704845814
+      },
+      {
+        "subject": "101",
+        "binary": 0.9973190348525469,
+        "subtype": 1.0,
+        "whole": 0.9973190348525469
+      },
+      {
+        "subject": "103",
+        "binary": 1.0,
+        "subtype": null,
+        "whole": 1.0
+      },
+      {
+        "subject": "105",
+        "binary": 0.9941634241245136,
+        "subtype": 1.0,
+        "whole": 0.9961013645224172
+      },
+      {
+        "subject": "106",
+        "binary": 1.0,
+        "subtype": 1.0,
+        "whole": 1.0
+      },
+      {
+        "subject": "107",
+        "binary": 1.0,
+        "subtype": 1.0,
+        "whole": 1.0
+      },
+      {
+        "subject": "108",
+        "binary": 0.9857954545454546,
+        "subtype": 0.4,
+        "whole": 0.9829545454545454
+      },
+      {
+        "subject": "109",
+        "binary": 0.9802371541501976,
+        "subtype": 0.7213438735177866,
+        "whole": 0.717391304347826
+      },
+      {
+        "subject": "111",
+        "binary": 1.0,
+        "subtype": 0.9976415094339622,
+        "whole": 0.9976415094339622
+      },
+      {
+        "subject": "112",
+        "binary": 1.0,
+        "subtype": null,
+        "whole": 1.0
+      },
+      {
+        "subject": "113",
+        "binary": 1.0,
+        "subtype": null,
+        "whole": 1.0
+      },
+      {
+        "subject": "114",
+        "binary": 0.984,
+        "subtype": 0.25,
+        "whole": 0.9813333333333333
+      },
+      {
+        "subject": "115",
+        "binary": 1.0,
+        "subtype": null,
+        "whole": 1.0
+      },
+      {
+        "subject": "116",
+        "binary": 1.0,
+        "subtype": 1.0,
+        "whole": 1.0
+      },
+      {
+        "subject": "117",
+        "binary": 1.0,
+        "subtype": null,
+        "whole": 1.0
+      },
+      {
+        "subject": "118",
+        "binary": 0.9978021978021978,
+        "subtype": 0.9978021978021978,
+        "whole": 0.9956043956043956
+      },
+      {
+        "subject": "119",
+        "binary": 1.0,
+        "subtype": 1.0,
+        "whole": 1.0
+      },
+      {
+        "subject": "121",
+        "binary": 1.0,
+        "subtype": null,
+        "whole": 1.0
+      },
+      {
+        "subject": "122",
+        "binary": 1.0,
+        "subtype": null,
+        "whole": 1.0
+      },
+      {
+        "subject": "123",
+        "binary": 1.0,
+        "subtype": 1.0,
+        "whole": 1.0
+      },
+      {
+        "subject": "124",
+        "binary": 0.9256965944272446,
+        "subtype": 0.984375,
+        "whole": 0.9164086687306502
+      },
+      {
+        "subject": "200",
+        "binary": 0.9749518304431599,
+        "subtype": 0.9195402298850575,
+        "whole": 0.9672447013487476
+      },
+      {
+        "subject": "201-202",
+        "binary": 0.9938949938949939,
+        "subtype": 0.9842105263157894,
+        "whole": 0.980440097799511
+      },
+      {
+        "subject": "203",
+        "binary": 0.9882352941176471,
+        "subtype": 0.9898477157360406,
+        "whole": 0.9864636209813875
+      },
+      {
+        "subject": "205",
+        "binary": 1.0,
+        "subtype": 0.9736842105263158,
+        "whole": 0.9981167608286252
+      },
+      {
+        "subject": "207",
+        "binary": 0.9757412398921833,
+        "subtype": 0.5336927223719676,
+        "whole": 0.5309973045822103
+      },
+      {
+        "subject": "208",
+        "binary": 0.9796610169491525,
+        "subtype": 1.0,
+        "whole": 0.9945054945054945
+      },
+      {
+        "subject": "209",
+        "binary": 0.97,
+        "subtype": 1.0,
+        "whole": 0.97
+      },
+      {
+        "subject": "210",
+        "binary": 0.9867674858223062,
+        "subtype": 0.9809885931558935,
+        "whole": 0.9734848484848485
+      },
+      {
+        "subject": "212",
+        "binary": 0.9908925318761385,
+        "subtype": 1.0,
+        "whole": 0.9908925318761385
+      },
+      {
+        "subject": "213",
+        "binary": 0.9707241910631741,
+        "subtype": 1.0,
+        "whole": 0.9983471074380166
+      },
+      {
+        "subject": "214",
+        "binary": 1.0,
+        "subtype": 1.0,
+        "whole": 1.0
+      },
+      {
+        "subject": "215",
+        "binary": 0.9985119047619048,
+        "subtype": 1.0,
+        "whole": 1.0
+      },
+      {
+        "subject": "217",
+        "binary": 0.9977324263038548,
+        "subtype": 1.0,
+        "whole": 1.0
+      },
+      {
+        "subject": "219",
+        "binary": 1.0,
+        "subtype": 0.9976744186046511,
+        "whole": 0.9976744186046511
+      },
+      {
+        "subject": "220",
+        "binary": 0.9926650366748166,
+        "subtype": 1.0,
+        "whole": 0.9926650366748166
+      },
+      {
+        "subject": "221",
+        "binary": 0.9381443298969072,
+        "subtype": 1.0,
+        "whole": 0.9381443298969072
+      },
+      {
+        "subject": "222",
+        "binary": 0.7399193548387096,
+        "subtype": 0.9951573849878934,
+        "whole": 0.7358870967741935
+      },
+      {
+        "subject": "223",
+        "binary": 0.9884615384615385,
+        "subtype": 0.967741935483871,
+        "whole": 0.9807321772639692
+      },
+      {
+        "subject": "228",
+        "binary": 0.9951219512195122,
+        "subtype": 0.96,
+        "whole": 0.9926829268292683
+      },
+      {
+        "subject": "230",
+        "binary": 1.0,
+        "subtype": 1.0,
+        "whole": 1.0
+      },
+      {
+        "subject": "231",
+        "binary": 1.0,
+        "subtype": 1.0,
+        "whole": 1.0
+      },
+      {
+        "subject": "232",
+        "binary": 1.0,
+        "subtype": 1.0,
+        "whole": 1.0
+      },
+      {
+        "subject": "233",
+        "binary": 0.9983739837398374,
+        "subtype": 0.9888888888888889,
+        "whole": 0.996742671009772
+      },
+      {
+        "subject": "234",
+        "binary": 1.0,
+        "subtype": 1.0,
+        "whole": 1.0
+      }
+    ]
+  },
+  "headline": {
+    "binary_accuracy": 0.9847055460263008,
+    "binary_balanced_accuracy": 0.9822144555868357,
+    "subtype_accuracy": 0.9520341536916123,
+    "subtype_macro_f1": 0.9325289702749451,
+    "whole_system_accuracy": 0.9686471936995315,
+    "whole_system_macro_f1": 0.9302682471166553,
+    "whole_system_subject_macro_accuracy": 0.9689592744813958,
+    "whole_system_subject_clustered_ci_95": [
+      0.9401985279471115,
+      0.9904584470560533
+    ],
+    "whole_system_ci_width": 0.0502599191089419,
+    "target_point_accuracy_met": true,
+    "target_lower_ci_above_90_met": true,
+    "target_ci_width_at_most_3pp_met": false
+  },
+  "artifacts": {
+    "model": "D:\\SANDARUWAN\\Research\\ECGdoc\\Final_Report_Research\\experiments\\final_temporal_holdout.joblib",
+    "result": "D:\\SANDARUWAN\\Research\\ECGdoc\\Final_Report_Research\\experiments\\final_temporal_holdout.json"
+  },
+  "elapsed_seconds": 399.6664295196533
+}

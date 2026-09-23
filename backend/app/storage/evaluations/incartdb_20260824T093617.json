@@ -1,0 +1,2185 @@
+{
+  "saved_at": "2026-08-24T09:36:17.318905+00:00",
+  "dataset_id": "incartdb",
+  "validation_kind": "external",
+  "result": {
+    "dataset": {
+      "id": "incartdb",
+      "name": "St Petersburg INCART 12-lead Arrhythmia Database",
+      "physionet_slug": "incartdb",
+      "lead_name": "II",
+      "sampling_rate_hz": 257,
+      "validation_kind": "external",
+      "description": "75 unseen 30-minute 12-lead Holter records with beat annotations. Lead II is used as the closest practical external counterpart to MLII.",
+      "warning": "External validation: INCART lead II is not identical to MIT-BIH MLII, so results measure dataset, device, and lead-domain shift.",
+      "mode": "offline"
+    },
+    "threshold": 0.15889294601231813,
+    "default_threshold": 0.15889294601231813,
+    "optimized_threshold": 0.06709061563014984,
+    "threshold_optimization": {
+      "enabled": false,
+      "objective": "balanced_accuracy",
+      "interpretation": "Exploratory only: this threshold was selected and measured on the same requested labels. Use grouped validation for an unbiased research estimate.",
+      "selected": {
+        "threshold": 0.15889294601231813,
+        "confusion": {
+          "tp": 0,
+          "tn": 111,
+          "fp": 0,
+          "fn": 9
+        },
+        "accuracy": 0.925,
+        "balanced_accuracy": 0.5,
+        "sensitivity": 0.0,
+        "specificity": 1.0,
+        "precision": 0.0,
+        "f1": 0.0,
+        "auroc": 0.32932932932932935,
+        "auprc": 0.058450198467233205,
+        "brier": 0.07170859348729755
+      },
+      "default": {
+        "threshold": 0.15889294601231813,
+        "confusion": {
+          "tp": 0,
+          "tn": 111,
+          "fp": 0,
+          "fn": 9
+        },
+        "accuracy": 0.925,
+        "balanced_accuracy": 0.5,
+        "sensitivity": 0.0,
+        "specificity": 1.0,
+        "precision": 0.0,
+        "f1": 0.0,
+        "auroc": 0.32932932932932935,
+        "auprc": 0.058450198467233205,
+        "brier": 0.07170859348729755
+      },
+      "best": {
+        "threshold": 0.06709061563014984,
+        "confusion": {
+          "tp": 9,
+          "tn": 1,
+          "fp": 110,
+          "fn": 0
+        },
+        "accuracy": 0.08333333333333333,
+        "balanced_accuracy": 0.5045045045045045,
+        "sensitivity": 1.0,
+        "specificity": 0.009009009009009009,
+        "precision": 0.07563025210084033,
+        "f1": 0.140625,
+        "auroc": 0.32932932932932935,
+        "auprc": 0.058450198467233205,
+        "brier": 0.07170859348729755
+      },
+      "candidates": [
+        {
+          "threshold": 0.06709061563014984,
+          "confusion": {
+            "tp": 9,
+            "tn": 1,
+            "fp": 110,
+            "fn": 0
+          },
+          "accuracy": 0.08333333333333333,
+          "balanced_accuracy": 0.5045045045045045,
+          "sensitivity": 1.0,
+          "specificity": 0.009009009009009009,
+          "precision": 0.07563025210084033,
+          "f1": 0.140625,
+          "auroc": 0.32932932932932935,
+          "auprc": 0.058450198467233205,
+          "brier": 0.07170859348729755
+        },
+        {
+          "threshold": 0.07622948624193668,
+          "confusion": {
+            "tp": 7,
+            "tn": 4,
+            "fp": 107,
+            "fn": 2
+          },
+          "accuracy": 0.09166666666666666,
+          "balanced_accuracy": 0.4069069069069069,
+          "sensitivity": 0.7777777777777778,
+          "specificity": 0.036036036036036036,
+          "precision": 0.06140350877192982,
+          "f1": 0.11382113821138211,
+          "auroc": 0.32932932932932935,
+          "auprc": 0.058450198467233205,
+          "brier": 0.07170859348729755
+        },
+        {
+          "threshold": 0.0780527114868164,
+          "confusion": {
+            "tp": 7,
+            "tn": 7,
+            "fp": 104,
+            "fn": 2
+          },
+          "accuracy": 0.11666666666666667,
+          "balanced_accuracy": 0.42042042042042044,
+          "sensitivity": 0.7777777777777778,
+          "specificity": 0.06306306306306306,
+          "precision": 0.06306306306306306,
+          "f1": 0.11666666666666665,
+          "auroc": 0.32932932932932935,
+          "auprc": 0.058450198467233205,
+          "brier": 0.07170859348729755
+        },
+        {
+          "threshold": 0.08047616109251976,
+          "confusion": {
+            "tp": 7,
+            "tn": 10,
+            "fp": 101,
+            "fn": 2
+          },
+          "accuracy": 0.14166666666666666,
+          "balanced_accuracy": 0.4339339339339339,
+          "sensitivity": 0.7777777777777778,
+          "specificity": 0.09009009009009009,
+          "precision": 0.06481481481481481,
+          "f1": 0.11965811965811966,
+          "auroc": 0.32932932932932935,
+          "auprc": 0.058450198467233205,
+          "brier": 0.07170859348729755
+        },
+        {
+          "threshold": 0.08248038124293089,
+          "confusion": {
+            "tp": 7,
+            "tn": 13,
+            "fp": 98,
+            "fn": 2
+          },
+          "accuracy": 0.16666666666666666,
+          "balanced_accuracy": 0.44744744744744747,
+          "sensitivity": 0.7777777777777778,
+          "specificity": 0.11711711711711711,
+          "precision": 0.06666666666666667,
+          "f1": 0.12280701754385964,
+          "auroc": 0.32932932932932935,
+          "auprc": 0.058450198467233205,
+          "brier": 0.07170859348729755
+        },
+        {
+          "threshold": 0.08552223220467567,
+          "confusion": {
+            "tp": 6,
+            "tn": 15,
+            "fp": 96,
+            "fn": 3
+          },
+          "accuracy": 0.175,
+          "balanced_accuracy": 0.4009009009009009,
+          "sensitivity": 0.6666666666666666,
+          "specificity": 0.13513513513513514,
+          "precision": 0.058823529411764705,
+          "f1": 0.10810810810810811,
+          "auroc": 0.32932932932932935,
+          "auprc": 0.058450198467233205,
+          "brier": 0.07170859348729755
+        },
+        {
+          "threshold": 0.08730971291661263,
+          "confusion": {
+            "tp": 6,
+            "tn": 18,
+            "fp": 93,
+            "fn": 3
+          },
+          "accuracy": 0.2,
+          "balanced_accuracy": 0.4144144144144144,
+          "sensitivity": 0.6666666666666666,
+          "specificity": 0.16216216216216217,
+          "precision": 0.06060606060606061,
+          "f1": 0.1111111111111111,
+          "auroc": 0.32932932932932935,
+          "auprc": 0.058450198467233205,
+          "brier": 0.07170859348729755
+        },
+        {
+          "threshold": 0.08900811672210693,
+          "confusion": {
+            "tp": 6,
+            "tn": 21,
+            "fp": 90,
+            "fn": 3
+          },
+          "accuracy": 0.225,
+          "balanced_accuracy": 0.4279279279279279,
+          "sensitivity": 0.6666666666666666,
+          "specificity": 0.1891891891891892,
+          "precision": 0.0625,
+          "f1": 0.11428571428571428,
+          "auroc": 0.32932932932932935,
+          "auprc": 0.058450198467233205,
+          "brier": 0.07170859348729755
+        },
+        {
+          "threshold": 0.0911741878837347,
+          "confusion": {
+            "tp": 5,
+            "tn": 23,
+            "fp": 88,
+            "fn": 4
+          },
+          "accuracy": 0.23333333333333334,
+          "balanced_accuracy": 0.3813813813813814,
+          "sensitivity": 0.5555555555555556,
+          "specificity": 0.2072072072072072,
+          "precision": 0.053763440860215055,
+          "f1": 0.09803921568627452,
+          "auroc": 0.32932932932932935,
+          "auprc": 0.058450198467233205,
+          "brier": 0.07170859348729755
+        },
+        {
+          "threshold": 0.09458023123443127,
+          "confusion": {
+            "tp": 5,
+            "tn": 26,
+            "fp": 85,
+            "fn": 4
+          },
+          "accuracy": 0.25833333333333336,
+          "balanced_accuracy": 0.39489489489489493,
+          "sensitivity": 0.5555555555555556,
+          "specificity": 0.23423423423423423,
+          "precision": 0.05555555555555555,
+          "f1": 0.101010101010101,
+          "auroc": 0.32932932932932935,
+          "auprc": 0.058450198467233205,
+          "brier": 0.07170859348729755
+        },
+        {
+          "threshold": 0.09537665378302336,
+          "confusion": {
+            "tp": 5,
+            "tn": 29,
+            "fp": 82,
+            "fn": 4
+          },
+          "accuracy": 0.2833333333333333,
+          "balanced_accuracy": 0.4084084084084084,
+          "sensitivity": 0.5555555555555556,
+          "specificity": 0.26126126126126126,
+          "precision": 0.05747126436781609,
+          "f1": 0.10416666666666666,
+          "auroc": 0.32932932932932935,
+          "auprc": 0.058450198467233205,
+          "brier": 0.07170859348729755
+        },
+        {
+          "threshold": 0.09620778858661652,
+          "confusion": {
+            "tp": 5,
+            "tn": 32,
+            "fp": 79,
+            "fn": 4
+          },
+          "accuracy": 0.30833333333333335,
+          "balanced_accuracy": 0.4219219219219219,
+          "sensitivity": 0.5555555555555556,
+          "specificity": 0.2882882882882883,
+          "precision": 0.05952380952380952,
+          "f1": 0.1075268817204301,
+          "auroc": 0.32932932932932935,
+          "auprc": 0.058450198467233205,
+          "brier": 0.07170859348729755
+        },
+        {
+          "threshold": 0.0970943944528699,
+          "confusion": {
+            "tp": 5,
+            "tn": 35,
+            "fp": 76,
+            "fn": 4
+          },
+          "accuracy": 0.3333333333333333,
+          "balanced_accuracy": 0.43543543543543545,
+          "sensitivity": 0.5555555555555556,
+          "specificity": 0.3153153153153153,
+          "precision": 0.06172839506172839,
+          "f1": 0.1111111111111111,
+          "auroc": 0.32932932932932935,
+          "auprc": 0.058450198467233205,
+          "brier": 0.07170859348729755
+        },
+        {
+          "threshold": 0.09767385385930538,
+          "confusion": {
+            "tp": 5,
+            "tn": 38,
+            "fp": 73,
+            "fn": 4
+          },
+          "accuracy": 0.35833333333333334,
+          "balanced_accuracy": 0.448948948948949,
+          "sensitivity": 0.5555555555555556,
+          "specificity": 0.34234234234234234,
+          "precision": 0.0641025641025641,
+          "f1": 0.11494252873563218,
+          "auroc": 0.32932932932932935,
+          "auprc": 0.058450198467233205,
+          "brier": 0.07170859348729755
+        },
+        {
+          "threshold": 0.09850688558071852,
+          "confusion": {
+            "tp": 5,
+            "tn": 41,
+            "fp": 70,
+            "fn": 4
+          },
+          "accuracy": 0.38333333333333336,
+          "balanced_accuracy": 0.4624624624624625,
+          "sensitivity": 0.5555555555555556,
+          "specificity": 0.36936936936936937,
+          "precision": 0.06666666666666667,
+          "f1": 0.11904761904761904,
+          "auroc": 0.32932932932932935,
+          "auprc": 0.058450198467233205,
+          "brier": 0.07170859348729755
+        },
+        {
+          "threshold": 0.10027688294649124,
+          "confusion": {
+            "tp": 4,
+            "tn": 43,
+            "fp": 68,
+            "fn": 5
+          },
+          "accuracy": 0.39166666666666666,
+          "balanced_accuracy": 0.4159159159159159,
+          "sensitivity": 0.4444444444444444,
+          "specificity": 0.38738738738738737,
+          "precision": 0.05555555555555555,
+          "f1": 0.09876543209876543,
+          "auroc": 0.32932932932932935,
+          "auprc": 0.058450198467233205,
+          "brier": 0.07170859348729755
+        },
+        {
+          "threshold": 0.1011212708428502,
+          "confusion": {
+            "tp": 4,
+            "tn": 46,
+            "fp": 65,
+            "fn": 5
+          },
+          "accuracy": 0.4166666666666667,
+          "balanced_accuracy": 0.4294294294294294,
+          "sensitivity": 0.4444444444444444,
+          "specificity": 0.4144144144144144,
+          "precision": 0.057971014492753624,
+          "f1": 0.10256410256410256,
+          "auroc": 0.32932932932932935,
+          "auprc": 0.058450198467233205,
+          "brier": 0.07170859348729755
+        },
+        {
+          "threshold": 0.1017990592867136,
+          "confusion": {
+            "tp": 3,
+            "tn": 48,
+            "fp": 63,
+            "fn": 6
+          },
+          "accuracy": 0.425,
+          "balanced_accuracy": 0.38288288288288286,
+          "sensitivity": 0.3333333333333333,
+          "specificity": 0.43243243243243246,
+          "precision": 0.045454545454545456,
+          "f1": 0.08,
+          "auroc": 0.32932932932932935,
+          "auprc": 0.058450198467233205,
+          "brier": 0.07170859348729755
+        },
+        {
+          "threshold": 0.10260119270533323,
+          "confusion": {
+            "tp": 2,
+            "tn": 50,
+            "fp": 61,
+            "fn": 7
+          },
+          "accuracy": 0.43333333333333335,
+          "balanced_accuracy": 0.3363363363363363,
+          "sensitivity": 0.2222222222222222,
+          "specificity": 0.45045045045045046,
+          "precision": 0.031746031746031744,
+          "f1": 0.05555555555555555,
+          "auroc": 0.32932932932932935,
+          "auprc": 0.058450198467233205,
+          "brier": 0.07170859348729755
+        },
+        {
+          "threshold": 0.10308260098099709,
+          "confusion": {
+            "tp": 2,
+            "tn": 53,
+            "fp": 58,
+            "fn": 7
+          },
+          "accuracy": 0.4583333333333333,
+          "balanced_accuracy": 0.34984984984984985,
+          "sensitivity": 0.2222222222222222,
+          "specificity": 0.4774774774774775,
+          "precision": 0.03333333333333333,
+          "f1": 0.057971014492753624,
+          "auroc": 0.32932932932932935,
+          "auprc": 0.058450198467233205,
+          "brier": 0.07170859348729755
+        },
+        {
+          "threshold": 0.10363381020724774,
+          "confusion": {
+            "tp": 2,
+            "tn": 56,
+            "fp": 55,
+            "fn": 7
+          },
+          "accuracy": 0.48333333333333334,
+          "balanced_accuracy": 0.36336336336336333,
+          "sensitivity": 0.2222222222222222,
+          "specificity": 0.5045045045045045,
+          "precision": 0.03508771929824561,
+          "f1": 0.06060606060606061,
+          "auroc": 0.32932932932932935,
+          "auprc": 0.058450198467233205,
+          "brier": 0.07170859348729755
+        },
+        {
+          "threshold": 0.10515540279448032,
+          "confusion": {
+            "tp": 2,
+            "tn": 59,
+            "fp": 52,
+            "fn": 7
+          },
+          "accuracy": 0.5083333333333333,
+          "balanced_accuracy": 0.3768768768768769,
+          "sensitivity": 0.2222222222222222,
+          "specificity": 0.5315315315315315,
+          "precision": 0.037037037037037035,
+          "f1": 0.06349206349206349,
+          "auroc": 0.32932932932932935,
+          "auprc": 0.058450198467233205,
+          "brier": 0.07170859348729755
+        },
+        {
+          "threshold": 0.10561563931405545,
+          "confusion": {
+            "tp": 2,
+            "tn": 62,
+            "fp": 49,
+            "fn": 7
+          },
+          "accuracy": 0.5333333333333333,
+          "balanced_accuracy": 0.39039039039039036,
+          "sensitivity": 0.2222222222222222,
+          "specificity": 0.5585585585585585,
+          "precision": 0.0392156862745098,
+          "f1": 0.06666666666666667,
+          "auroc": 0.32932932932932935,
+          "auprc": 0.058450198467233205,
+          "brier": 0.07170859348729755
+        },
+        {
+          "threshold": 0.10661359578371048,
+          "confusion": {
+            "tp": 2,
+            "tn": 65,
+            "fp": 46,
+            "fn": 7
+          },
+          "accuracy": 0.5583333333333333,
+          "balanced_accuracy": 0.4039039039039039,
+          "sensitivity": 0.2222222222222222,
+          "specificity": 0.5855855855855856,
+          "precision": 0.041666666666666664,
+          "f1": 0.07017543859649122,
+          "auroc": 0.32932932932932935,
+          "auprc": 0.058450198467233205,
+          "brier": 0.07170859348729755
+        },
+        {
+          "threshold": 0.10742131154984236,
+          "confusion": {
+            "tp": 2,
+            "tn": 68,
+            "fp": 43,
+            "fn": 7
+          },
+          "accuracy": 0.5833333333333334,
+          "balanced_accuracy": 0.4174174174174174,
+          "sensitivity": 0.2222222222222222,
+          "specificity": 0.6126126126126126,
+          "precision": 0.044444444444444446,
+          "f1": 0.07407407407407407,
+          "auroc": 0.32932932932932935,
+          "auprc": 0.058450198467233205,
+          "brier": 0.07170859348729755
+        },
+        {
+          "threshold": 0.10833827592432499,
+          "confusion": {
+            "tp": 2,
+            "tn": 71,
+            "fp": 40,
+            "fn": 7
+          },
+          "accuracy": 0.6083333333333333,
+          "balanced_accuracy": 0.43093093093093093,
+          "sensitivity": 0.2222222222222222,
+          "specificity": 0.6396396396396397,
+          "precision": 0.047619047619047616,
+          "f1": 0.0784313725490196,
+          "auroc": 0.32932932932932935,
+          "auprc": 0.058450198467233205,
+          "brier": 0.07170859348729755
+        },
+        {
+          "threshold": 0.10917035788297653,
+          "confusion": {
+            "tp": 1,
+            "tn": 73,
+            "fp": 38,
+            "fn": 8
+          },
+          "accuracy": 0.6166666666666667,
+          "balanced_accuracy": 0.3843843843843844,
+          "sensitivity": 0.1111111111111111,
+          "specificity": 0.6576576576576577,
+          "precision": 0.02564102564102564,
+          "f1": 0.041666666666666664,
+          "auroc": 0.32932932932932935,
+          "auprc": 0.058450198467233205,
+          "brier": 0.07170859348729755
+        },
+        {
+          "threshold": 0.11027976721525193,
+          "confusion": {
+            "tp": 1,
+            "tn": 76,
+            "fp": 35,
+            "fn": 8
+          },
+          "accuracy": 0.6416666666666667,
+          "balanced_accuracy": 0.39789789789789787,
+          "sensitivity": 0.1111111111111111,
+          "specificity": 0.6846846846846847,
+          "precision": 0.027777777777777776,
+          "f1": 0.04444444444444444,
+          "auroc": 0.32932932932932935,
+          "auprc": 0.058450198467233205,
+          "brier": 0.07170859348729755
+        },
+        {
+          "threshold": 0.11097441222518681,
+          "confusion": {
+            "tp": 0,
+            "tn": 78,
+            "fp": 33,
+            "fn": 9
+          },
+          "accuracy": 0.65,
+          "balanced_accuracy": 0.35135135135135137,
+          "sensitivity": 0.0,
+          "specificity": 0.7027027027027027,
+          "precision": 0.0,
+          "f1": 0.0,
+          "auroc": 0.32932932932932935,
+          "auprc": 0.058450198467233205,
+          "brier": 0.07170859348729755
+        },
+        {
+          "threshold": 0.1127273440361023,
+          "confusion": {
+            "tp": 0,
+            "tn": 81,
+            "fp": 30,
+            "fn": 9
+          },
+          "accuracy": 0.675,
+          "balanced_accuracy": 0.36486486486486486,
+          "sensitivity": 0.0,
+          "specificity": 0.7297297297297297,
+          "precision": 0.0,
+          "f1": 0.0,
+          "auroc": 0.32932932932932935,
+          "auprc": 0.058450198467233205,
+          "brier": 0.07170859348729755
+        },
+        {
+          "threshold": 0.11348585169762374,
+          "confusion": {
+            "tp": 0,
+            "tn": 84,
+            "fp": 27,
+            "fn": 9
+          },
+          "accuracy": 0.7,
+          "balanced_accuracy": 0.3783783783783784,
+          "sensitivity": 0.0,
+          "specificity": 0.7567567567567568,
+          "precision": 0.0,
+          "f1": 0.0,
+          "auroc": 0.32932932932932935,
+          "auprc": 0.058450198467233205,
+          "brier": 0.07170859348729755
+        },
+        {
+          "threshold": 0.1155716449022293,
+          "confusion": {
+            "tp": 0,
+            "tn": 87,
+            "fp": 24,
+            "fn": 9
+          },
+          "accuracy": 0.725,
+          "balanced_accuracy": 0.3918918918918919,
+          "sensitivity": 0.0,
+          "specificity": 0.7837837837837838,
+          "precision": 0.0,
+          "f1": 0.0,
+          "auroc": 0.32932932932932935,
+          "auprc": 0.058450198467233205,
+          "brier": 0.07170859348729755
+        },
+        {
+          "threshold": 0.11689183898270131,
+          "confusion": {
+            "tp": 0,
+            "tn": 90,
+            "fp": 21,
+            "fn": 9
+          },
+          "accuracy": 0.75,
+          "balanced_accuracy": 0.40540540540540543,
+          "sensitivity": 0.0,
+          "specificity": 0.8108108108108109,
+          "precision": 0.0,
+          "f1": 0.0,
+          "auroc": 0.32932932932932935,
+          "auprc": 0.058450198467233205,
+          "brier": 0.07170859348729755
+        },
+        {
+          "threshold": 0.11792857311666012,
+          "confusion": {
+            "tp": 0,
+            "tn": 93,
+            "fp": 18,
+            "fn": 9
+          },
+          "accuracy": 0.775,
+          "balanced_accuracy": 0.4189189189189189,
+          "sensitivity": 0.0,
+          "specificity": 0.8378378378378378,
+          "precision": 0.0,
+          "f1": 0.0,
+          "auroc": 0.32932932932932935,
+          "auprc": 0.058450198467233205,
+          "brier": 0.07170859348729755
+        },
+        {
+          "threshold": 0.11904008407145739,
+          "confusion": {
+            "tp": 0,
+            "tn": 96,
+            "fp": 15,
+            "fn": 9
+          },
+          "accuracy": 0.8,
+          "balanced_accuracy": 0.43243243243243246,
+          "sensitivity": 0.0,
+          "specificity": 0.8648648648648649,
+          "precision": 0.0,
+          "f1": 0.0,
+          "auroc": 0.32932932932932935,
+          "auprc": 0.058450198467233205,
+          "brier": 0.07170859348729755
+        },
+        {
+          "threshold": 0.1211364433169365,
+          "confusion": {
+            "tp": 0,
+            "tn": 99,
+            "fp": 12,
+            "fn": 9
+          },
+          "accuracy": 0.825,
+          "balanced_accuracy": 0.44594594594594594,
+          "sensitivity": 0.0,
+          "specificity": 0.8918918918918919,
+          "precision": 0.0,
+          "f1": 0.0,
+          "auroc": 0.32932932932932935,
+          "auprc": 0.058450198467233205,
+          "brier": 0.07170859348729755
+        },
+        {
+          "threshold": 0.12589226737618447,
+          "confusion": {
+            "tp": 0,
+            "tn": 102,
+            "fp": 9,
+            "fn": 9
+          },
+          "accuracy": 0.85,
+          "balanced_accuracy": 0.4594594594594595,
+          "sensitivity": 0.0,
+          "specificity": 0.918918918918919,
+          "precision": 0.0,
+          "f1": 0.0,
+          "auroc": 0.32932932932932935,
+          "auprc": 0.058450198467233205,
+          "brier": 0.07170859348729755
+        },
+        {
+          "threshold": 0.12953857555985449,
+          "confusion": {
+            "tp": 0,
+            "tn": 105,
+            "fp": 6,
+            "fn": 9
+          },
+          "accuracy": 0.875,
+          "balanced_accuracy": 0.47297297297297297,
+          "sensitivity": 0.0,
+          "specificity": 0.9459459459459459,
+          "precision": 0.0,
+          "f1": 0.0,
+          "auroc": 0.32932932932932935,
+          "auprc": 0.058450198467233205,
+          "brier": 0.07170859348729755
+        },
+        {
+          "threshold": 0.13838736712932587,
+          "confusion": {
+            "tp": 0,
+            "tn": 111,
+            "fp": 0,
+            "fn": 9
+          },
+          "accuracy": 0.925,
+          "balanced_accuracy": 0.5,
+          "sensitivity": 0.0,
+          "specificity": 1.0,
+          "precision": 0.0,
+          "f1": 0.0,
+          "auroc": 0.32932932932932935,
+          "auprc": 0.058450198467233205,
+          "brier": 0.07170859348729755
+        },
+        {
+          "threshold": 0.15889294601231813,
+          "confusion": {
+            "tp": 0,
+            "tn": 111,
+            "fp": 0,
+            "fn": 9
+          },
+          "accuracy": 0.925,
+          "balanced_accuracy": 0.5,
+          "sensitivity": 0.0,
+          "specificity": 1.0,
+          "precision": 0.0,
+          "f1": 0.0,
+          "auroc": 0.32932932932932935,
+          "auprc": 0.058450198467233205,
+          "brier": 0.07170859348729755
+        }
+      ]
+    },
+    "records": [
+      {
+        "record": "I01",
+        "status": "ok",
+        "beats": 120
+      }
+    ],
+    "n_beats": 120,
+    "class_support": {
+      "N": 111,
+      "PVC": 9
+    },
+    "detection": {
+      "threshold": 0.15889294601231813,
+      "confusion": {
+        "tp": 0,
+        "tn": 111,
+        "fp": 0,
+        "fn": 9
+      },
+      "accuracy": 0.925,
+      "balanced_accuracy": 0.5,
+      "sensitivity": 0.0,
+      "specificity": 1.0,
+      "precision": 0.0,
+      "f1": 0.0,
+      "auroc": 0.32932932932932935,
+      "auprc": 0.058450198467233205,
+      "brier": 0.07170859348729755
+    },
+    "per_record_detection": [
+      {
+        "record": "I01",
+        "threshold": 0.15889294601231813,
+        "confusion": {
+          "tp": 0,
+          "tn": 111,
+          "fp": 0,
+          "fn": 9
+        },
+        "accuracy": 0.925,
+        "balanced_accuracy": 0.5,
+        "sensitivity": 0.0,
+        "specificity": 1.0,
+        "precision": 0.0,
+        "f1": 0.0,
+        "auroc": 0.32932932932932935,
+        "auprc": 0.058450198467233205,
+        "brier": 0.07170859348729755
+      }
+    ],
+    "abnormal_by_symbol": [
+      {
+        "symbol": "V",
+        "support": 9,
+        "detected": 0,
+        "missed": 9,
+        "recall": 0.0
+      }
+    ],
+    "classifier": null,
+    "examples": [
+      {
+        "record": "I01",
+        "sample": 220,
+        "symbol": "N",
+        "true_class": "N",
+        "true_anomaly": false,
+        "score": 0.11835717409849167,
+        "predicted_anomaly": false,
+        "predicted_class": null,
+        "confidence": null
+      },
+      {
+        "record": "I01",
+        "sample": 302,
+        "symbol": "N",
+        "true_class": "N",
+        "true_anomaly": false,
+        "score": 0.11788852512836456,
+        "predicted_anomaly": false,
+        "predicted_class": null,
+        "confidence": null
+      },
+      {
+        "record": "I01",
+        "sample": 353,
+        "symbol": "V",
+        "true_class": "PVC",
+        "true_anomaly": true,
+        "score": 0.10139353573322296,
+        "predicted_anomaly": false,
+        "predicted_class": null,
+        "confidence": null
+      },
+      {
+        "record": "I01",
+        "sample": 468,
+        "symbol": "N",
+        "true_class": "N",
+        "true_anomaly": false,
+        "score": 0.11703447997570038,
+        "predicted_anomaly": false,
+        "predicted_class": null,
+        "confidence": null
+      },
+      {
+        "record": "I01",
+        "sample": 550,
+        "symbol": "N",
+        "true_class": "N",
+        "true_anomaly": false,
+        "score": 0.11999417096376419,
+        "predicted_anomaly": false,
+        "predicted_class": null,
+        "confidence": null
+      },
+      {
+        "record": "I01",
+        "sample": 632,
+        "symbol": "N",
+        "true_class": "N",
+        "true_anomaly": false,
+        "score": 0.11526021361351013,
+        "predicted_anomaly": false,
+        "predicted_class": null,
+        "confidence": null
+      },
+      {
+        "record": "I01",
+        "sample": 714,
+        "symbol": "N",
+        "true_class": "N",
+        "true_anomaly": false,
+        "score": 0.11686158180236816,
+        "predicted_anomaly": false,
+        "predicted_class": null,
+        "confidence": null
+      },
+      {
+        "record": "I01",
+        "sample": 794,
+        "symbol": "N",
+        "true_class": "N",
+        "true_anomaly": false,
+        "score": 0.10817228257656097,
+        "predicted_anomaly": false,
+        "predicted_class": null,
+        "confidence": null
+      },
+      {
+        "record": "I01",
+        "sample": 874,
+        "symbol": "N",
+        "true_class": "N",
+        "true_anomaly": false,
+        "score": 0.10915565490722656,
+        "predicted_anomaly": false,
+        "predicted_class": null,
+        "confidence": null
+      },
+      {
+        "record": "I01",
+        "sample": 953,
+        "symbol": "N",
+        "true_class": "N",
+        "true_anomaly": false,
+        "score": 0.10321459174156189,
+        "predicted_anomaly": false,
+        "predicted_class": null,
+        "confidence": null
+      },
+      {
+        "record": "I01",
+        "sample": 1033,
+        "symbol": "N",
+        "true_class": "N",
+        "true_anomaly": false,
+        "score": 0.1054801195859909,
+        "predicted_anomaly": false,
+        "predicted_class": null,
+        "confidence": null
+      },
+      {
+        "record": "I01",
+        "sample": 1114,
+        "symbol": "N",
+        "true_class": "N",
+        "true_anomaly": false,
+        "score": 0.10656791180372238,
+        "predicted_anomaly": false,
+        "predicted_class": null,
+        "confidence": null
+      },
+      {
+        "record": "I01",
+        "sample": 1191,
+        "symbol": "N",
+        "true_class": "N",
+        "true_anomaly": false,
+        "score": 0.1026715487241745,
+        "predicted_anomaly": false,
+        "predicted_class": null,
+        "confidence": null
+      },
+      {
+        "record": "I01",
+        "sample": 1273,
+        "symbol": "N",
+        "true_class": "N",
+        "true_anomaly": false,
+        "score": 0.11602650582790375,
+        "predicted_anomaly": false,
+        "predicted_class": null,
+        "confidence": null
+      },
+      {
+        "record": "I01",
+        "sample": 1322,
+        "symbol": "V",
+        "true_class": "PVC",
+        "true_anomaly": true,
+        "score": 0.10872677713632584,
+        "predicted_anomaly": false,
+        "predicted_class": null,
+        "confidence": null
+      },
+      {
+        "record": "I01",
+        "sample": 1436,
+        "symbol": "N",
+        "true_class": "N",
+        "true_anomaly": false,
+        "score": 0.11366221308708191,
+        "predicted_anomaly": false,
+        "predicted_class": null,
+        "confidence": null
+      },
+      {
+        "record": "I01",
+        "sample": 1515,
+        "symbol": "N",
+        "true_class": "N",
+        "true_anomaly": false,
+        "score": 0.11343465000391006,
+        "predicted_anomaly": false,
+        "predicted_class": null,
+        "confidence": null
+      },
+      {
+        "record": "I01",
+        "sample": 1595,
+        "symbol": "N",
+        "true_class": "N",
+        "true_anomaly": false,
+        "score": 0.11056313663721085,
+        "predicted_anomaly": false,
+        "predicted_class": null,
+        "confidence": null
+      },
+      {
+        "record": "I01",
+        "sample": 1674,
+        "symbol": "N",
+        "true_class": "N",
+        "true_anomaly": false,
+        "score": 0.10920089483261108,
+        "predicted_anomaly": false,
+        "predicted_class": null,
+        "confidence": null
+      },
+      {
+        "record": "I01",
+        "sample": 1753,
+        "symbol": "N",
+        "true_class": "N",
+        "true_anomaly": false,
+        "score": 0.10048767179250717,
+        "predicted_anomaly": false,
+        "predicted_class": null,
+        "confidence": null
+      },
+      {
+        "record": "I01",
+        "sample": 1833,
+        "symbol": "N",
+        "true_class": "N",
+        "true_anomaly": false,
+        "score": 0.10579898953437805,
+        "predicted_anomaly": false,
+        "predicted_class": null,
+        "confidence": null
+      },
+      {
+        "record": "I01",
+        "sample": 1912,
+        "symbol": "N",
+        "true_class": "N",
+        "true_anomaly": false,
+        "score": 0.09701713174581528,
+        "predicted_anomaly": false,
+        "predicted_class": null,
+        "confidence": null
+      },
+      {
+        "record": "I01",
+        "sample": 1991,
+        "symbol": "N",
+        "true_class": "N",
+        "true_anomaly": false,
+        "score": 0.09852880984544754,
+        "predicted_anomaly": false,
+        "predicted_class": null,
+        "confidence": null
+      },
+      {
+        "record": "I01",
+        "sample": 2070,
+        "symbol": "N",
+        "true_class": "N",
+        "true_anomaly": false,
+        "score": 0.08830815553665161,
+        "predicted_anomaly": false,
+        "predicted_class": null,
+        "confidence": null
+      },
+      {
+        "record": "I01",
+        "sample": 2151,
+        "symbol": "N",
+        "true_class": "N",
+        "true_anomaly": false,
+        "score": 0.08736182004213333,
+        "predicted_anomaly": false,
+        "predicted_class": null,
+        "confidence": null
+      },
+      {
+        "record": "I01",
+        "sample": 2233,
+        "symbol": "N",
+        "true_class": "N",
+        "true_anomaly": false,
+        "score": 0.0782916322350502,
+        "predicted_anomaly": false,
+        "predicted_class": null,
+        "confidence": null
+      },
+      {
+        "record": "I01",
+        "sample": 2316,
+        "symbol": "N",
+        "true_class": "N",
+        "true_anomaly": false,
+        "score": 0.06709061563014984,
+        "predicted_anomaly": false,
+        "predicted_class": null,
+        "confidence": null
+      },
+      {
+        "record": "I01",
+        "sample": 2400,
+        "symbol": "N",
+        "true_class": "N",
+        "true_anomaly": false,
+        "score": 0.06786243617534637,
+        "predicted_anomaly": false,
+        "predicted_class": null,
+        "confidence": null
+      },
+      {
+        "record": "I01",
+        "sample": 2483,
+        "symbol": "N",
+        "true_class": "N",
+        "true_anomaly": false,
+        "score": 0.07809260487556458,
+        "predicted_anomaly": false,
+        "predicted_class": null,
+        "confidence": null
+      },
+      {
+        "record": "I01",
+        "sample": 2567,
+        "symbol": "N",
+        "true_class": "N",
+        "true_anomaly": false,
+        "score": 0.08066180348396301,
+        "predicted_anomaly": false,
+        "predicted_class": null,
+        "confidence": null
+      },
+      {
+        "record": "I01",
+        "sample": 2621,
+        "symbol": "V",
+        "true_class": "PVC",
+        "true_anomaly": true,
+        "score": 0.08263690024614334,
+        "predicted_anomaly": false,
+        "predicted_class": null,
+        "confidence": null
+      },
+      {
+        "record": "I01",
+        "sample": 2740,
+        "symbol": "N",
+        "true_class": "N",
+        "true_anomaly": false,
+        "score": 0.09621327370405197,
+        "predicted_anomaly": false,
+        "predicted_class": null,
+        "confidence": null
+      },
+      {
+        "record": "I01",
+        "sample": 2824,
+        "symbol": "N",
+        "true_class": "N",
+        "true_anomaly": false,
+        "score": 0.10701166838407516,
+        "predicted_anomaly": false,
+        "predicted_class": null,
+        "confidence": null
+      },
+      {
+        "record": "I01",
+        "sample": 2908,
+        "symbol": "N",
+        "true_class": "N",
+        "true_anomaly": false,
+        "score": 0.1154579296708107,
+        "predicted_anomaly": false,
+        "predicted_class": null,
+        "confidence": null
+      },
+      {
+        "record": "I01",
+        "sample": 2993,
+        "symbol": "N",
+        "true_class": "N",
+        "true_anomaly": false,
+        "score": 0.09841835498809814,
+        "predicted_anomaly": false,
+        "predicted_class": null,
+        "confidence": null
+      },
+      {
+        "record": "I01",
+        "sample": 3074,
+        "symbol": "N",
+        "true_class": "N",
+        "true_anomaly": false,
+        "score": 0.12223006039857864,
+        "predicted_anomaly": false,
+        "predicted_class": null,
+        "confidence": null
+      },
+      {
+        "record": "I01",
+        "sample": 3157,
+        "symbol": "N",
+        "true_class": "N",
+        "true_anomaly": false,
+        "score": 0.10245893150568008,
+        "predicted_anomaly": false,
+        "predicted_class": null,
+        "confidence": null
+      },
+      {
+        "record": "I01",
+        "sample": 3239,
+        "symbol": "N",
+        "true_class": "N",
+        "true_anomaly": false,
+        "score": 0.10295061022043228,
+        "predicted_anomaly": false,
+        "predicted_class": null,
+        "confidence": null
+      },
+      {
+        "record": "I01",
+        "sample": 3321,
+        "symbol": "N",
+        "true_class": "N",
+        "true_anomaly": false,
+        "score": 0.0976826548576355,
+        "predicted_anomaly": false,
+        "predicted_class": null,
+        "confidence": null
+      },
+      {
+        "record": "I01",
+        "sample": 3404,
+        "symbol": "N",
+        "true_class": "N",
+        "true_anomaly": false,
+        "score": 0.10864654928445816,
+        "predicted_anomaly": false,
+        "predicted_class": null,
+        "confidence": null
+      },
+      {
+        "record": "I01",
+        "sample": 3484,
+        "symbol": "N",
+        "true_class": "N",
+        "true_anomaly": false,
+        "score": 0.10401979833841324,
+        "predicted_anomaly": false,
+        "predicted_class": null,
+        "confidence": null
+      },
+      {
+        "record": "I01",
+        "sample": 3565,
+        "symbol": "N",
+        "true_class": "N",
+        "true_anomaly": false,
+        "score": 0.0951254814863205,
+        "predicted_anomaly": false,
+        "predicted_class": null,
+        "confidence": null
+      },
+      {
+        "record": "I01",
+        "sample": 3645,
+        "symbol": "N",
+        "true_class": "N",
+        "true_anomaly": false,
+        "score": 0.09504219889640808,
+        "predicted_anomaly": false,
+        "predicted_class": null,
+        "confidence": null
+      },
+      {
+        "record": "I01",
+        "sample": 3726,
+        "symbol": "N",
+        "true_class": "N",
+        "true_anomaly": false,
+        "score": 0.08902788907289505,
+        "predicted_anomaly": false,
+        "predicted_class": null,
+        "confidence": null
+      },
+      {
+        "record": "I01",
+        "sample": 3807,
+        "symbol": "N",
+        "true_class": "N",
+        "true_anomaly": false,
+        "score": 0.10720771551132202,
+        "predicted_anomaly": false,
+        "predicted_class": null,
+        "confidence": null
+      },
+      {
+        "record": "I01",
+        "sample": 3888,
+        "symbol": "N",
+        "true_class": "N",
+        "true_anomaly": false,
+        "score": 0.09713159501552582,
+        "predicted_anomaly": false,
+        "predicted_class": null,
+        "confidence": null
+      },
+      {
+        "record": "I01",
+        "sample": 3968,
+        "symbol": "N",
+        "true_class": "N",
+        "true_anomaly": false,
+        "score": 0.1006537452340126,
+        "predicted_anomaly": false,
+        "predicted_class": null,
+        "confidence": null
+      },
+      {
+        "record": "I01",
+        "sample": 4046,
+        "symbol": "N",
+        "true_class": "N",
+        "true_anomaly": false,
+        "score": 0.10097482800483704,
+        "predicted_anomaly": false,
+        "predicted_class": null,
+        "confidence": null
+      },
+      {
+        "record": "I01",
+        "sample": 4124,
+        "symbol": "N",
+        "true_class": "N",
+        "true_anomaly": false,
+        "score": 0.10655329376459122,
+        "predicted_anomaly": false,
+        "predicted_class": null,
+        "confidence": null
+      },
+      {
+        "record": "I01",
+        "sample": 4205,
+        "symbol": "N",
+        "true_class": "N",
+        "true_anomaly": false,
+        "score": 0.1016906350851059,
+        "predicted_anomaly": false,
+        "predicted_class": null,
+        "confidence": null
+      },
+      {
+        "record": "I01",
+        "sample": 4253,
+        "symbol": "V",
+        "true_class": "PVC",
+        "true_anomaly": true,
+        "score": 0.09907135367393494,
+        "predicted_anomaly": false,
+        "predicted_class": null,
+        "confidence": null
+      },
+      {
+        "record": "I01",
+        "sample": 4366,
+        "symbol": "N",
+        "true_class": "N",
+        "true_anomaly": false,
+        "score": 0.09765750914812088,
+        "predicted_anomaly": false,
+        "predicted_class": null,
+        "confidence": null
+      },
+      {
+        "record": "I01",
+        "sample": 4445,
+        "symbol": "N",
+        "true_class": "N",
+        "true_anomaly": false,
+        "score": 0.0947410985827446,
+        "predicted_anomaly": false,
+        "predicted_class": null,
+        "confidence": null
+      },
+      {
+        "record": "I01",
+        "sample": 4522,
+        "symbol": "N",
+        "true_class": "N",
+        "true_anomaly": false,
+        "score": 0.09150930494070053,
+        "predicted_anomaly": false,
+        "predicted_class": null,
+        "confidence": null
+      },
+      {
+        "record": "I01",
+        "sample": 4603,
+        "symbol": "N",
+        "true_class": "N",
+        "true_anomaly": false,
+        "score": 0.09764785319566727,
+        "predicted_anomaly": false,
+        "predicted_class": null,
+        "confidence": null
+      },
+      {
+        "record": "I01",
+        "sample": 4678,
+        "symbol": "N",
+        "true_class": "N",
+        "true_anomaly": false,
+        "score": 0.08706406503915787,
+        "predicted_anomaly": false,
+        "predicted_class": null,
+        "confidence": null
+      },
+      {
+        "record": "I01",
+        "sample": 4756,
+        "symbol": "N",
+        "true_class": "N",
+        "true_anomaly": false,
+        "score": 0.08892902731895447,
+        "predicted_anomaly": false,
+        "predicted_class": null,
+        "confidence": null
+      },
+      {
+        "record": "I01",
+        "sample": 4833,
+        "symbol": "N",
+        "true_class": "N",
+        "true_anomaly": false,
+        "score": 0.09120281040668488,
+        "predicted_anomaly": false,
+        "predicted_class": null,
+        "confidence": null
+      },
+      {
+        "record": "I01",
+        "sample": 4911,
+        "symbol": "N",
+        "true_class": "N",
+        "true_anomaly": false,
+        "score": 0.09619498997926712,
+        "predicted_anomaly": false,
+        "predicted_class": null,
+        "confidence": null
+      },
+      {
+        "record": "I01",
+        "sample": 4988,
+        "symbol": "N",
+        "true_class": "N",
+        "true_anomaly": false,
+        "score": 0.0966416522860527,
+        "predicted_anomaly": false,
+        "predicted_class": null,
+        "confidence": null
+      },
+      {
+        "record": "I01",
+        "sample": 5066,
+        "symbol": "N",
+        "true_class": "N",
+        "true_anomaly": false,
+        "score": 0.10777730494737625,
+        "predicted_anomaly": false,
+        "predicted_class": null,
+        "confidence": null
+      },
+      {
+        "record": "I01",
+        "sample": 5143,
+        "symbol": "N",
+        "true_class": "N",
+        "true_anomaly": false,
+        "score": 0.10122951120138168,
+        "predicted_anomaly": false,
+        "predicted_class": null,
+        "confidence": null
+      },
+      {
+        "record": "I01",
+        "sample": 5221,
+        "symbol": "N",
+        "true_class": "N",
+        "true_anomaly": false,
+        "score": 0.09847034513950348,
+        "predicted_anomaly": false,
+        "predicted_class": null,
+        "confidence": null
+      },
+      {
+        "record": "I01",
+        "sample": 5298,
+        "symbol": "N",
+        "true_class": "N",
+        "true_anomaly": false,
+        "score": 0.10261286795139313,
+        "predicted_anomaly": false,
+        "predicted_class": null,
+        "confidence": null
+      },
+      {
+        "record": "I01",
+        "sample": 5377,
+        "symbol": "N",
+        "true_class": "N",
+        "true_anomaly": false,
+        "score": 0.10374747216701508,
+        "predicted_anomaly": false,
+        "predicted_class": null,
+        "confidence": null
+      },
+      {
+        "record": "I01",
+        "sample": 5426,
+        "symbol": "V",
+        "true_class": "PVC",
+        "true_anomaly": true,
+        "score": 0.11035417020320892,
+        "predicted_anomaly": false,
+        "predicted_class": null,
+        "confidence": null
+      },
+      {
+        "record": "I01",
+        "sample": 5536,
+        "symbol": "N",
+        "true_class": "N",
+        "true_anomaly": false,
+        "score": 0.12101493030786514,
+        "predicted_anomaly": false,
+        "predicted_class": null,
+        "confidence": null
+      },
+      {
+        "record": "I01",
+        "sample": 5615,
+        "symbol": "N",
+        "true_class": "N",
+        "true_anomaly": false,
+        "score": 0.13276322185993195,
+        "predicted_anomaly": false,
+        "predicted_class": null,
+        "confidence": null
+      },
+      {
+        "record": "I01",
+        "sample": 5694,
+        "symbol": "N",
+        "true_class": "N",
+        "true_anomaly": false,
+        "score": 0.12860806286334991,
+        "predicted_anomaly": false,
+        "predicted_class": null,
+        "confidence": null
+      },
+      {
+        "record": "I01",
+        "sample": 5772,
+        "symbol": "N",
+        "true_class": "N",
+        "true_anomaly": false,
+        "score": 0.1325290948152542,
+        "predicted_anomaly": false,
+        "predicted_class": null,
+        "confidence": null
+      },
+      {
+        "record": "I01",
+        "sample": 5849,
+        "symbol": "N",
+        "true_class": "N",
+        "true_anomaly": false,
+        "score": 0.1378292590379715,
+        "predicted_anomaly": false,
+        "predicted_class": null,
+        "confidence": null
+      },
+      {
+        "record": "I01",
+        "sample": 5925,
+        "symbol": "N",
+        "true_class": "N",
+        "true_anomaly": false,
+        "score": 0.13838736712932587,
+        "predicted_anomaly": false,
+        "predicted_class": null,
+        "confidence": null
+      },
+      {
+        "record": "I01",
+        "sample": 6002,
+        "symbol": "N",
+        "true_class": "N",
+        "true_anomaly": false,
+        "score": 0.13368135690689087,
+        "predicted_anomaly": false,
+        "predicted_class": null,
+        "confidence": null
+      },
+      {
+        "record": "I01",
+        "sample": 6079,
+        "symbol": "N",
+        "true_class": "N",
+        "true_anomaly": false,
+        "score": 0.11890378594398499,
+        "predicted_anomaly": false,
+        "predicted_class": null,
+        "confidence": null
+      },
+      {
+        "record": "I01",
+        "sample": 6156,
+        "symbol": "N",
+        "true_class": "N",
+        "true_anomaly": false,
+        "score": 0.11316469311714172,
+        "predicted_anomaly": false,
+        "predicted_class": null,
+        "confidence": null
+      },
+      {
+        "record": "I01",
+        "sample": 6234,
+        "symbol": "N",
+        "true_class": "N",
+        "true_anomaly": false,
+        "score": 0.11234918981790543,
+        "predicted_anomaly": false,
+        "predicted_class": null,
+        "confidence": null
+      },
+      {
+        "record": "I01",
+        "sample": 6311,
+        "symbol": "N",
+        "true_class": "N",
+        "true_anomaly": false,
+        "score": 0.10491278022527695,
+        "predicted_anomaly": false,
+        "predicted_class": null,
+        "confidence": null
+      },
+      {
+        "record": "I01",
+        "sample": 6389,
+        "symbol": "N",
+        "true_class": "N",
+        "true_anomaly": false,
+        "score": 0.09996069967746735,
+        "predicted_anomaly": false,
+        "predicted_class": null,
+        "confidence": null
+      },
+      {
+        "record": "I01",
+        "sample": 6466,
+        "symbol": "N",
+        "true_class": "N",
+        "true_anomaly": false,
+        "score": 0.10804377496242523,
+        "predicted_anomaly": false,
+        "predicted_class": null,
+        "confidence": null
+      },
+      {
+        "record": "I01",
+        "sample": 6544,
+        "symbol": "N",
+        "true_class": "N",
+        "true_anomaly": false,
+        "score": 0.11266529560089111,
+        "predicted_anomaly": false,
+        "predicted_class": null,
+        "confidence": null
+      },
+      {
+        "record": "I01",
+        "sample": 6622,
+        "symbol": "N",
+        "true_class": "N",
+        "true_anomaly": false,
+        "score": 0.10668212175369263,
+        "predicted_anomaly": false,
+        "predicted_class": null,
+        "confidence": null
+      },
+      {
+        "record": "I01",
+        "sample": 6699,
+        "symbol": "N",
+        "true_class": "N",
+        "true_anomaly": false,
+        "score": 0.10353097319602966,
+        "predicted_anomaly": false,
+        "predicted_class": null,
+        "confidence": null
+      },
+      {
+        "record": "I01",
+        "sample": 6779,
+        "symbol": "N",
+        "true_class": "N",
+        "true_anomaly": false,
+        "score": 0.11051127314567566,
+        "predicted_anomaly": false,
+        "predicted_class": null,
+        "confidence": null
+      },
+      {
+        "record": "I01",
+        "sample": 6855,
+        "symbol": "N",
+        "true_class": "N",
+        "true_anomaly": false,
+        "score": 0.11676499247550964,
+        "predicted_anomaly": false,
+        "predicted_class": null,
+        "confidence": null
+      },
+      {
+        "record": "I01",
+        "sample": 6933,
+        "symbol": "N",
+        "true_class": "N",
+        "true_anomaly": false,
+        "score": 0.11291348934173584,
+        "predicted_anomaly": false,
+        "predicted_class": null,
+        "confidence": null
+      },
+      {
+        "record": "I01",
+        "sample": 7011,
+        "symbol": "N",
+        "true_class": "N",
+        "true_anomaly": false,
+        "score": 0.10547672212123871,
+        "predicted_anomaly": false,
+        "predicted_class": null,
+        "confidence": null
+      },
+      {
+        "record": "I01",
+        "sample": 7088,
+        "symbol": "N",
+        "true_class": "N",
+        "true_anomaly": false,
+        "score": 0.12702271342277527,
+        "predicted_anomaly": false,
+        "predicted_class": null,
+        "confidence": null
+      },
+      {
+        "record": "I01",
+        "sample": 7165,
+        "symbol": "N",
+        "true_class": "N",
+        "true_anomaly": false,
+        "score": 0.11790148168802261,
+        "predicted_anomaly": false,
+        "predicted_class": null,
+        "confidence": null
+      },
+      {
+        "record": "I01",
+        "sample": 7243,
+        "symbol": "N",
+        "true_class": "N",
+        "true_anomaly": false,
+        "score": 0.12013790011405945,
+        "predicted_anomaly": false,
+        "predicted_class": null,
+        "confidence": null
+      },
+      {
+        "record": "I01",
+        "sample": 7321,
+        "symbol": "N",
+        "true_class": "N",
+        "true_anomaly": false,
+        "score": 0.12580060958862305,
+        "predicted_anomaly": false,
+        "predicted_class": null,
+        "confidence": null
+      },
+      {
+        "record": "I01",
+        "sample": 7400,
+        "symbol": "N",
+        "true_class": "N",
+        "true_anomaly": false,
+        "score": 0.13460147380828857,
+        "predicted_anomaly": false,
+        "predicted_class": null,
+        "confidence": null
+      },
+      {
+        "record": "I01",
+        "sample": 7478,
+        "symbol": "N",
+        "true_class": "N",
+        "true_anomaly": false,
+        "score": 0.1293811798095703,
+        "predicted_anomaly": false,
+        "predicted_class": null,
+        "confidence": null
+      },
+      {
+        "record": "I01",
+        "sample": 7556,
+        "symbol": "N",
+        "true_class": "N",
+        "true_anomaly": false,
+        "score": 0.1244552955031395,
+        "predicted_anomaly": false,
+        "predicted_class": null,
+        "confidence": null
+      },
+      {
+        "record": "I01",
+        "sample": 7634,
+        "symbol": "N",
+        "true_class": "N",
+        "true_anomaly": false,
+        "score": 0.11808209121227264,
+        "predicted_anomaly": false,
+        "predicted_class": null,
+        "confidence": null
+      },
+      {
+        "record": "I01",
+        "sample": 7712,
+        "symbol": "N",
+        "true_class": "N",
+        "true_anomaly": false,
+        "score": 0.11205868422985077,
+        "predicted_anomaly": false,
+        "predicted_class": null,
+        "confidence": null
+      },
+      {
+        "record": "I01",
+        "sample": 7792,
+        "symbol": "N",
+        "true_class": "N",
+        "true_anomaly": false,
+        "score": 0.10326491296291351,
+        "predicted_anomaly": false,
+        "predicted_class": null,
+        "confidence": null
+      },
+      {
+        "record": "I01",
+        "sample": 7867,
+        "symbol": "N",
+        "true_class": "N",
+        "true_anomaly": false,
+        "score": 0.10258828848600388,
+        "predicted_anomaly": false,
+        "predicted_class": null,
+        "confidence": null
+      },
+      {
+        "record": "I01",
+        "sample": 7946,
+        "symbol": "N",
+        "true_class": "N",
+        "true_anomaly": false,
+        "score": 0.09547192603349686,
+        "predicted_anomaly": false,
+        "predicted_class": null,
+        "confidence": null
+      },
+      {
+        "record": "I01",
+        "sample": 7995,
+        "symbol": "V",
+        "true_class": "PVC",
+        "true_anomaly": true,
+        "score": 0.1018877699971199,
+        "predicted_anomaly": false,
+        "predicted_class": null,
+        "confidence": null
+      },
+      {
+        "record": "I01",
+        "sample": 8103,
+        "symbol": "N",
+        "true_class": "N",
+        "true_anomaly": false,
+        "score": 0.09555815160274506,
+        "predicted_anomaly": false,
+        "predicted_class": null,
+        "confidence": null
+      },
+      {
+        "record": "I01",
+        "sample": 8181,
+        "symbol": "N",
+        "true_class": "N",
+        "true_anomaly": false,
+        "score": 0.09409762918949127,
+        "predicted_anomaly": false,
+        "predicted_class": null,
+        "confidence": null
+      },
+      {
+        "record": "I01",
+        "sample": 8260,
+        "symbol": "N",
+        "true_class": "N",
+        "true_anomaly": false,
+        "score": 0.08473768830299377,
+        "predicted_anomaly": false,
+        "predicted_class": null,
+        "confidence": null
+      },
+      {
+        "record": "I01",
+        "sample": 8338,
+        "symbol": "N",
+        "true_class": "N",
+        "true_anomaly": false,
+        "score": 0.08935781568288803,
+        "predicted_anomaly": false,
+        "predicted_class": null,
+        "confidence": null
+      },
+      {
+        "record": "I01",
+        "sample": 8416,
+        "symbol": "N",
+        "true_class": "N",
+        "true_anomaly": false,
+        "score": 0.08661415427923203,
+        "predicted_anomaly": false,
+        "predicted_class": null,
+        "confidence": null
+      },
+      {
+        "record": "I01",
+        "sample": 8495,
+        "symbol": "N",
+        "true_class": "N",
+        "true_anomaly": false,
+        "score": 0.08138474822044373,
+        "predicted_anomaly": false,
+        "predicted_class": null,
+        "confidence": null
+      },
+      {
+        "record": "I01",
+        "sample": 8575,
+        "symbol": "N",
+        "true_class": "N",
+        "true_anomaly": false,
+        "score": 0.08132725954055786,
+        "predicted_anomaly": false,
+        "predicted_class": null,
+        "confidence": null
+      },
+      {
+        "record": "I01",
+        "sample": 8630,
+        "symbol": "V",
+        "true_class": "PVC",
+        "true_anomaly": true,
+        "score": 0.07590056210756302,
+        "predicted_anomaly": false,
+        "predicted_class": null,
+        "confidence": null
+      },
+      {
+        "record": "I01",
+        "sample": 8736,
+        "symbol": "N",
+        "true_class": "N",
+        "true_anomaly": false,
+        "score": 0.07756069302558899,
+        "predicted_anomaly": false,
+        "predicted_class": null,
+        "confidence": null
+      },
+      {
+        "record": "I01",
+        "sample": 8817,
+        "symbol": "N",
+        "true_class": "N",
+        "true_anomaly": false,
+        "score": 0.08566068112850189,
+        "predicted_anomaly": false,
+        "predicted_class": null,
+        "confidence": null
+      },
+      {
+        "record": "I01",
+        "sample": 8897,
+        "symbol": "N",
+        "true_class": "N",
+        "true_anomaly": false,
+        "score": 0.07880537956953049,
+        "predicted_anomaly": false,
+        "predicted_class": null,
+        "confidence": null
+      },
+      {
+        "record": "I01",
+        "sample": 8977,
+        "symbol": "N",
+        "true_class": "N",
+        "true_anomaly": false,
+        "score": 0.07626058161258698,
+        "predicted_anomaly": false,
+        "predicted_class": null,
+        "confidence": null
+      },
+      {
+        "record": "I01",
+        "sample": 9029,
+        "symbol": "V",
+        "true_class": "PVC",
+        "true_anomaly": true,
+        "score": 0.07347694784402847,
+        "predicted_anomaly": false,
+        "predicted_class": null,
+        "confidence": null
+      },
+      {
+        "record": "I01",
+        "sample": 9139,
+        "symbol": "N",
+        "true_class": "N",
+        "true_anomaly": false,
+        "score": 0.07061788439750671,
+        "predicted_anomaly": false,
+        "predicted_class": null,
+        "confidence": null
+      },
+      {
+        "record": "I01",
+        "sample": 9218,
+        "symbol": "N",
+        "true_class": "N",
+        "true_anomaly": false,
+        "score": 0.07624679803848267,
+        "predicted_anomaly": false,
+        "predicted_class": null,
+        "confidence": null
+      },
+      {
+        "record": "I01",
+        "sample": 9299,
+        "symbol": "N",
+        "true_class": "N",
+        "true_anomaly": false,
+        "score": 0.06779265403747559,
+        "predicted_anomaly": false,
+        "predicted_class": null,
+        "confidence": null
+      },
+      {
+        "record": "I01",
+        "sample": 9378,
+        "symbol": "N",
+        "true_class": "N",
+        "true_anomaly": false,
+        "score": 0.08268630504608154,
+        "predicted_anomaly": false,
+        "predicted_class": null,
+        "confidence": null
+      },
+      {
+        "record": "I01",
+        "sample": 9430,
+        "symbol": "V",
+        "true_class": "PVC",
+        "true_anomaly": true,
+        "score": 0.091075599193573,
+        "predicted_anomaly": false,
+        "predicted_class": null,
+        "confidence": null
+      },
+      {
+        "record": "I01",
+        "sample": 9540,
+        "symbol": "N",
+        "true_class": "N",
+        "true_anomaly": false,
+        "score": 0.10545194149017334,
+        "predicted_anomaly": false,
+        "predicted_class": null,
+        "confidence": null
+      },
+      {
+        "record": "I01",
+        "sample": 9618,
+        "symbol": "N",
+        "true_class": "N",
+        "true_anomaly": false,
+        "score": 0.11024788022041321,
+        "predicted_anomaly": false,
+        "predicted_class": null,
+        "confidence": null
+      },
+      {
+        "record": "I01",
+        "sample": 9699,
+        "symbol": "N",
+        "true_class": "N",
+        "true_anomaly": false,
+        "score": 0.10987307131290436,
+        "predicted_anomaly": false,
+        "predicted_class": null,
+        "confidence": null
+      }
+    ]
+  }
+}

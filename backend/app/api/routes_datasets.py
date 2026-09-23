@@ -10,7 +10,13 @@ from fastapi import APIRouter, Depends, UploadFile, File, Form, HTTPException
 from app.api.schemas import OkResponse
 from app.api.routes_auth import require_user
 from app.core.config import settings
-from app.ml.data import NSRDB_RECORDS, MITDB_RECORDS, list_uploaded_datasets
+from app.ml.data import (
+    INCART_RECORDS,
+    NSRDB_RECORD_COUNT,
+    NSRDB_RECORDS,
+    MITDB_RECORDS,
+    list_uploaded_datasets,
+)
 
 router = APIRouter(prefix="/api/datasets", tags=["datasets"])
 
@@ -37,9 +43,9 @@ def list_datasets(user=Depends(require_user)):
                 "records": [],
             },
             {
-                "id": "mit-bih-nsr",
-                "name": "MIT-BIH Normal Sinus Rhythm DB",
-                "description": "18 long-term ECG recordings from healthy subjects (PhysioNet). Will use local files if present in storage/datasets/nsrdb/, otherwise downloads.",
+                "id": "mitbih-nsrdb",
+                "name": "MIT-BIH Normal Sinus Rhythm Database",
+                "description": f"All {NSRDB_RECORD_COUNT} real long-term healthy recordings; complete first stored ECG channel only.",
                 "records": NSRDB_RECORDS,
             },
             *uploaded_entries,
@@ -48,8 +54,14 @@ def list_datasets(user=Depends(require_user)):
             {
                 "id": "mit-bih-arrhythmia",
                 "name": "MIT-BIH Arrhythmia Database",
-                "description": "48 half-hour ECG recordings with annotated arrhythmias (PhysioNet). Will use local files if present in storage/datasets/mitdb/, otherwise downloads.",
+                "description": "46 half-hour records containing MLII with annotated arrhythmias. Records without MLII are excluded.",
                 "records": MITDB_RECORDS,
+            },
+            {
+                "id": "incartdb",
+                "name": "St Petersburg INCART 12-lead Arrhythmia Database",
+                "description": "75 unseen 30-minute 12-lead Holter records. Performance testing uses lead II as the closest external counterpart to MLII.",
+                "records": INCART_RECORDS,
             },
             {
                 "id": "synthetic-arrhythmia",

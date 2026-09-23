@@ -28,6 +28,7 @@ type Props = {
   active: boolean
   height?: number
   pixelsPerSample?: number
+  showPrediction?: boolean
 }
 
 // Visual constants
@@ -71,6 +72,7 @@ export function EcgCanvas({
   active,
   height = 300,
   pixelsPerSample = 3,
+  showPrediction = true,
 }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
@@ -138,19 +140,21 @@ export function EcgCanvas({
         }
         ctx.globalAlpha = 1
 
-        // 3. Draw reconstruction (cyan dashed)
-        ctx.strokeStyle = COLOR_RECON
-        ctx.lineWidth = 1
-        ctx.setLineDash([4, 3])
-        ctx.beginPath()
-        for (let i = 0; i < visible.length; i++) {
-          const x = startX + i * pixelsPerSample
-          const y = valueToY(visible[i].prediction, h)
-          if (i === 0) ctx.moveTo(x, y)
-          else ctx.lineTo(x, y)
+        // 3. Draw reconstruction (cyan dashed) only for autoencoder mode.
+        if (showPrediction) {
+          ctx.strokeStyle = COLOR_RECON
+          ctx.lineWidth = 1
+          ctx.setLineDash([4, 3])
+          ctx.beginPath()
+          for (let i = 0; i < visible.length; i++) {
+            const x = startX + i * pixelsPerSample
+            const y = valueToY(visible[i].prediction, h)
+            if (i === 0) ctx.moveTo(x, y)
+            else ctx.lineTo(x, y)
+          }
+          ctx.stroke()
+          ctx.setLineDash([])
         }
-        ctx.stroke()
-        ctx.setLineDash([])
 
         // 4. Draw ECG trace (black)
         ctx.strokeStyle = COLOR_TRACE
@@ -200,7 +204,7 @@ export function EcgCanvas({
 
     raf = requestAnimationFrame(render)
     return () => cancelAnimationFrame(raf)
-  }, [height, pixelsPerSample])
+  }, [height, pixelsPerSample, showPrediction])
 
   return (
     <div ref={containerRef} className="w-full">

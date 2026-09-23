@@ -2,8 +2,8 @@
 
 Provides three sources:
 1. Synthetic normal sinus rhythm — for quick smoke tests when PhysioNet is unreachable.
-2. MIT-BIH Normal Sinus Rhythm DB (NSRDB) — for training.
-3. MIT-BIH Arrhythmia Database (MITDB) — for evaluation / live replay.
+2. MIT-BIH Normal Sinus Rhythm Database first ECG channel — for training.
+3. MIT-BIH Arrhythmia Database MLII — for evaluation / live replay.
 
 All sources go through the same preprocessing per slide 11:
   raw → resample to 128 Hz → bandpass 0.5–50 Hz → 4 s windows (512 samples) → z-score normalize
@@ -14,6 +14,7 @@ import io
 import os
 import math
 import random
+import urllib.request
 from pathlib import Path
 from typing import Iterator, List, Tuple, Optional
 
@@ -414,22 +415,37 @@ def synthetic_arrhythmia_ecg(duration_s: float = 30.0,
 
 # ---------- MIT-BIH loaders (download from PhysioNet on first use) ----------
 
-NSRDB_RECORDS = [
-    "16265", "16272", "16420", "16483", "16539", "16773", "16786", "16795",
-    "17052", "17453", "18177", "18184", "19088", "19090", "19093", "19140",
-    "19830", "19840",
-]
-
 MITDB_RECORDS = [
-    "100", "101", "102", "103", "104", "105", "106", "107", "108", "109",
+    "100", "101", "103", "105", "106", "107", "108", "109",
     "111", "112", "113", "114", "115", "116", "117", "118", "119", "121",
     "122", "123", "124", "200", "201", "202", "203", "205", "207", "208",
     "209", "210", "212", "213", "214", "215", "217", "219", "220", "221",
     "222", "223", "228", "230", "231", "232", "233", "234",
 ]
 
+# Records 102 and 104 contain V5 and V2 only. They are deliberately excluded
+# because the final system accepts the Lead-II axis only. Record 114 is kept:
+# its MLII signal is channel 2 and is selected by name below.
+MITDB_EXCLUDED_NO_MLII = ["102", "104"]
+INCART_RECORDS = [f"I{i:02d}" for i in range(1, 76)]
+NSRDB_RECORDS = [
+    "16265", "16272", "16273", "16420", "16483", "16539",
+    "16773", "16786", "16795", "17052", "17453", "18177",
+    "18184", "19088", "19090", "19093", "19140", "19830",
+]
+NSRDB_RECORD_COUNT = len(NSRDB_RECORDS)
+NSRDB_PRIMARY_HEADER_NAME = "ECG1"
 
-def _download_record(record_name: str, db_slug: str) -> Tuple[np.ndarray, int]:
+
+def _lead_cache_stem(record_name: str, required_lead: Optional[str]) -> str:
+    return record_name if not required_lead else f"{record_name}_{required_lead.upper()}"
+
+
+def _download_record(
+    record_name: str,
+    db_slug: str,
+    required_lead: Optional[str] = None,
+) -> Tuple[np.ndarray, int]:
     """Load a record from local files, PhysioNet cache, or download from PhysioNet.
 
     Search order:
@@ -438,8 +454,7 @@ def _download_record(record_name: str, db_slug: str) -> Tuple[np.ndarray, int]:
     3. Download from PhysioNet (requires internet)
 
     To use your own MIT-BIH files: copy the .dat and .hea files to
-    storage/datasets/nsrdb/ (for NSR DB) or storage/datasets/mitdb/ (for
-    Arrhythmia DB). The system will use them instead of downloading.
+    storage/datasets/mitdb/. The system will use them instead of downloading.
     """
     cache_dir = settings.DATASET_DIR / db_slug
     cache_dir.mkdir(parents=True, exist_ok=True)
@@ -451,18 +466,31 @@ def _download_record(record_name: str, db_slug: str) -> Tuple[np.ndarray, int]:
         print(f"[ok] Loading {record_name} from local files ({cache_dir})")
         import wfdb
         record = wfdb.rdrecord(str(cache_dir / record_name))
-        signal = record.p_signal[:, 0].astype(np.float32)
+        signal_names = [str(name).upper() for name in record.sig_name]
+        if required_lead:
+            requested = required_lead.upper()
+            if requested not in signal_names:
+                raise ValueError(
+                    f"Record {record_name} does not contain required lead "
+                    f"{required_lead}; available signals: {record.sig_name}"
+                )
+            lead_index = signal_names.index(requested)
+        else:
+            lead_index = 0
+        signal = record.p_signal[:, lead_index].astype(np.float32)
         fs = record.fs
         # Cache as .npy for faster subsequent loads
-        cache_file = cache_dir / f"{record_name}.npy"
-        fs_cache_file = cache_dir / f"{record_name}.fs"
+        cache_stem = _lead_cache_stem(record_name, required_lead)
+        cache_file = cache_dir / f"{cache_stem}.npy"
+        fs_cache_file = cache_dir / f"{cache_stem}.fs"
         np.save(cache_file, signal)
         fs_cache_file.write_text(str(fs))
         return signal, fs
 
     # 2. Check for cached .npy file
-    cache_file = cache_dir / f"{record_name}.npy"
-    fs_cache_file = cache_dir / f"{record_name}.fs"
+    cache_stem = _lead_cache_stem(record_name, required_lead)
+    cache_file = cache_dir / f"{cache_stem}.npy"
+    fs_cache_file = cache_dir / f"{cache_stem}.fs"
     if cache_file.exists() and fs_cache_file.exists():
         signal = np.load(cache_file)
         fs = int(fs_cache_file.read_text().strip())
@@ -476,67 +504,76 @@ def _download_record(record_name: str, db_slug: str) -> Tuple[np.ndarray, int]:
         record = wfdb.rdrecord(record_name, pn_dir=db_slug)
     except TypeError:
         record = wfdb.rdrecord(record_name, pb_dir=db_slug)
-    # Use lead 0 (MLII in MITDB, ECG1 in NSRDB)
-    signal = record.p_signal[:, 0].astype(np.float32)
+    signal_names = [str(name).upper() for name in record.sig_name]
+    if required_lead:
+        requested = required_lead.upper()
+        if requested not in signal_names:
+            raise ValueError(
+                f"Record {record_name} does not contain required lead "
+                f"{required_lead}; available signals: {record.sig_name}"
+            )
+        lead_index = signal_names.index(requested)
+    else:
+        lead_index = 0
+    signal = record.p_signal[:, lead_index].astype(np.float32)
     fs = record.fs
     np.save(cache_file, signal)
     fs_cache_file.write_text(str(fs))
     return signal, fs
 
 
-def load_mitbih_nsr(records: Optional[List[str]] = None,
-                    max_records: int = 4,
-                    duration_s_per_record: float = 60.0,
-                    use_ecg_qc: bool = True,
-                    min_quality: int = 2) -> np.ndarray:
-    """Load MIT-BIH NSR DB records, preprocess, windowize, and QC.
+def _prepare_complete_nsrdb_record(record_name: str) -> np.ndarray:
+    """Return cleaned windows from the complete first NSRDB ECG channel."""
+    cache_dir = settings.DATASET_DIR / "nsrdb-primary-full"
+    cache_dir.mkdir(parents=True, exist_ok=True)
+    cache_path = cache_dir / f"{record_name}_primary_full.npy"
+    if cache_path.exists():
+        return np.load(cache_path)
 
-    Returns a (N, 512) array of normal ECG windows for training.
+    signal, source_rate = _download_record(
+        record_name, "nsrdb", required_lead=NSRDB_PRIMARY_HEADER_NAME
+    )
+    if source_rate != settings.SAMPLING_RATE_HZ:
+        signal = resample_to(signal, source_rate, settings.SAMPLING_RATE_HZ)
+    window_samples = settings.WINDOW_SAMPLES
+    block_samples = 30 * 60 * settings.SAMPLING_RATE_HZ
+    usable_samples = (len(signal) // window_samples) * window_samples
+    parts: List[np.ndarray] = []
+    for central_start in range(0, usable_samples, block_samples):
+        central_end = min(central_start + block_samples, usable_samples)
+        extended_start = max(0, central_start - window_samples)
+        extended_end = min(len(signal), central_end + window_samples)
+        filtered = bandpass_filter(
+            signal[extended_start:extended_end], settings.SAMPLING_RATE_HZ
+        )
+        kept_start = central_start - extended_start
+        kept_end = kept_start + central_end - central_start
+        parts.append(windowize(filtered[kept_start:kept_end]))
+    windows = np.concatenate(parts).astype(np.float32, copy=False)
+    mean = windows.mean(axis=1, keepdims=True)
+    standard_deviation = windows.std(axis=1, keepdims=True)
+    windows = ((windows - mean) / (standard_deviation + 1e-8)).astype(np.float32)
+    row_std = windows.std(axis=1)
+    keep = (
+        np.all(np.isfinite(windows), axis=1)
+        & (np.ptp(windows, axis=1) >= 0.5)
+        & (row_std >= 0.05)
+        & (row_std <= 5.0)
+    )
+    windows = windows[keep]
+    np.save(cache_path, windows)
+    return windows
 
-    Parameters
-    ----------
-    records : list of str, optional
-        NSRDB record names to load. Defaults to the first `max_records` from NSRDB_RECORDS.
-    max_records : int
-        Number of records to use (only when `records` is None).
-    duration_s_per_record : float
-        Seconds of each record to load (default 60s — increase for more training data).
-    use_ecg_qc : bool
-        If True (default), use the ecg_qc SQI-based quality classifier.
-        If False, fall back to the simple std-based filter.
-    min_quality : int
-        Minimum quality class (0-3) to keep when using ecg_qc. Default: 2.
-    """
-    records = records or NSRDB_RECORDS[:max_records]
-    all_windows: List[np.ndarray] = []
-    total_in = 0
-    total_kept = 0
-    for rec in records:
-        try:
-            signal, src_fs = _download_record(rec, "nsrdb")
-        except Exception as e:
-            print(f"[warn] Could not load NSRDB record {rec}: {e}")
-            continue
-        # Trim to requested duration
-        max_samples = int(duration_s_per_record * src_fs)
-        signal = signal[:max_samples]
-        signal = preprocess_signal(signal, src_fs)
-        windows = windowize(signal)
-        total_in += len(windows)
-        if use_ecg_qc:
-            windows, stats = ecg_qc_quality_control(windows, fs=settings.SAMPLING_RATE_HZ,
-                                                     min_quality=min_quality)
-            print(f"[ok] NSRDB {rec}: {stats['n_kept']}/{stats['n_in']} windows kept "
-                  f"(dist: {stats['distribution']})")
-        else:
-            windows = quality_control(windows)
-            print(f"[ok] NSRDB {rec}: {len(windows)} windows (simple QC)")
-        total_kept += len(windows)
-        all_windows.append(windows)
-    print(f"[qc] Total: {total_kept}/{total_in} windows kept ({100.0*total_kept/max(1,total_in):.1f}%)")
+
+def load_nsrdb_primary(max_records: int = NSRDB_RECORD_COUNT) -> np.ndarray:
+    """Load complete real healthy ECG from one fixed channel in all NSRDB records."""
+    all_windows = [
+        _prepare_complete_nsrdb_record(record)
+        for record in NSRDB_RECORDS[:max_records]
+    ]
     if not all_windows:
         return np.empty((0, settings.WINDOW_SAMPLES), dtype=np.float32)
-    return np.concatenate(all_windows, axis=0)
+    return np.concatenate(all_windows).astype(np.float32, copy=False)
 
 
 def load_mitbih_arrhythmia(records: Optional[List[str]] = None,
@@ -549,7 +586,7 @@ def load_mitbih_arrhythmia(records: Optional[List[str]] = None,
     out = []
     for rec in records:
         try:
-            signal, src_fs = _download_record(rec, "mitdb")
+            signal, src_fs = _download_record(rec, "mitdb", required_lead="MLII")
         except Exception as e:
             print(f"[warn] Could not load MITDB record {rec}: {e}")
             continue
@@ -558,12 +595,34 @@ def load_mitbih_arrhythmia(records: Optional[List[str]] = None,
 
 
 def stream_mitbih_record(record_name: str,
-                         chunk_seconds: float = 4.0) -> Iterator[np.ndarray]:
-    """Stream a MIT-BIH arrhythmia record in chunks for live UI playback."""
-    signal, src_fs = _download_record(record_name, "mitdb")
-    signal = preprocess_signal(signal, src_fs)
+                         chunk_seconds: float = 4.0,
+                         raw_resampled: bool = False,
+                         ) -> Iterator[np.ndarray]:
+    """Stream the preprocessed MLII signal for live UI playback."""
+    if record_name not in MITDB_RECORDS:
+        raise ValueError(f"Record {record_name} is unavailable in MLII-only mode")
+    signal, src_fs = _download_record(record_name, "mitdb", required_lead="MLII")
+    signal = resample_to(signal, src_fs, settings.SAMPLING_RATE_HZ) if raw_resampled else preprocess_signal(signal, src_fs)
     chunk_size = int(chunk_seconds * settings.SAMPLING_RATE_HZ)
-    for i in range(0, len(signal) - chunk_size, chunk_size):
+    if chunk_size < 1:
+        raise ValueError("Chunk duration must be positive")
+    for i in range(0, len(signal), chunk_size):
+        yield signal[i:i + chunk_size]
+
+
+def stream_incart_record(record_name: str,
+                         chunk_seconds: float = 4.0,
+                         raw_resampled: bool = False,
+                         ) -> Iterator[np.ndarray]:
+    """Stream preprocessed INCART lead II for external live replay."""
+    if record_name not in INCART_RECORDS:
+        raise ValueError(f"Unknown INCART record {record_name}")
+    signal, src_fs = _download_record(record_name, "incartdb", required_lead="II")
+    signal = resample_to(signal, src_fs, settings.SAMPLING_RATE_HZ) if raw_resampled else preprocess_signal(signal, src_fs)
+    chunk_size = int(chunk_seconds * settings.SAMPLING_RATE_HZ)
+    if chunk_size < 1:
+        raise ValueError("Chunk duration must be positive")
+    for i in range(0, len(signal), chunk_size):
         yield signal[i:i + chunk_size]
 
 

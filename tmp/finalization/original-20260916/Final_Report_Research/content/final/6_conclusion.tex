@@ -1,0 +1,120 @@
+\chapter{Discussion and Conclusion}\label{ch:conclusion}
+
+\section{Core finding}
+
+The final one-lead system reached high overall accuracy on later MLII ECG from
+patients whose earlier MLII ECG was used for training. Whole-system pooled
+accuracy was 96.86\%, equal-subject accuracy was 96.90\%, and the
+subject-clustered 95\% confidence interval was 94.02--99.05\%. Its lower bound
+is above 90\%, and two non-parametric subject-level tests also reject a 90\%
+null hypothesis.
+
+This is a genuine chronological holdout, not a shuffled-beat calculation. The
+final 20\% was excluded from fitting and selection, and a 16-beat gap reduced
+contact between neighbouring windows. However, it is a patient-adapted result:
+the same patients appear in the first 80\% training region. It must not be
+described as 96.86\% accuracy on unseen patients.
+
+A limited post-freeze INCART check was added after the main final experiment.
+It used lead II from an unseen source database and is useful for demonstrating
+external-domain behaviour, including example ECG segments. It does not replace
+a large patient-level external validation study.
+
+\section{Were the goals reached?}
+
+\begin{itemize}
+    \item \textbf{Aggregate accuracy above 90\%: reached.} Abnormality,
+    conditional subtype, whole-system accuracy, and whole-system macro F1 all
+    exceed 90\%.
+    \item \textbf{Whole-system 95\% interval above 90\%: reached.} The lower
+    bound is 94.02\%.
+    \item \textbf{Interval width at most three points: not reached.} The width
+    is 5.03 points.
+    \item \textbf{Every arrhythmia above 90\% recall: not reached.} PAC recall
+    is 70.05\%.
+    \item \textbf{More than 90\% accuracy on completely unseen patients:
+    partially checked, not fully validated.} The limited INCART check exceeded
+    90\% on its saved subset, but it is too small to establish patient-level
+    external generalisation.
+\end{itemize}
+
+\section{Why the final architecture worked}
+
+The system works as a one-channel system. The autoencoder uses only the first
+stored channel of NSRDB, while every supervised and deployed input is MLII. The
+NSRDB header calls its channel ECG1 but does not document an anatomical Lead-II
+placement. For that reason, this thesis does not claim that the two source
+channels have the same electrical axis. Removing MITDB records without MLII
+also prevents the supervised system from silently changing viewpoints.
+
+The model combines evidence that explains different parts of the ECG. Beat bins
+and derivatives describe shape. Spectral features describe frequency content.
+Causal RR history describes timing. Normal-only reconstruction describes
+mismatch from healthy structure. Extra Trees learn non-linear links between
+these features without assuming a straight-line decision boundary. Earlier
+labelled ECG also gives a patient-specific reference, which makes persistent
+bundle-branch and rhythm patterns easier to recognise later in the same
+recording.
+
+\section{Remaining weaknesses}
+
+PAC remains difficult because it can look like normal rhythm or PVC and often
+depends on subtle timing evidence. The final system correctly classified 414
+of 591 PAC beats end to end. Its PAC precision is high, but sensitivity is low.
+Improvement requires more independent PAC patients and a larger external test,
+not more tuning against the temporal test or the limited INCART check already
+reported here.
+
+The interval width is controlled by 45 independent subject clusters, including
+three below-target clusters. Adding more beats from the same records would
+produce a misleadingly narrow beat-level interval without adding independent
+evidence. A genuinely shorter interval requires more independent patients with
+enough examples from all classes.
+
+\section{Limitations}
+
+\begin{enumerate}
+    \item The temporal study has patient overlap by design and cannot establish
+    cold-start patient generalisation.
+    \item The supervised data represent 45 MITDB subject clusters; no external
+    hospital cohort was used. The added INCART check is an external database
+    check, not a hospital-cohort validation study.
+    \item The healthy autoencoder used complete recordings from all 18 NSRDB
+    subjects. Its first stored channel is named ECG1 in the WFDB headers, but
+    the electrode placement is not documented as Lead II.
+    \item The independent benefit of the four autoencoder features was not
+    tested with a final held-out ablation.
+    \item PAC end-to-end recall is 70.05\%.
+    \item Unsupported abnormal symbols remain in the binary result but are
+    excluded from the supported six-class result.
+    \item Records 102 and 104 were excluded because they contain V5 and V2,
+    not MLII. Record 114 uses its stored MLII channel by signal name rather
+    than assuming a fixed channel number.
+    \item Offline evaluation uses annotated R peaks. Live R-peak detection can
+    add errors that are not included in the offline temporal result.
+    \item Evaluation is beat based, not a clinical episode or patient-level
+    diagnosis study.
+\end{enumerate}
+
+These limits follow the principle that development performance and clinical
+evidence must be reported separately \cite{collins2024tripodai}.
+
+\section{Required next study}
+
+A future study should add many independent patients, reserve an external
+patient-level database for one final test, pre-register a lower 95\% bound
+above 90\%, keep the three-point width target, and set minimum recall for each
+arrhythmia. All thresholds must be selected without the external test. The
+study should also compare the full model with and without autoencoder
+residuals, and validate real-time R-peak detection and Lead-II hardware
+placement.
+
+\section{Final statement}
+
+The thesis demonstrates a one-lead, patient-adapted temporal ECG system with
+96.86\% whole-system accuracy and a 94.02--99.05\% subject-clustered 95\%
+interval. This is meaningful evidence for later MLII ECG from known patients.
+The added INCART result is a useful external-source check, but it is not
+evidence of equivalent performance for all new patients, and it does not solve
+PAC sensitivity. The aggregate final-study goal is reached with clearly stated
+statistical and clinical limits. The system remains for research use only.

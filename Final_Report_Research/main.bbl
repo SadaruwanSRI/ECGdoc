@@ -1,0 +1,152 @@
+\begin{thebibliography}{10}
+
+\bibitem{kligfield2007standardization}
+P.~Kligfield, L.~S. Gettes, J.~J. Bailey, R.~Childers, B.~J. Deal, E.~W.
+  Hancock, G.~van Herpen, J.~A. Kors, P.~Macfarlane, D.~M. Mirvis, O.~Pahlm,
+  P.~Rautaharju, and G.~S. Wagner, ``Recommendations for the standardization
+  and interpretation of the electrocardiogram: Part i,'' {\em Journal of the
+  American College of Cardiology}, vol.~49, no.~10, pp.~1109--1127, 2007.
+
+\bibitem{moody2001impact}
+G.~B. Moody and R.~G. Mark, ``The impact of the mit--bih arrhythmia database,''
+  {\em IEEE Engineering in Medicine and Biology Magazine}, vol.~20, no.~3,
+  pp.~45--50, 2001.
+
+\bibitem{dechazal2004heartbeat}
+P.~de~Chazal, M.~O'Dwyer, and R.~B. Reilly, ``Automatic classification of
+  heartbeats using ecg morphology and heartbeat interval features,'' {\em IEEE
+  Transactions on Biomedical Engineering}, vol.~51, no.~7, pp.~1196--1206,
+  2004.
+
+\bibitem{goldberger2000physionet}
+A.~L. Goldberger, L.~A.~N. Amaral, L.~Glass, J.~M. Hausdorff, P.~C. Ivanov,
+  R.~G. Mark, J.~E. Mietus, G.~B. Moody, C.-K. Peng, and H.~E. Stanley,
+  ``Physiobank, physiotoolkit, and physionet: Components of a new research
+  resource for complex physiologic signals,'' {\em Circulation}, vol.~101,
+  no.~23, pp.~e215--e220, 2000.
+
+\bibitem{mitdb}
+G.~B. Moody and R.~G. Mark, ``Mit--bih arrhythmia database.''
+  \url{https://physionet.org/content/mitdb/1.0.0/}, 2005.
+
+\bibitem{nsrdb}
+G.~B. Moody, ``Mit--bih normal sinus rhythm database.''
+  \url{https://physionet.org/content/nsrdb/1.0.0/}, 1999.
+
+\bibitem{mousavi2019seq2seq}
+S.~Mousavi and F.~Afghah, ``Inter- and intra-patient ecg heartbeat
+  classification for arrhythmia detection: A sequence to sequence deep learning
+  approach,'' in {\em IEEE International Conference on Acoustics, Speech and
+  Signal Processing}, pp.~1308--1312, 2019.
+
+\bibitem{zhang2021interpatient}
+J.~Zhang, A.~Liu, D.~Liang, X.~Chen, and M.~Gao, ``Interpatient ecg heartbeat
+  classification with an adversarial convolutional neural network,'' {\em
+  Journal of Healthcare Engineering}, vol.~2021, p.~9946596, 2021.
+
+\bibitem{huang2014bbb}
+H.~Huang, J.~Liu, Q.~Zhu, R.~Wang, and G.~Hu, ``Detection of inter-patient left
+  and right bundle branch block heartbeats in ecg using ensemble classifiers,''
+  {\em BioMedical Engineering OnLine}, vol.~13, p.~72, 2014.
+
+\bibitem{kiranyaz2016ecgcnn}
+S.~Kiranyaz, T.~Ince, and M.~Gabbouj, ``Real-time patient-specific ecg
+  classification by 1-d convolutional neural networks,'' {\em IEEE Transactions
+  on Biomedical Engineering}, vol.~63, no.~3, pp.~664--675, 2016.
+
+\bibitem{acharya2017cnn}
+U.~R. Acharya, H.~Fujita, O.~S. Lih, Y.~Hagiwara, J.~H. Tan, and M.~Adam,
+  ``Automated detection of arrhythmias using different intervals of tachycardia
+  ecg segments with convolutional neural network,'' {\em Information Sciences},
+  vol.~405, pp.~81--90, 2017.
+
+\bibitem{hannun2019cardiologist}
+A.~Y. Hannun, P.~Rajpurkar, M.~Haghpanahi, G.~H. Tison, C.~Bourn, M.~P.
+  Turakhia, and A.~Y. Ng, ``Cardiologist-level arrhythmia detection and
+  classification in ambulatory electrocardiograms using a deep neural
+  network,'' {\em Nature Medicine}, vol.~25, pp.~65--69, 2019.
+
+\bibitem{ribeiro2020ecg}
+A.~H. Ribeiro, M.~H. Ribeiro, G.~M.~M. Paixao, D.~M. Oliveira, P.~R. Gomes,
+  J.~A. Canazart, M.~P.~S. Ferreira, C.~R. Andersson, P.~W. Macfarlane,
+  W.~Meira, T.~B. Sch{\"o}n, and A.~L.~P. Ribeiro, ``Automatic diagnosis of the
+  12-lead ecg using a deep neural network,'' {\em Nature Communications},
+  vol.~11, p.~1760, 2020.
+
+\bibitem{hinton2006autoencoder}
+G.~E. Hinton and R.~R. Salakhutdinov, ``Reducing the dimensionality of data
+  with neural networks,'' {\em Science}, vol.~313, no.~5786, pp.~504--507,
+  2006.
+
+\bibitem{vincent2008denoising}
+P.~Vincent, H.~Larochelle, Y.~Bengio, and P.-A. Manzagol, ``Extracting and
+  composing robust features with denoising autoencoders,'' in {\em Proceedings
+  of the 25th International Conference on Machine Learning}, pp.~1096--1103,
+  2008.
+
+\bibitem{chandola2009anomaly}
+V.~Chandola, A.~Banerjee, and V.~Kumar, ``Anomaly detection: A survey,'' {\em
+  ACM Computing Surveys}, vol.~41, no.~3, pp.~1--58, 2009.
+
+\bibitem{malhotra2016lstm}
+P.~Malhotra, A.~Ramakrishnan, G.~Anand, L.~Vig, P.~Agarwal, and G.~Shroff,
+  ``Lstm-based encoder--decoder for multi-sensor anomaly detection,'' in {\em
+  ICML 2016 Workshop on Anomaly Detection}, 2016.
+
+\bibitem{thill2021tcnae}
+M.~Thill, W.~Konen, H.~Wang, and T.~B{\"a}ck, ``Temporal convolutional
+  autoencoder for unsupervised anomaly detection in time series,'' {\em Applied
+  Soft Computing}, vol.~112, p.~107751, 2021.
+
+\bibitem{jang2021cvae}
+J.-H. Jang, T.~Y. Kim, H.-S. Lim, and D.~Yoon, ``Unsupervised feature learning
+  for electrocardiogram data using the convolutional variational autoencoder,''
+  {\em PLOS ONE}, vol.~16, no.~12, p.~e0260612, 2021.
+
+\bibitem{zhou2022aae}
+L.~Shan {\em et~al.}, ``Abnormal ecg detection based on an adversarial
+  autoencoder,'' {\em Frontiers in Physiology}, vol.~13, p.~961724, 2022.
+
+\bibitem{saito2015pr}
+T.~Saito and M.~Rehmsmeier, ``The precision--recall plot is more informative
+  than the roc plot when evaluating binary classifiers on imbalanced
+  datasets,'' {\em PLOS ONE}, vol.~10, no.~3, p.~e0118432, 2015.
+
+\bibitem{cui2019classbalanced}
+Y.~Cui, M.~Jia, T.-Y. Lin, Y.~Song, and S.~Belongie, ``Class-balanced loss
+  based on effective number of samples,'' in {\em Proceedings of the IEEE/CVF
+  Conference on Computer Vision and Pattern Recognition}, pp.~9268--9277, 2019.
+
+\bibitem{rutter2000clustered}
+C.~M. Rutter, ``Bootstrap estimation of diagnostic accuracy with
+  patient-clustered data,'' {\em Academic Radiology}, vol.~7, no.~6,
+  pp.~413--419, 2000.
+
+\bibitem{collins2024tripodai}
+G.~S. Collins, K.~G.~M. Moons, P.~Dhiman, R.~D. Riley, A.~L. Beam,
+  B.~Van~Calster, M.~Ghassemi, X.~Liu, J.~B. Reitsma, M.~van Smeden, A.-L.
+  Boulesteix, J.~C. Camaradou, L.~A. Celi, S.~Denaxas, A.~K. Denniston,
+  B.~Glocker, R.~M. Golub, H.~Harvey, G.~Heinze, M.~M. Hoffman, A.~P. Kengne,
+  E.~Lam, N.~Lee, E.~W. Loder, L.~Maier-Hein, B.~A. Mateen, M.~D. McCradden,
+  L.~Oakden-Rayner, J.~Ordish, R.~Parnell, S.~Rose, K.~Singh, L.~Wynants, and
+  P.~Logullo, ``{TRIPOD+AI} statement: Updated guidance for reporting clinical
+  prediction models that use regression or machine learning methods,'' {\em
+  BMJ}, vol.~385, p.~e078378, 2024.
+
+\bibitem{butterworth1930filter}
+S.~Butterworth, ``On the theory of filter amplifiers,'' {\em Experimental
+  Wireless and the Wireless Engineer}, vol.~7, pp.~536--541, 1930.
+
+\bibitem{virtanen2020scipy}
+P.~Virtanen {\em et~al.}, ``Scipy 1.0: Fundamental algorithms for scientific
+  computing in python,'' {\em Nature Methods}, vol.~17, pp.~261--272, 2020.
+
+\bibitem{geurts2006extratrees}
+P.~Geurts, D.~Ernst, and L.~Wehenkel, ``Extremely randomized trees,'' {\em
+  Machine Learning}, vol.~63, pp.~3--42, 2006.
+
+\bibitem{incartdb}
+E.~Yakushenko, ``St petersburg incart 12-lead arrhythmia database.''
+  \url{https://physionet.org/content/incartdb/1.0.0/}, 2008.
+
+\end{thebibliography}

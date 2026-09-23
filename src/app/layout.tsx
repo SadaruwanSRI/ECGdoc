@@ -4,10 +4,20 @@ import { Toaster } from "@/components/ui/toaster";
 import { AuthProvider } from "@/lib/auth-context";
 
 export const metadata: Metadata = {
-  title: "ECG Anomaly Detection — Clinical Decision Support",
+  title: "ECG Anomaly Detection - Research ECG Analysis",
   description:
-    "Unsupervised deep-learning ECG anomaly detection system. Train autoencoders on MIT-BIH NSR DB, detect arrhythmias in real time, and generate physician-ready PDF reports.",
-  keywords: ["ECG", "anomaly detection", "autoencoder", "deep learning", "MIT-BIH", "arrhythmia", "PyTorch", "FastAPI"],
+    "Research ECG analysis system using a one-lead MLII temporal-holdout hierarchy with morphology, RR timing, and normal-autoencoder residual evidence.",
+  keywords: [
+    "ECG",
+    "anomaly detection",
+    "MLII",
+    "temporal holdout",
+    "autoencoder",
+    "Extra Trees",
+    "MIT-BIH",
+    "arrhythmia",
+    "FastAPI",
+  ],
 };
 
 export default function RootLayout({

@@ -48,12 +48,12 @@ export function TrainingTab() {
   const [cfg, setCfg] = useState({
     model_name: `ecg-ae-${new Date().toISOString().slice(0, 10)}`,
     description: 'Trained from web UI',
-    epochs: 10,
-    batch_size: 32,
+    epochs: 2,
+    batch_size: 256,
     learning_rate: 0.001,
-    dataset_name: 'synthetic',
+    dataset_name: 'mitbih-nsrdb',
     uploaded_dataset_id: '' as string,
-    max_records: 4,
+    max_records: 18,
     threshold_k: 2.0,
     use_ecg_qc: true,
     min_quality: 2,
@@ -75,7 +75,7 @@ export function TrainingTab() {
     epochs: 30,
     batch_size: 64,
     learning_rate: 0.001,
-    max_records: 48,
+    max_records: 46,
     hidden_dim: 256,
     dropout: 0.35,
     freeze_encoder: false,
@@ -347,9 +347,9 @@ export function TrainingTab() {
                   ))}
                 </SelectContent>
               </Select>
-              {cfg.dataset_name === 'mit-bih-nsr' && (
+              {cfg.dataset_name === 'mitbih-nsrdb' && (
                 <p className="text-xs text-slate-500">
-                  Will use local files in storage/datasets/nsrdb/ if present, otherwise download {cfg.max_records} records from PhysioNet.
+                  Uses the complete first stored ECG channel from all 18 real MIT-BIH normal-sinus records. The WFDB header calls this channel ECG1; it is not claimed to be standard Lead II.
                 </p>
               )}
               {cfg.dataset_name.startsWith('uploaded:') && (
@@ -398,7 +398,7 @@ export function TrainingTab() {
                 <span className="text-sm font-mono text-slate-600">{cfg.epochs}</span>
               </div>
               <Slider
-                min={3} max={100} step={1}
+                min={1} max={100} step={1}
                 value={[cfg.epochs]}
                 onValueChange={v => setCfg({ ...cfg, epochs: v[0] })}
               />
@@ -413,7 +413,7 @@ export function TrainingTab() {
                 >
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    {[16, 32, 64, 128].map(n => (
+                    {[16, 32, 64, 128, 256].map(n => (
                       <SelectItem key={n} value={String(n)}>{n}</SelectItem>
                     ))}
                   </SelectContent>
@@ -450,7 +450,7 @@ export function TrainingTab() {
               </p>
             </div>
 
-            {cfg.dataset_name === 'mit-bih-nsr' && (
+            {cfg.dataset_name === 'mitbih-nsrdb' && (
               <div className="space-y-2">
                 <div className="flex justify-between">
                   <Label>Records to download</Label>
@@ -568,10 +568,10 @@ export function TrainingTab() {
                 />
               </div>
               <div className="space-y-2">
-                <Label className="text-xs">Max records (1-48)</Label>
+                <Label className="text-xs">Eligible MLII records (1-46)</Label>
                 <Input
                   type="number"
-                  min={1} max={48}
+                  min={1} max={46}
                   value={classifierCfg.max_records}
                   onChange={e => setClassifierCfg({ ...classifierCfg, max_records: Number(e.target.value) })}
                   disabled={classifierStatus === 'running' || classifierStatus === 'starting'}
@@ -675,6 +675,10 @@ export function TrainingTab() {
                 <div>Test macro-F1: <span className="font-mono font-semibold">{((classifierResult.test_macro_f1 ?? 0) * 100).toFixed(1)}%</span></div>
                 <div>Best val macro-F1: <span className="font-mono font-semibold">{((classifierResult.val_macro_f1 ?? 0) * 100).toFixed(1)}%</span></div>
                 <div>Beats extracted: {classifierResult.n_beats.toLocaleString()}</div>
+                <div>Split: <span className="font-semibold">unseen patients</span> (not random beats)</div>
+                {classifierResult.test_subjects?.length > 0 && (
+                  <div>Held-out test patients: <span className="font-mono">{classifierResult.test_subjects.join(', ')}</span></div>
+                )}
                 <div>Class distribution:</div>
                 {Object.entries(classifierResult.class_distribution).map(([cls, count]) => (
                   <div key={cls} className="ml-3 font-mono text-slate-600">{cls}: {String(count)}</div>

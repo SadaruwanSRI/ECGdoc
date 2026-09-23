@@ -21,16 +21,23 @@ from app.api.routes_reports import router as reports_router
 from app.api.routes_datasets import router as datasets_router
 from app.api.routes_evaluation import router as evaluation_router
 from app.api.routes_arduino import router as arduino_router
+from app.ml.model_registry import ensure_final_model_registered
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup
-    print(f"[fastapi] Starting ECG Anomaly Detection backend v1.0.0")
+    print(f"[fastapi] Starting ECG Anomaly Detection backend v1.1.0")
     print(f"[fastapi] Database: {settings.SQLALCHEMY_URL}")
     print(f"[fastapi] Storage dir: {settings.STORAGE_DIR}")
     ok = health()
     print(f"[fastapi] DB health: {'OK' if ok else 'FAILED'}")
+    if ok:
+        registered = ensure_final_model_registered()
+        print(
+            "[fastapi] Final MLII model: "
+            f"{'READY' if registered else 'NOT AVAILABLE'}"
+        )
     yield
     # Shutdown
     print("[fastapi] Shutting down")
@@ -38,15 +45,17 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="ECG Anomaly Detection API",
-    description="Unsupervised deep-learning ECG anomaly detection backend. "
-                "FastAPI + PyTorch + PostgreSQL-ready.",
-    version="1.0.0",
+    description=(
+        "ECG research backend with MIT-BIH normal-sinus reconstruction "
+        "and beat-aligned temporal-holdout classifier."
+    ),
+    version="1.1.0",
     lifespan=lifespan,
 )
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.CORS_ORIGINS + ["*"],  # permissive for sandbox
+    allow_origins=settings.CORS_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -55,7 +64,7 @@ app.add_middleware(
 
 @app.get("/health")
 def healthz():
-    return {"ok": True, "db": health(), "version": "1.0.0"}
+    return {"ok": True, "db": health(), "version": "1.1.0"}
 
 
 # Register routers
@@ -73,7 +82,7 @@ app.include_router(arduino_router)
 def root():
     return {
         "name": "ECG Anomaly Detection API",
-        "version": "1.0.0",
+        "version": "1.1.0",
         "docs": "/docs",
         "health": "/health",
     }

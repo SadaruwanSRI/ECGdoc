@@ -25,6 +25,8 @@ torch>=2.6.0,<3.0
 numpy>=1.26,<3.0
 scipy>=1.13,<2.0
 pandas>=2.2,<3.0
+scikit-learn>=1.5,<2.0
+joblib>=1.4,<2.0
 
 # PhysioNet data loading
 wfdb>=4.1.2,<5.0

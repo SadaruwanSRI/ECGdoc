@@ -1,0 +1,44 @@
+\chapter*{Abstract}\label{abstract}
+\phantomsection
+\pdfbookmark[1]{Abstract}{abstract}%
+\prevspace
+This thesis develops a two-stage electrocardiogram (ECG) system that uses one
+lead. The first supervised stage decides whether a heartbeat is normal or
+abnormal. If the beat is abnormal, the second stage classifies it as premature
+ventricular contraction (PVC), premature atrial contraction (PAC), left bundle
+branch block (LBBB), right bundle branch block (RBBB), or atrial fibrillation
+(AFib).
+
+All models receive one ECG channel at a time. A dilated U-Net autoencoder
+learned normal ECG structure from the complete first stored ECG channel of all
+18 MIT--BIH Normal Sinus Rhythm Database records. The WFDB header names this
+channel ECG1, but it does not state the exact anatomical placement. Fifteen
+subjects were used for fitting and three different subjects were used for
+validation. Four reconstruction-error measures were then combined with MLII
+beat shape, frequency power, and causal RR-interval context. Two separate Extra
+Trees ensembles performed abnormality detection and abnormal-subtype
+classification.
+
+The supervised study used every MIT--BIH Arrhythmia Database record that
+contains MLII: 46 records representing 45 subject clusters. In each record, the
+first 80\% of time was used for development and the final 20\% was kept for
+testing. A 16-beat gap was left before the test boundary to reduce contact
+between neighbouring windows. Therefore, the test contains later unseen signal
+from known patients. It is not an unseen-patient test.
+
+On 20,988 temporal-test beats, abnormality accuracy was 98.47\%, balanced accuracy was
+98.22\%, sensitivity was 96.59\%, and specificity was 99.85\%. Conditional
+subtype accuracy on 7,964 supported abnormal beats was 95.20\%, with macro F1
+of 0.9325. On 20,062 supported six-class beats, whole-system accuracy was
+96.86\% and macro F1 was 0.9303. Equal-subject whole-system accuracy was
+96.90\%. A 10,000-replicate subject-cluster bootstrap gave a 95\% confidence
+interval of 94.02--99.05\%. Its lower bound exceeds 90\%, but its 5.03-point
+width does not meet the planned three-point precision target. Forty-two of 45
+subject clusters exceeded 90\% ($p=4.33\times10^{-10}$, exact one-sided sign
+test).
+
+The aggregate target was reached for this known-patient temporal holdout, but
+not for every subtype. PAC end-to-end recall was 70.05\%. The system therefore
+shows strong performance on later ECG after patient-specific training. However,
+it does not prove more than 90\% accuracy for completely new patients or for
+every arrhythmia type. It remains a research prototype, not a clinical device.

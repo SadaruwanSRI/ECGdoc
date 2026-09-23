@@ -69,20 +69,20 @@ export function AuthScreen() {
             </div>
             <div>
               <h1 className="text-2xl font-bold tracking-tight">ECG Anomaly Detection</h1>
-              <p className="text-rose-300/70 text-sm">Clinical Decision Support System</p>
+              <p className="text-rose-300/70 text-sm">Research ECG Analysis System</p>
             </div>
           </div>
         </div>
 
         <div className="relative space-y-6">
           <h2 className="text-4xl font-bold leading-tight">
-            Unsupervised deep-learning<br />
-            <span className="text-rose-400">arrhythmia detection</span>
+            One-lead MLII<br />
+            <span className="text-rose-400">arrhythmia research</span>
           </h2>
           <p className="text-slate-300 text-lg leading-relaxed max-w-md">
-            Train a 1D convolutional autoencoder on the MIT-BIH Normal Sinus Rhythm
-            Database, then detect anomalies in real time from MIT-BIH Arrhythmia records
-            or live Arduino ECG streams.
+            Combine MLII morphology, RR timing, and frozen normal-autoencoder
+            residual evidence to detect and classify ECG anomalies in MIT-BIH
+            records or research-grade live streams.
           </p>
 
           <div className="grid grid-cols-2 gap-4 max-w-md pt-4">
@@ -106,7 +106,7 @@ export function AuthScreen() {
               <HeartPulse className="w-7 h-7 text-rose-500" />
             </div>
             <h1 className="text-2xl font-bold">ECG Anomaly Detection</h1>
-            <p className="text-slate-500 text-sm">Clinical Decision Support</p>
+            <p className="text-slate-500 text-sm">Research ECG Analysis</p>
           </div>
 
           <Tabs defaultValue="login">

@@ -1,0 +1,207 @@
+{
+  "protocol": {
+    "records": [
+      "I01",
+      "I02"
+    ],
+    "selection": "all complete locally cached INCART lead-II records at audit start",
+    "threshold_tuned": false,
+    "lead": "II",
+    "mode": "offline annotated beats",
+    "headers": {
+      "I01": [
+        "<age>: 65 <sex>: F <diagnoses> Coronary artery disease, arterial hypertension",
+        "patient 1",
+        "PVCs, noise"
+      ],
+      "I02": [
+        "<age>: 65 <sex>: F <diagnoses> Coronary artery disease, arterial hypertension",
+        "patient 1",
+        "ventricular trigeminy, ventricular couplets"
+      ]
+    },
+    "limitation": "convenience subset; source patients may repeat across records; no population generalisation claim"
+  },
+  "threshold": 0.5708333333333333,
+  "model_sha256": "b14b38024d6c39d2f382ee92b1a72964f6e10d7a9807bc69fe298ab6903ddd1e",
+  "test_binary": {
+    "support": 5416,
+    "normal_support": 4845,
+    "abnormal_support": 571,
+    "accuracy": 0.9411004431314623,
+    "balanced_accuracy": 0.9655345482279925,
+    "sensitivity": 0.9964973730297724,
+    "specificity": 0.9345717234262126,
+    "precision": 0.6422121896162528,
+    "f1": 0.7810569663692519,
+    "auroc": 0.9913829593041013,
+    "auprc": 0.9152290765717952,
+    "brier": 0.12364085836205482
+  },
+  "test_whole_system": {
+    "support": 5416,
+    "accuracy": 0.9285450516986706,
+    "macro_f1": 0.3038526984126984,
+    "confusion_matrix": [
+      [
+        4528,
+        97,
+        115,
+        0,
+        55,
+        50
+      ],
+      [
+        2,
+        501,
+        11,
+        0,
+        0,
+        57
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    ],
+    "per_class": {
+      "N": {
+        "support": 4845,
+        "precision": 0.9995584988962473,
+        "recall": 0.9345717234262126,
+        "f1": 0.9659733333333334
+      },
+      "PVC": {
+        "support": 571,
+        "precision": 0.8377926421404682,
+        "recall": 0.8774080560420315,
+        "f1": 0.8571428571428571
+      },
+      "PAC": {
+        "support": 0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0
+      },
+      "LBBB": {
+        "support": 0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0
+      },
+      "RBBB": {
+        "support": 0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0
+      },
+      "AFib": {
+        "support": 0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0
+      }
+    }
+  },
+  "test_subtype": {
+    "support": 571,
+    "accuracy": 0.8809106830122592,
+    "macro_f1": 0.18733705772811918,
+    "balanced_accuracy": 0.8809106830122592,
+    "confusion_matrix": [
+      [
+        503,
+        11,
+        0,
+        0,
+        57
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    ]
+  },
+  "per_record": {
+    "I01": {
+      "support": 2750,
+      "normal_support": 2407,
+      "abnormal_support": 343,
+      "accuracy": 0.9447272727272727,
+      "balanced_accuracy": 0.9671754273553448,
+      "sensitivity": 0.9970845481049563,
+      "specificity": 0.9372663066057333,
+      "precision": 0.6937119675456389,
+      "f1": 0.8181818181818182,
+      "auroc": 0.9923340693628036,
+      "auprc": 0.9324434830164646,
+      "brier": 0.1521195202020202
+    },
+    "I02": {
+      "support": 2666,
+      "normal_support": 2438,
+      "abnormal_support": 228,
+      "accuracy": 0.9373593398349588,
+      "balanced_accuracy": 0.9637627189384455,
+      "sensitivity": 0.9956140350877193,
+      "specificity": 0.9319114027891715,
+      "precision": 0.5776081424936387,
+      "f1": 0.7310789049919485,
+      "auroc": 0.9888794741159709,
+      "auprc": 0.8969014519510867,
+      "brier": 0.09426489434858715
+    }
+  }
+}

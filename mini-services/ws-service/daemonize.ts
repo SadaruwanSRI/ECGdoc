@@ -1,8 +1,13 @@
 // Bun-based daemon launcher
+import { dirname, join } from 'node:path'
+import { fileURLToPath } from 'node:url'
+
+const serviceDir = dirname(fileURLToPath(import.meta.url))
+const logFile = Bun.file(join(serviceDir, 'ws.log'))
 const proc = Bun.spawn(['bun', 'run', 'index.ts'], {
-  cwd: '/home/z/my-project/mini-services/ws-service',
-  stdout: '/home/z/my-project/mini-services/ws-service/ws.log',
-  stderr: '/home/z/my-project/mini-services/ws-service/ws.log',
+  cwd: serviceDir,
+  stdout: logFile,
+  stderr: logFile,
   env: { ...process.env },
   detached: true,
 })

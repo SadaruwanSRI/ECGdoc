@@ -1,0 +1,101 @@
+\relax 
+\providecommand\hyper@newdestlabel[2]{}
+\citation{goldberger2000physionet,nsrdb,mitdb}
+\citation{nsrdb}
+\citation{mitdb,moody2001impact}
+\@writefile{toc}{\contentsline {chapter}{\numberline {3}Data}{11}{chapter.3}\protected@file@percent }
+\@writefile{lof}{\addvspace {10\p@ }}
+\@writefile{lot}{\addvspace {10\p@ }}
+\@writefile{lol}{\addvspace {10\p@ }}
+\newlabel{ch:data}{{3}{11}{Data}{chapter.3}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {3.1}Data Sources and Roles}{11}{section.3.1}\protected@file@percent }
+\@writefile{brf}{\backcite{goldberger2000physionet}{{11}{3.1}{section.3.1}}}
+\@writefile{brf}{\backcite{nsrdb}{{11}{3.1}{section.3.1}}}
+\@writefile{brf}{\backcite{mitdb}{{11}{3.1}{section.3.1}}}
+\@writefile{lot}{\contentsline {table}{\numberline {3.1}{\ignorespaces Data sources and their strictly separated roles.}}{11}{table.caption.12}\protected@file@percent }
+\newlabel{tab:data-source-role}{{3.1}{11}{Data sources and their strictly separated roles}{table.caption.12}{}}
+\@writefile{brf}{\backcite{nsrdb}{{11}{3.1}{table.caption.12}}}
+\@writefile{brf}{\backcite{mitdb}{{11}{3.1}{table.caption.12}}}
+\@writefile{brf}{\backcite{moody2001impact}{{11}{3.1}{table.caption.12}}}
+\citation{mitdb}
+\@writefile{lof}{\contentsline {figure}{\numberline {3.1}{\ignorespaces Dataset roles and evaluation boundaries. The healthy NSRDB channel creates the frozen normal model. MITDB MLII creates the supervised feature table and is split chronologically into development and temporal-test regions.}}{12}{figure.caption.13}\protected@file@percent }
+\newlabel{fig:data-source-overview}{{3.1}{12}{Dataset roles and evaluation boundaries. The healthy NSRDB channel creates the frozen normal model. MITDB MLII creates the supervised feature table and is split chronologically into development and temporal-test regions}{figure.caption.13}{}}
+\@writefile{brf}{\backcite{mitdb}{{13}{3.1}{figure.caption.13}}}
+\@writefile{lof}{\contentsline {figure}{\numberline {3.2}{\ignorespaces Physical MLII placement and the exact one-channel rule. The normal autoencoder uses only the first stored NSRDB ECG channel, whose anatomical placement is unspecified. The supervised and deployed system uses only MLII: negative electrode on the right upper chest, positive electrode on the left lower chest/rib region, and reference electrode on the lower right torso.}}{13}{figure.caption.14}\protected@file@percent }
+\newlabel{fig:data-lead-positions}{{3.2}{13}{Physical MLII placement and the exact one-channel rule. The normal autoencoder uses only the first stored NSRDB ECG channel, whose anatomical placement is unspecified. The supervised and deployed system uses only MLII: negative electrode on the right upper chest, positive electrode on the left lower chest/rib region, and reference electrode on the lower right torso}{figure.caption.14}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {3.2}{\ignorespaces Mapping from MITDB expert annotations to project outputs.}}{13}{table.caption.15}\protected@file@percent }
+\newlabel{tab:data-label-map}{{3.2}{13}{Mapping from MITDB expert annotations to project outputs}{table.caption.15}{}}
+\citation{butterworth1930filter,virtanen2020scipy}
+\@writefile{toc}{\contentsline {section}{\numberline {3.2}Data Cleaning}{14}{section.3.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.2.1}Cleaning Checklist}{14}{subsection.3.2.1}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {3.3}{\ignorespaces Cleaning checklist applied before a signal can become a model input.}}{15}{table.caption.16}\protected@file@percent }
+\newlabel{tab:data-cleaning-checklist}{{3.3}{15}{Cleaning checklist applied before a signal can become a model input}{table.caption.16}{}}
+\@writefile{brf}{\backcite{butterworth1930filter}{{15}{3.3}{table.caption.16}}}
+\@writefile{brf}{\backcite{virtanen2020scipy}{{15}{3.3}{table.caption.16}}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.2.2}Window Construction}{15}{subsection.3.2.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.2.3}Cleaning Yield}{16}{subsection.3.2.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.2.4}Installed Use}{16}{subsection.3.2.4}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {3.3}{\ignorespaces Cleaning real ECG for the two roles. The healthy example is the first channel of NSRDB record 16265. The unseen-use example is MLII from MITDB record 100. Both become one 512-sample input, but their documented channel identities remain different.}}{17}{figure.caption.17}\protected@file@percent }
+\newlabel{fig:data-cleaning-real}{{3.3}{17}{Cleaning real ECG for the two roles. The healthy example is the first channel of NSRDB record 16265. The unseen-use example is MLII from MITDB record 100. Both become one 512-sample input, but their documented channel identities remain different}{figure.caption.17}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {3.3}Data Preparation}{17}{section.3.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.3.1}Prepared Objects}{17}{subsection.3.3.1}\protected@file@percent }
+\newlabel{countitems@1}{{2}{17}{Prepared Objects}{subsection.3.3.1}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.3.2}Splits}{18}{subsection.3.3.2}\protected@file@percent }
+\newlabel{countitems@2}{{4}{18}{Splits}{subsection.3.3.2}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.3.3}Exact Model Allocation}{19}{subsection.3.3.3}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {3.4}{\ignorespaces Training, validation, and temporal-test data supplied to each model.}}{19}{table.caption.18}\protected@file@percent }
+\newlabel{tab:data-model-allocation}{{3.4}{19}{Training, validation, and temporal-test data supplied to each model}{table.caption.18}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {3.4}{\ignorespaces Data preparation during model development and use. Panel A separates normal-only autoencoder development from labeled MLII development. Panel B shows one new MLII signal passing through the frozen abnormality gate and then, only when abnormal, the subtype classifier.}}{20}{figure.caption.19}\protected@file@percent }
+\newlabel{fig:data-feed-real}{{3.4}{20}{Data preparation during model development and use. Panel A separates normal-only autoencoder development from labeled MLII development. Panel B shows one new MLII signal passing through the frozen abnormality gate and then, only when abnormal, the subtype classifier}{figure.caption.19}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.3.4}Feeding the Frozen System}{20}{subsection.3.3.4}\protected@file@percent }
+\@setckpt{content/final/2_data}{
+\setcounter{page}{21}
+\setcounter{equation}{1}
+\setcounter{enumi}{4}
+\setcounter{enumii}{0}
+\setcounter{enumiii}{0}
+\setcounter{enumiv}{0}
+\setcounter{footnote}{0}
+\setcounter{mpfootnote}{0}
+\setcounter{part}{0}
+\setcounter{chapter}{3}
+\setcounter{section}{3}
+\setcounter{subsection}{4}
+\setcounter{subsubsection}{0}
+\setcounter{paragraph}{0}
+\setcounter{subparagraph}{0}
+\setcounter{figure}{4}
+\setcounter{table}{4}
+\setcounter{NAT@ctr}{0}
+\setcounter{parentequation}{0}
+\setcounter{ALC@unique}{0}
+\setcounter{ALC@line}{0}
+\setcounter{ALC@rem}{0}
+\setcounter{ALC@depth}{0}
+\setcounter{AM@survey}{0}
+\setcounter{lstnumber}{1}
+\setcounter{FancyVerbLine}{0}
+\setcounter{caption@flags}{2}
+\setcounter{continuedfloat}{0}
+\setcounter{subfigure}{0}
+\setcounter{subtable}{0}
+\setcounter{section@level}{0}
+\setcounter{Item}{15}
+\setcounter{Hfootnote}{0}
+\setcounter{bookmark@seq@number}{0}
+\setcounter{nlinenum}{0}
+\setcounter{LT@tables}{1}
+\setcounter{LT@chunks}{3}
+\setcounter{float@type}{16}
+\setcounter{countitems}{4}
+\setcounter{nextitemizecount}{3}
+\setcounter{tcbbreakpart}{1}
+\setcounter{tcblayer}{0}
+\setcounter{tcolorbox@number}{1}
+\setcounter{tcbrastercolumn}{1}
+\setcounter{tcbrasterrow}{1}
+\setcounter{tcbrasternum}{1}
+\setcounter{tcbraster}{0}
+\setcounter{tcblisting}{0}
+\setcounter{lstlisting}{0}
+}

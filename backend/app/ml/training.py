@@ -20,7 +20,7 @@ from app.core.config import settings
 from app.ml.model import DENOISING_SKIP_SCALE, build_model
 from app.ml.data import (
     synthetic_normal_ecg,
-    load_mitbih_nsr,
+    load_nsrdb_primary,
     load_uploaded_dataset,
     windows_to_tensor,
     windowize,
@@ -34,16 +34,16 @@ ProgressCallback = Callable[[Dict[str, Any]], None]
 
 @dataclass
 class TrainConfig:
-    epochs: int = settings.DEFAULT_EPOCHS
-    batch_size: int = settings.DEFAULT_BATCH_SIZE
+    epochs: int = 2
+    batch_size: int = 256
     learning_rate: float = settings.DEFAULT_LEARNING_RATE
     latent_channels: int = 1024
     kernel_size: int = 7
     dropout: float = 0.2
-    dataset_name: str = "synthetic"  # "synthetic" | "mit-bih-nsr" | "uploaded"
+    dataset_name: str = "mitbih-nsrdb"  # final real healthy source
     uploaded_dataset_id: str = ""    # name of uploaded dataset folder (when dataset_name="uploaded")
-    max_records: int = 4              # used for mit-bih-nsr and uploaded
-    duration_per_record: float = 60.0
+    max_records: int = 18             # every MIT-BIH NSRDB subject
+    duration_per_record: float = 0.0  # complete recordings are always used
     train_split: float = 0.85
     seed: int = 42
     device: str = "cpu"
@@ -80,30 +80,21 @@ def _gather_training_windows(cfg: TrainConfig,
     can show how many windows were kept/dropped.
     """
     qc_stats = None
-    if cfg.dataset_name == "mit-bih-nsr":
-        try:
-            windows = load_mitbih_nsr(
-                max_records=cfg.max_records,
-                duration_s_per_record=cfg.duration_per_record,
-                use_ecg_qc=cfg.use_ecg_qc,
-                min_quality=cfg.min_quality,
-            )
-            if len(windows) > 0:
-                print(f"[train] Loaded {len(windows)} clean windows from MIT-BIH NSR DB")
-                if on_progress:
-                    on_progress({
-                        "type": "qc",
-                        "dataset": "mit-bih-nsr",
-                        "n_kept": len(windows),
-                        "qc_method": "ecg_qc" if cfg.use_ecg_qc else "simple_std",
-                        "min_quality": cfg.min_quality,
-                    })
-                return windows
-            print("[train] MIT-BIH NSR returned 0 windows - falling back to synthetic")
-        except Exception as e:
-            print(f"[train] MIT-BIH NSR load failed ({e}) - falling back to synthetic")
+    if cfg.dataset_name == "mitbih-nsrdb":
+        windows = load_nsrdb_primary(max_records=cfg.max_records)
+        print(f"[train] Loaded {len(windows)} first-channel windows from MIT-BIH NSRDB")
+        if on_progress:
+            on_progress({
+                "type": "qc",
+                "dataset": "mitbih-nsrdb",
+                "n_kept": len(windows),
+                "lead": "first stored NSRDB ECG channel",
+                "wfdb_channel_name": "ECG1",
+                "subjects": cfg.max_records,
+            })
+        return windows
 
-    elif cfg.dataset_name == "uploaded" and cfg.uploaded_dataset_id:
+    if cfg.dataset_name == "uploaded" and cfg.uploaded_dataset_id:
         # User-uploaded dataset (local .dat/.hea or .csv files)
         upload_dir = settings.DATASET_DIR / "uploads" / cfg.uploaded_dataset_id
         print(f"[train] Loading uploaded dataset from {upload_dir}")
@@ -216,7 +207,9 @@ def train(cfg: TrainConfig,
             "Need at least 8. Try increasing max_records or duration_per_record."
         )
 
-    # Train / val split (subject-wise simulation: last 15% as val)
+    # Interactive retraining uses a reproducible window-level split. The shipped
+    # thesis checkpoint is produced by train_nsrdb_autoencoder.py, which keeps
+    # 15 complete subjects for fitting and three different subjects for validation.
     n = len(windows)
     n_train = int(n * cfg.train_split)
     perm = np.random.permutation(n)

@@ -46,7 +46,7 @@ export default function Home() {
             </div>
             <div>
               <h1 className="font-semibold text-lg leading-tight">ECG Anomaly Detection</h1>
-              <p className="text-xs text-slate-500 leading-tight">Clinical Decision Support</p>
+              <p className="text-xs text-slate-500 leading-tight">Research ECG Analysis</p>
             </div>
           </div>
           <div className="flex items-center gap-3">

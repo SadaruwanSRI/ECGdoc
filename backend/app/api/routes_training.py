@@ -128,6 +128,7 @@ def start_training(req: TrainRequest, user=Depends(require_user)):
     _STOP_FLAGS[run_id] = stop_flag
     _RUNS[run_id] = {
         "run_id": run_id,
+        "user_id": user_id,
         "model_id": model_id,
         "status": "queued",
         "progress": [],
@@ -259,14 +260,17 @@ def start_training(req: TrainRequest, user=Depends(require_user)):
 
 @router.get("/{run_id}", response_model=OkResponse)
 def get_run_status(run_id: str, user=Depends(require_user)):
+    user_id, _ = user
     run = _RUNS.get(run_id)
+    if run and run.get("user_id") != user_id:
+        raise HTTPException(403, "Not authorized to access this training run")
     if not run:
         # Try DB
         with get_db() as db:
             row = db.execute(text("""
                 SELECT id, modelId, status, startedAt, completedAt, finalLoss, epochsRun, logsJson, configJson
-                FROM TrainingRun WHERE id = :id
-            """), {"id": run_id}).fetchone()
+                FROM TrainingRun WHERE id = :id AND userId = :uid
+            """), {"id": run_id, "uid": user_id}).fetchone()
         if not row:
             raise HTTPException(404, "Run not found")
         config = json.loads(row[8] or "{}")
@@ -294,6 +298,16 @@ def get_run_status(run_id: str, user=Depends(require_user)):
 
 @router.post("/{run_id}/stop", response_model=OkResponse)
 def stop_run(run_id: str, user=Depends(require_user)):
+    user_id, _ = user
+    with get_db() as db:
+        owner = db.execute(
+            text("SELECT userId FROM TrainingRun WHERE id = :id"),
+            {"id": run_id},
+        ).fetchone()
+    if not owner:
+        raise HTTPException(404, "Run not found")
+    if owner[0] != user_id:
+        raise HTTPException(403, "Not authorized to stop this training run")
     flag = _STOP_FLAGS.get(run_id)
     if flag:
         flag.set()
@@ -428,6 +442,7 @@ def start_classifier_training(req: ClassifierTrainRequest, user=Depends(require_
     _STOP_FLAGS[run_id] = stop_flag
     _RUNS[run_id] = {
         "run_id": run_id,
+        "user_id": user_id,
         "model_id": model_id,
         "status": "queued",
         "progress": [],

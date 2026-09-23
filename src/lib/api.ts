@@ -8,8 +8,8 @@
  *   directly to http://localhost:8000, and WebSocket to ws://localhost:3003.
  */
 
-const API_PORT = 8000
-const WS_PORT = 3003
+const API_PORT = Number(process.env.NEXT_PUBLIC_API_PORT ?? '8000')
+const WS_PORT = Number(process.env.NEXT_PUBLIC_WS_PORT ?? '3003')
 
 /**
  * Detect whether we're running in the sandbox (Caddy on port 81) or locally
@@ -189,6 +189,32 @@ export const api = {
     })
   },
 
+  async listEvaluationDatasets() {
+    return request<any>('/api/evaluation/datasets')
+  },
+
+  async evaluateDataset(config: any) {
+    return request<any>('/api/evaluation/run', {
+      method: 'POST',
+      body: JSON.stringify(config),
+    })
+  },
+
+  async startEvaluation(config: any) {
+    return request<any>('/api/evaluation/start', {
+      method: 'POST',
+      body: JSON.stringify(config),
+    })
+  },
+
+  async getEvaluationProgress(jobId: string) {
+    return request<any>(`/api/evaluation/progress/${jobId}`)
+  },
+
+  async getFinalStudy() {
+    return request<any>('/api/evaluation/final-study')
+  },
+
   // ---------- Sessions ----------
   async startSession(config: any) {
     return request<any>('/api/sessions/start', {
@@ -271,8 +297,24 @@ export const api = {
     })
   },
 
-  reportDownloadUrl(filename: string): string {
-    return apiUrl(`/api/reports/download/${filename}`)
+  async downloadReport(filename: string) {
+    const token = getToken()
+    const headers: Record<string, string> = {}
+    if (token) headers['Authorization'] = `Bearer ${token}`
+    const resp = await fetch(apiUrl(`/api/reports/download/${encodeURIComponent(filename)}`), {
+      headers,
+    })
+    if (!resp.ok) {
+      let detail = `${resp.status} ${resp.statusText}`
+      try { const err = await resp.json(); detail = err.detail || detail } catch {}
+      throw new Error(detail)
+    }
+    const blobUrl = URL.createObjectURL(await resp.blob())
+    const link = document.createElement('a')
+    link.href = blobUrl
+    link.download = filename
+    link.click()
+    URL.revokeObjectURL(blobUrl)
   },
 }
 

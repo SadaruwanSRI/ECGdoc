@@ -1,0 +1,184 @@
+\chapter{Literature Review}\label{ch:literature}
+
+This chapter reviews the work most relevant to the thesis questions: can a
+system detect and name ECG abnormalities, and how does performance change when
+earlier ECG from the same patient is available? The review focuses on four
+areas: ECG datasets and evaluation protocols, supervised heartbeat
+classification, normal-only anomaly detection, and statistical validation. It
+is a focused narrative review, not a systematic review or meta-analysis. Papers
+were selected because they explain a design choice, show an important
+alternative, or reveal a risk in patient-independent evaluation.
+
+Headline accuracy is not used to rank the papers. ECG studies often use
+different leads, labels, record lengths, patient splits, and output units. For
+example, a patient-specific beat classifier, a 12-lead diagnostic model, and
+the six-class system in this thesis answer different questions. Their accuracy
+values cannot be compared directly. This matters because a high score may come
+from an easier class mapping, or from placing beats from the same person in
+both training and test data.
+
+PhysioNet provides open physiological databases and common software tools
+\cite{goldberger2000physionet}. The MIT--BIH Arrhythmia Database (MITDB) became
+a widely used benchmark because it contains expert beat annotations and two ECG
+channels \cite{moody2001impact,mitdb}. The MIT--BIH Normal Sinus Rhythm
+Database provides 18 real long-term recordings from subjects without
+significant arrhythmias \cite{nsrdb}. It is suitable for normal-only learning,
+but its headers identify the channels only as ECG1 and ECG2. The present study
+therefore uses one fixed first channel and reports this uncertainty instead of
+assigning an unsupported anatomical lead name.
+
+The evaluation protocol is as important as the database. A beat-wise random
+split can place very similar beats from one patient in both training and test
+sets. An inter-patient split instead tests whether the learned boundary transfers
+to a different person. De Chazal et al. established an influential inter-patient
+heartbeat study using ECG morphology and heartbeat-interval features
+\cite{dechazal2004heartbeat}. Later research continued to treat patient variation
+as a central problem rather than assuming that all beats are independent
+\cite{mousavi2019seq2seq,zhang2021interpatient}.
+
+This evidence supports a clearly defined evaluation protocol instead of a
+single ambiguous score. The final experiment keeps chronological order, trains
+on the first 80\% of every record, and tests on the final 20\%. This protocol
+is stricter than a random beat split. However, it measures patient-adapted
+temporal continuation, not performance on a new patient. The separate NSRDB
+cohort is used only for the normal autoencoder; no healthy record trains either
+supervised tree model.
+
+Early automatic ECG systems used measured morphology and timing. De Chazal et
+al. combined waveform information with RR intervals, showing why beat shape and
+beat timing should be treated as complementary evidence
+\cite{dechazal2004heartbeat}. This idea remains useful even when the classifier
+changes: morphology helps describe PVC and bundle-branch beats, while RR history
+helps describe premature beats and irregular rhythms.
+
+Huang et al. studied inter-patient separation of normal, LBBB, and RBBB beats
+with ensemble classifiers \cite{huang2014bbb}. That study is particularly
+relevant because bundle-branch morphology can persist through a record. However,
+its three-class task is narrower than the present N/PVC/PAC/LBBB/RBBB/AFib task.
+Its results therefore justify using morphology and ensemble learning, but they
+cannot be copied as an expected accuracy for this thesis.
+
+Feature-based models have two practical advantages for this dataset. They make
+the evidence easier to inspect, and they can be controlled when only a few
+patients contain a class. Their weakness is that hand-designed summaries may
+miss useful waveform detail. This trade-off led to the combined design used
+here: pooled waveform and RR features are kept, while an autoencoder adds
+learned normal-reconstruction evidence.
+
+One-dimensional convolutional neural networks can learn ECG morphology directly.
+Kiranyaz et al. developed a patient-specific real-time classifier
+\cite{kiranyaz2016ecgcnn}. Its patient adaptation is useful when labelled beats
+from the target person exist. It is therefore directly relevant to the
+final patient-adapted setting, but it does not answer performance before
+seeing a new patient. Acharya et al. classified arrhythmias
+from ECG segments with a convolutional network \cite{acharya2017cnn}. Segment-
+level work demonstrates the value of learned temporal features, but its label
+definition and split must match the target study before accuracy can be compared.
+
+Large deep-learning studies have also reported strong performance on ambulatory
+single-lead recordings and 12-lead diagnostic ECGs
+\cite{hannun2019cardiologist,ribeiro2020ecg}. These works show the potential of
+deep networks when many patients and labels are available. They also show why
+dataset scale matters. Their databases, lead systems, and diagnostic outputs are
+different from the small six-class MITDB experiment, so they are evidence for a
+method family rather than a performance baseline for this thesis.
+
+Sequence models use neighbouring beats to add rhythm context. Mousavi et al.
+compared intra-patient and inter-patient heartbeat classification with a
+sequence-to-sequence approach \cite{mousavi2019seq2seq}. Zhang et al. added an
+adversarial subject classifier so that the learned representation would contain
+less patient identity \cite{zhang2021interpatient}. These approaches address
+generalisation directly, but they also need enough independent patients. The
+present study has only 45 eligible subject clusters, so the final system uses a
+simpler tree hierarchy. This is a data-availability decision, not a claim that
+deep learning is generally inferior.
+
+Autoencoders learn a compressed representation by reconstructing their input
+\cite{hinton2006autoencoder}. Denoising training corrupts the input but retains a
+clean target, encouraging the network to learn stable structure rather than an
+exact copy \cite{vincent2008denoising}. In anomaly detection, the model is often
+trained on normal sequences and reconstruction error is used as evidence that a
+new sequence differs from the learned normal pattern
+\cite{chandola2009anomaly,malhotra2016lstm}.
+
+Temporal convolutional autoencoders use convolution and dilation to cover longer
+time patterns efficiently. Thill et al. evaluated this idea on time-series
+anomaly tasks that included ECG \cite{thill2021tcnae}. ECG-specific studies have
+also investigated convolutional variational and adversarial autoencoders
+\cite{jang2021cvae,zhou2022aae}. Together, these studies support using a
+convolutional autoencoder for normal ECG representation.
+
+The literature does not mean that reconstruction error is a diagnosis. A
+high-capacity model may reconstruct an abnormal input well, while noise or a
+different electrode position may increase the error of a normal input. For that
+reason, this thesis does not use one reconstruction threshold as the final
+answer. It uses four residual summaries as features in a supervised abnormal
+detector. The normal-only idea is kept, but the final decision can combine
+residual, morphology, spectral, and RR evidence.
+
+ECG datasets contain unequal class counts and unequal numbers of patients per
+class. A high overall accuracy can therefore hide failure on a rare arrhythmia.
+Precision--recall analysis is more informative than ROC analysis in strongly
+imbalanced binary problems \cite{saito2015pr}, while class-balanced learning can
+increase the influence of rare classes \cite{cui2019classbalanced}. This thesis
+therefore reports sensitivity, specificity, balanced accuracy, macro F1, and
+per-class recall in addition to accuracy.
+
+Thousands of beats from a small number of subjects do not become thousands of
+independent patients. If individual beats are resampled, the confidence
+intervals become too narrow. Patient-cluster bootstrap methods keep
+within-patient dependence \cite{rutter2000clustered}. The final experiment gives
+each of 45 subject clusters equal weight and resamples complete subjects. This
+also follows modern guidance to report the data split, model development, and
+validation population clearly \cite{collins2024tripodai}.
+
+The literature provides strong individual ideas: normal-only reconstruction,
+learned waveform features, morphology and RR features, patient-invariant
+learning, specialised bundle-branch classification, and clustered statistical
+validation. However, reported results usually address only part of the present
+problem. They may use a different class mapping, adapt to the test patient, use
+more leads, or evaluate anomaly detection without naming the abnormal type.
+
+The gap addressed by this thesis is therefore not simply the need for another
+classifier. The need is to evaluate a complete two-stage system while making
+the generalisation claim explicit:
+\begin{enumerate}
+    \item learn normal reconstruction from one fixed channel of all 18 real
+    MIT--BIH normal-sinus recordings;
+    \item use a chronological 80/20 experiment for patient-adapted temporal evidence;
+    \item keep each final test portion unavailable during selection; and
+    \item report separate abnormal, subtype, whole-system, patient-level, and
+    uncertainty results.
+\end{enumerate}
+
+Table~\ref{tab:literature-comparison} summarises the papers that contributed most
+directly to the data protocol, model architecture, and evaluation method used in
+this research.
+
+\begingroup
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\begin{longtable}{>{\raggedright\arraybackslash}p{5.0cm}>{\raggedright\arraybackslash}p{3.4cm}>{\raggedright\arraybackslash}p{5.3cm}}
+\caption{Main papers referenced in this study and their contribution.}\label{tab:literature-comparison}\\
+\toprule
+Paper title & Author(s) & Main contribution used in this research\\
+\midrule
+\endfirsthead
+\toprule
+Paper title & Author(s) & Main contribution used in this research\\
+\midrule
+\endhead
+MIT--BIH Normal Sinus Rhythm Database \cite{nsrdb} & George B. Moody & Provides the 18 real long-term recordings without significant arrhythmias used for normal-only autoencoder development; its generic channel names also motivate explicit reporting of lead uncertainty.\\
+Automatic Classification of Heartbeats Using ECG Morphology and Heartbeat Interval Features \cite{dechazal2004heartbeat} & Philip de Chazal, Maria O'Dwyer, and Richard B. Reilly & Established the value of combining ECG morphology with RR intervals and carefully defining the evaluation population. This supports the morphology, timing, and reporting choices of the present system.\\
+Reducing the Dimensionality of Data with Neural Networks \cite{hinton2006autoencoder} & Geoffrey E. Hinton and Ruslan R. Salakhutdinov & Provides the representation-learning basis of the autoencoder used to learn normal ECG structure.\\
+Extracting and Composing Robust Features with Denoising Autoencoders \cite{vincent2008denoising} & Pascal Vincent, Hugo Larochelle, Yoshua Bengio, and Pierre-Antoine Manzagol & Supports adding noise to the input while keeping a clean reconstruction target, so the autoencoder learns stable normal patterns.\\
+Temporal Convolutional Autoencoder for Unsupervised Anomaly Detection in Time Series \cite{thill2021tcnae} & Markus Thill, Wolfgang Konen, and Thomas Baeck & Supports temporal convolution, dilation, and reconstruction error for detecting unusual time-series patterns, including ECG signals.\\
+Inter- and Intra-patient ECG Heartbeat Classification for Arrhythmia Detection: A Sequence to Sequence Deep Learning Approach \cite{mousavi2019seq2seq} & Sajad Mousavi and Fatemeh Afghah & Shows the importance of neighbouring-beat rhythm context and clearly separates intra-patient from inter-patient evaluation.\\
+Interpatient ECG Heartbeat Classification with an Adversarial Convolutional Neural Network \cite{zhang2021interpatient} & Jing Zhang, Aiping Liu, Deng Liang, Xun Chen, and Min Gao & Explains patient-identity leakage and why results from known-patient temporal tests must not be presented as new-patient performance.\\
+Detection of Inter-Patient Left and Right Bundle Branch Block Heartbeats in ECG Using Ensemble Classifiers \cite{huang2014bbb} & Huifang Huang, Jie Liu, Qiang Zhu, Rui Wang, and Guangshu Hu & Supports morphology and ensemble classifiers for LBBB and RBBB, while showing that this specialised three-class task is narrower than the thesis task.\\
+The Precision--Recall Plot Is More Informative than the ROC Plot When Evaluating Binary Classifiers on Imbalanced Datasets \cite{saito2015pr} & Takaya Saito and Marc Rehmsmeier & Justifies reporting precision, recall, and F1 because the ECG classes are imbalanced and accuracy alone can hide failure.\\
+Bootstrap Estimation of Diagnostic Accuracy with Patient-Clustered Data \cite{rutter2000clustered} & Carolyn M. Rutter & Provides the reason for resampling complete patient records instead of treating correlated beats as independent observations.\\
+TRIPOD+AI Statement: Updated Guidance for Reporting Clinical Prediction Models That Use Regression or Machine Learning Methods \cite{collins2024tripodai} & Gary S. Collins et al. & Supports transparent reporting of the patient split, model-development process, temporal evaluation, limitations, and intended use.\\
+\bottomrule
+\end{longtable}
+\endgroup

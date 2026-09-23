@@ -39,6 +39,16 @@ function modelKind(model: ModelInfo): 'classifier' | 'autoencoder' {
     : 'autoencoder'
 }
 
+function isImprovedHierarchy(model?: ModelInfo): boolean {
+  if (!model) return false
+  try {
+    const cfg = JSON.parse(model.config_json || '{}')
+    return cfg.system_kind === 'final_mlii_temporal_holdout'
+  } catch {
+    return String(model.architecture || '').includes('Experiment2-ExtraTrees-Hierarchy')
+  }
+}
+
 type SessionPoint = {
   t: number
   value: number
@@ -65,7 +75,23 @@ type AlertItem = {
     signal?: number[]
     reconstruction?: number[]
     fs?: number
+    score_type?: 'abnormal_probability' | 'reconstruction_error'
+    analysis_mode?: string
+    rr_seconds?: number
+    classification_mode?: string
   }
+}
+
+type BeatResult = {
+  t: number
+  is_anomaly: boolean
+  anomaly_probability: number
+  threshold: number
+  class: string
+  class_name: string
+  confidence: number
+  classification_mode: string
+  rr_seconds: number
 }
 
 type ChartPoint = {
@@ -124,6 +150,8 @@ export function LiveTab() {
   const [socket, setSocket] = useState<Socket | null>(null)
   const [serialPorts, setSerialPorts] = useState<SerialPortInfo[]>([])
   const [sourceStatus, setSourceStatus] = useState<any>(null)
+  const [analysisMode, setAnalysisMode] = useState('sliding-reconstruction')
+  const [countUnit, setCountUnit] = useState<'beats' | 'samples'>('samples')
 
   // Live data
   const [chartData, setChartData] = useState<ChartPoint[]>([])
@@ -146,7 +174,9 @@ export function LiveTab() {
       const list = (r.data?.models || []).filter((m: any) => m.status === 'ready')
       setModels(list)
       const anomalyModels = list.filter((m: ModelInfo) => modelKind(m) === 'autoencoder')
-      if (anomalyModels.length > 0) setModelId(anomalyModels[0].id)
+      if (anomalyModels.length > 0) setModelId((anomalyModels.find((m: ModelInfo) => m.id === 'nsrdb-primary-autoencoder') || anomalyModels[0]).id)
+      const improved = list.find((m: ModelInfo) => m.id === 'final-mlii-corrected-20260916') || list.find((m: ModelInfo) => isImprovedHierarchy(m))
+      if (improved) setClassifierModelId(improved.id)
     })
     api.listDatasets().then(r => setDatasets(r.data))
     api.listArduinoPorts().then(r => {
@@ -157,17 +187,22 @@ export function LiveTab() {
   }, [])
 
   useEffect(() => {
-    const selected = models.find(m => m.id === modelId)
+    const selectedClassifier = models.find(m => m.id === classifierModelId)
+    const selected = isImprovedHierarchy(selectedClassifier)
+      ? selectedClassifier
+      : models.find(m => m.id === modelId)
     if (selected?.threshold != null) {
       setThresholdOverride(Number(selected.threshold))
     }
-  }, [modelId, models])
+  }, [modelId, classifierModelId, models])
 
   useEffect(() => {
     if (sourceType === 'arduino') {
       setSourceDetail(current => current || serialPorts[0]?.device || '')
     } else if (sourceType === 'mit-bih-arrhythmia') {
       setSourceDetail('100')
+    } else if (sourceType === 'incartdb') {
+      setSourceDetail('I01')
     } else {
       setSourceDetail('')
     }
@@ -190,6 +225,7 @@ export function LiveTab() {
       if (data.type !== 'chunk') return
       const points: SessionPoint[] = data.points || []
       const newAlerts: AlertItem[] = data.alerts || []
+      const beatResults: BeatResult[] = data.beat_results || []
 
       // Convert to chart points
       const newChartPoints: ChartPoint[] = points.map(p => ({
@@ -201,7 +237,16 @@ export function LiveTab() {
       }))
 
       // Rolling buffer: keep last MAX_POINTS (a sliding window, NOT growing)
-      chartBufferRef.current = [...chartBufferRef.current, ...newChartPoints].slice(-MAX_POINTS)
+      const combined = [...chartBufferRef.current, ...newChartPoints].slice(-MAX_POINTS)
+      for (const beat of beatResults) {
+        for (const point of combined) {
+          if (Math.abs(point.t - beat.t) <= 10) {
+            point.score = beat.anomaly_probability
+            point.anomaly = beat.is_anomaly
+          }
+        }
+      }
+      chartBufferRef.current = combined
       // Create a NEW array reference so React detects the change and re-renders cleanly
       setChartData(chartBufferRef.current)
 
@@ -214,16 +259,22 @@ export function LiveTab() {
         setEcgMetrics(data.ecg_metrics)
       }
       if (data.source_status) setSourceStatus(data.source_status)
+      if (data.analysis_mode) setAnalysisMode(data.analysis_mode)
+      if (data.count_unit) setCountUnit(data.count_unit)
+
+      const activeScores = beatResults.length > 0
+        ? beatResults.map(beat => beat.anomaly_probability)
+        : newChartPoints.map(point => point.score)
 
       setStats({
         totalBeats: data.total_beats || 0,
         anomalyBeats: data.anomaly_beats || 0,
         threshold: data.threshold || 0,
-        avgScore: newChartPoints.length > 0
-          ? newChartPoints.reduce((s, p) => s + p.score, 0) / newChartPoints.length
+        avgScore: activeScores.length > 0
+          ? activeScores.reduce((sum, score) => sum + score, 0) / activeScores.length
           : 0,
-        maxScore: newChartPoints.length > 0
-          ? Math.max(...newChartPoints.map(p => p.score))
+        maxScore: activeScores.length > 0
+          ? Math.max(...activeScores)
           : 0,
       })
     })
@@ -249,6 +300,8 @@ export function LiveTab() {
     setAlerts([])
     setEcgMetrics(null)
     setSourceStatus(null)
+    setAnalysisMode('sliding-reconstruction')
+    setCountUnit('samples')
     chartBufferRef.current = []
     setStats({ totalBeats: 0, anomalyBeats: 0, threshold: 0, avgScore: 0, maxScore: 0 })
     try {
@@ -257,12 +310,20 @@ export function LiveTab() {
         classifier_model_id: classifierModelId === '__none__' ? undefined : classifierModelId,
         source_type: sourceType,
         source_detail: sourceDetail || undefined,
+        lead_name: 'MLII',
         chunk_seconds: sourceType === 'arduino' ? 4 : chunkSeconds,
         threshold_override: useThresholdOverride ? thresholdOverride : undefined,
       })
       if (r.ok && r.data?.session_id) {
         setSessionId(r.data.session_id)
-        setStats(s => ({ ...s, threshold: r.data.model_info?.threshold || 0 }))
+        setAnalysisMode(r.data.analysis_mode || r.data.model_info?.analysis_mode || 'sliding-reconstruction')
+        setCountUnit(r.data.count_unit || 'samples')
+        setStats(s => ({
+          ...s,
+          threshold: r.data.model_info?.decision_threshold
+            ?? r.data.model_info?.threshold
+            ?? 0,
+        }))
         setActive(true)
       } else {
         throw new Error(r.detail || 'Failed to start session')
@@ -285,6 +346,11 @@ export function LiveTab() {
 
   const anomalyPct = stats.totalBeats > 0 ? (stats.anomalyBeats / stats.totalBeats) * 100 : 0
   const currentSource = datasets?.testing.find((d: any) => d.id === sourceType)
+  const selectedClassifier = models.find(model => model.id === classifierModelId)
+  const usingImprovedSystem = isImprovedHierarchy(selectedClassifier)
+  const selectedThresholdModel = usingImprovedSystem
+    ? selectedClassifier
+    : models.find(model => model.id === modelId)
 
   return (
     <div className="grid lg:grid-cols-5 gap-6">
@@ -300,7 +366,11 @@ export function LiveTab() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label>Anomaly Detection Model (Model 1)</Label>
+              <Label>
+                {usingImprovedSystem
+                  ? 'Waveform reconstruction model (display fallback)'
+                  : 'Anomaly detection model (Model 1)'}
+              </Label>
               <Select value={modelId} onValueChange={setModelId} disabled={active}>
                 <SelectTrigger><SelectValue placeholder="Select trained model" /></SelectTrigger>
                 <SelectContent>
@@ -320,7 +390,7 @@ export function LiveTab() {
             </div>
 
             <div className="space-y-2">
-              <Label>Arrhythmia Classifier (Model 2, optional)</Label>
+              <Label>Detection and rhythm model</Label>
               <Select value={classifierModelId} onValueChange={setClassifierModelId} disabled={active}>
                 <SelectTrigger><SelectValue placeholder="None (anomaly detection only)" /></SelectTrigger>
                 <SelectContent>
@@ -336,8 +406,22 @@ export function LiveTab() {
                 </SelectContent>
               </Select>
               <p className="text-xs text-slate-500">
-                When selected, anomalies are classified into specific arrhythmia types (PVC, PAC, LBBB, RBBB, AFib).
+                {usingImprovedSystem
+                  ? 'Final system: R-peak-aligned morphology and RR timing detect abnormal beats; the subtype stage names supported rhythms.'
+                  : 'Optional legacy classifier for anomalies detected by reconstruction error.'}
               </p>
+              {usingImprovedSystem && (
+                <Alert className="border-emerald-200 bg-emerald-50">
+                  <Activity className="h-4 w-4 text-emerald-700" />
+                  <AlertTitle className="text-xs text-emerald-900">Improved beat-aligned mode</AlertTitle>
+                  <AlertDescription className="text-xs text-emerald-800">
+                    The complete system accepts MLII only. MIT–BIH replay selects MLII
+                    by name; Arduino electrodes must follow the MLII torso placement.
+                    Predictions are delayed until the next RR
+                    interval and post-peak waveform are available.
+                  </AlertDescription>
+                </Alert>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -364,18 +448,26 @@ export function LiveTab() {
               )}
             </div>
 
-            {sourceType === 'mit-bih-arrhythmia' && (
+            {(sourceType === 'mit-bih-arrhythmia' || sourceType === 'incartdb') && (
               <div className="space-y-2">
                 <Label>Record name</Label>
-                <Select value={sourceDetail || '100'} onValueChange={setSourceDetail} disabled={active}>
+                <Select
+                  value={sourceDetail || (sourceType === 'incartdb' ? 'I01' : '100')}
+                  onValueChange={setSourceDetail}
+                  disabled={active}
+                >
                   <SelectTrigger><SelectValue placeholder="Pick a record" /></SelectTrigger>
                   <SelectContent>
-                    {(datasets?.testing.find((d: any) => d.id === 'mit-bih-arrhythmia')?.records || []).map((r: string) => (
+                    {(datasets?.testing.find((d: any) => d.id === sourceType)?.records || []).map((r: string) => (
                       <SelectItem key={r} value={r}>{r}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
-                <p className="text-xs text-slate-500">First use downloads from PhysioNet (may take 10–20 s).</p>
+                <p className="text-xs text-slate-500">
+                  {sourceType === 'incartdb'
+                    ? 'Standard lead II is replayed as an external-domain counterpart to the model’s MLII input.'
+                    : 'Only records containing MLII are listed; MLII is selected by name.'}
+                </p>
               </div>
             )}
 
@@ -395,6 +487,9 @@ export function LiveTab() {
                 {serialPorts.length === 0 && (
                   <p className="text-xs text-amber-600">No serial ports found. Connect the Nano and restart the backend.</p>
                 )}
+                <p className="text-xs text-amber-700">
+                  Required placement: MLII, with the negative electrode on the upper-right torso and the positive electrode toward the lower-left torso.
+                </p>
                 {sourceStatus && (
                   <p className={`text-xs ${sourceStatus.lead_off ? 'text-amber-600' : 'text-emerald-600'}`}>
                     {sourceStatus.lead_off
@@ -423,7 +518,11 @@ export function LiveTab() {
 
             <div className="space-y-2 rounded-md border bg-slate-50 p-3">
               <div className="flex items-center justify-between gap-2">
-                <Label>Session threshold</Label>
+                <Label>
+                  {usingImprovedSystem
+                    ? 'Abnormal-probability threshold'
+                    : 'Reconstruction-error threshold'}
+                </Label>
                 <Button
                   type="button"
                   size="sm"
@@ -436,7 +535,9 @@ export function LiveTab() {
                 </Button>
               </div>
               <div className="text-xs text-slate-500">
-                Lower threshold = more sensitive. Higher threshold = fewer alerts.
+                {usingImprovedSystem
+                  ? 'Probability above this value is abnormal. The saved value was selected on validation records by balanced accuracy.'
+                  : 'Lower threshold = more sensitive. Higher threshold = fewer alerts.'}
               </div>
               <Input
                 type="number"
@@ -448,8 +549,8 @@ export function LiveTab() {
                 className="h-8 font-mono text-xs"
               />
               <div className="flex justify-between text-xs text-slate-500">
-                <span>Saved: {models.find(m => m.id === modelId)?.threshold?.toFixed(4) ?? '-'}</span>
-                <span>Using: {(useThresholdOverride ? thresholdOverride : models.find(m => m.id === modelId)?.threshold || 0).toFixed(4)}</span>
+                <span>Saved: {selectedThresholdModel?.threshold?.toFixed(4) ?? '-'}</span>
+                <span>Using: {(useThresholdOverride ? thresholdOverride : selectedThresholdModel?.threshold || 0).toFixed(4)}</span>
               </div>
             </div>
 
@@ -490,12 +591,13 @@ export function LiveTab() {
           <CardContent className="space-y-3 text-sm">
             <DiagRow label="Source" value={sourceType} icon={<Database className="w-3 h-3" />} />
             <DiagRow label="Status" value={active ? 'STREAMING' : 'IDLE'} icon={<Activity className="w-3 h-3" />} highlight={active} />
+            <DiagRow label="Analysis" value={analysisMode === 'beat-aligned-hierarchical' ? 'BEAT + RR' : 'RECONSTRUCTION'} icon={<Server className="w-3 h-3" />} highlight={analysisMode === 'beat-aligned-hierarchical'} />
             <DiagRow label="Heart Rate" value={ecgMetrics?.bpm != null ? `${ecgMetrics.bpm.toFixed(0)} BPM` : '—'} icon={<Heart className="w-3 h-3" />} warn={ecgMetrics?.bpm != null && (ecgMetrics.bpm < 60 || ecgMetrics.bpm > 100)} />
-            <DiagRow label="Rhythm" value={ecgMetrics?.rhythm || '—'} icon={<Activity className="w-3 h-3" />} warn={ecgMetrics?.rhythm && !ecgMetrics.rhythm.includes('Normal')} />
-            <DiagRow label="Threshold (τ)" value={stats.threshold.toFixed(4)} icon={<Server className="w-3 h-3" />} />
-            <DiagRow label="Current score" value={stats.maxScore.toFixed(4)} icon={<Zap className="w-3 h-3" />} warn={stats.maxScore > stats.threshold && stats.threshold > 0} />
-            <DiagRow label="Beats analyzed" value={stats.totalBeats.toLocaleString()} icon={<Heart className="w-3 h-3" />} />
-            <DiagRow label="Anomaly beats" value={stats.anomalyBeats.toLocaleString()} icon={<AlertTriangle className="w-3 h-3" />} warn={stats.anomalyBeats > 0} />
+            <DiagRow label="Rhythm" value={ecgMetrics?.rhythm || '—'} icon={<Activity className="w-3 h-3" />} warn={Boolean(ecgMetrics?.rhythm && !ecgMetrics.rhythm.includes('Normal'))} />
+            <DiagRow label={usingImprovedSystem ? 'Probability threshold' : 'MAE threshold'} value={stats.threshold.toFixed(4)} icon={<Server className="w-3 h-3" />} />
+            <DiagRow label={usingImprovedSystem ? 'Latest beat probability' : 'Current score'} value={stats.maxScore.toFixed(4)} icon={<Zap className="w-3 h-3" />} warn={stats.maxScore > stats.threshold && stats.threshold > 0} />
+            <DiagRow label={`${countUnit === 'beats' ? 'Beats' : 'Samples'} analyzed`} value={stats.totalBeats.toLocaleString()} icon={<Heart className="w-3 h-3" />} />
+            <DiagRow label={`Anomalous ${countUnit}`} value={stats.anomalyBeats.toLocaleString()} icon={<AlertTriangle className="w-3 h-3" />} warn={stats.anomalyBeats > 0} />
             <DiagRow label="Anomaly rate" value={`${anomalyPct.toFixed(2)}%`} icon={<Bell className="w-3 h-3" />} warn={anomalyPct > 1} />
           </CardContent>
         </Card>
@@ -513,7 +615,9 @@ export function LiveTab() {
                   Live ECG Signal
                 </CardTitle>
                 <CardDescription className="text-xs">
-                  {active ? `Streaming • ${stats.totalBeats} samples analyzed` : 'Idle — click Start to begin'}
+                  {active
+                    ? `Streaming • ${stats.totalBeats} ${countUnit} analyzed`
+                    : 'Idle — click Start to begin'}
                 </CardDescription>
               </div>
               {active && (
@@ -538,15 +642,18 @@ export function LiveTab() {
               active={active}
               height={300}
               pixelsPerSample={3}
+              showPrediction={!usingImprovedSystem}
             />
             {/* Legend */}
             <div className="flex items-center justify-center gap-4 mt-3 text-xs text-slate-500">
               <span className="flex items-center gap-1.5">
                 <span className="w-3 h-0.5 bg-slate-900"></span>ECG signal
               </span>
-              <span className="flex items-center gap-1.5">
-                <span className="w-3 h-0.5 bg-cyan-600 border-t border-dashed"></span>Reconstruction
-              </span>
+              {!usingImprovedSystem && (
+                <span className="flex items-center gap-1.5">
+                  <span className="w-3 h-0.5 bg-cyan-600 border-t border-dashed"></span>Reconstruction
+                </span>
+              )}
               <span className="flex items-center gap-1.5">
                 <span className="w-3 h-3 bg-rose-200"></span>Anomaly region
               </span>
@@ -562,7 +669,9 @@ export function LiveTab() {
           <CardHeader>
             <CardTitle className="text-sm flex items-center gap-2">
               <Activity className="w-4 h-4 text-rose-500" />
-              Anomaly Score (MAE) vs Threshold
+              {usingImprovedSystem
+                ? 'Beat Abnormal Probability vs Threshold'
+                : 'Anomaly Score (MAE) vs Threshold'}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -811,7 +920,10 @@ export function LiveTab() {
                           <div className="flex-1 min-w-0">
                             <div className="text-sm font-medium">{a.message}</div>
                             <div className="text-xs text-slate-500 mt-0.5">
-                              score={a.anomaly_score.toFixed(4)} • threshold={a.threshold.toFixed(4)} •{' '}
+                              {ctx.score_type === 'abnormal_probability'
+                                ? `abnormal probability=${(a.anomaly_score * 100).toFixed(1)}%`
+                                : `score=${a.anomaly_score.toFixed(4)}`}
+                              {' • '}threshold={a.threshold.toFixed(4)}{' • '}
                               {typeof a.timestamp === 'number'
                                 ? new Date(a.timestamp * 1000).toLocaleTimeString()
                                 : new Date(a.timestamp).toLocaleTimeString()}
@@ -954,6 +1066,7 @@ function DetectionResultCard({ alerts, onGetHealthInfo }: {
 
   const isAnomaly = true  // alerts only appear for anomalies
   const classification = latestAlert.classification
+  const probabilityMode = latestAlert.context?.score_type === 'abnormal_probability'
 
   const handleGetInfo = async () => {
     if (!classification) return
@@ -977,11 +1090,15 @@ function DetectionResultCard({ alerts, onGetHealthInfo }: {
           <div className="flex items-center gap-2 mb-1">
             <AlertTriangle className={`w-4 h-4 ${isAnomaly ? 'text-rose-600' : 'text-emerald-600'}`} />
             <span className="font-medium text-sm">
-              Step 1: {isAnomaly ? 'Anomaly Detected' : 'Normal'}
+              Step 1: {isAnomaly ? 'Abnormal Beat Detected' : 'Normal'}
             </span>
           </div>
           <div className="text-xs text-slate-600">
-            Reconstruction error: {latestAlert.anomaly_score.toFixed(4)} (threshold: {latestAlert.threshold.toFixed(4)})
+            {probabilityMode ? 'Abnormal probability' : 'Reconstruction error'}:{' '}
+            {probabilityMode
+              ? `${(latestAlert.anomaly_score * 100).toFixed(1)}%`
+              : latestAlert.anomaly_score.toFixed(4)}
+            {' '}(threshold: {latestAlert.threshold.toFixed(4)})
           </div>
         </div>
 
@@ -990,7 +1107,7 @@ function DetectionResultCard({ alerts, onGetHealthInfo }: {
           <div className="rounded-lg border border-amber-200 bg-amber-50 p-3">
             <div className="flex items-center gap-2 mb-2">
               <Zap className="w-4 h-4 text-amber-600" />
-              <span className="font-medium text-sm">Step 2: Arrhythmia Classification</span>
+              <span className="font-medium text-sm">Step 2: Rhythm Subtype</span>
             </div>
             <div className="text-lg font-bold text-slate-900 mb-1">
               {classification.class_name}
@@ -1015,15 +1132,17 @@ function DetectionResultCard({ alerts, onGetHealthInfo }: {
                   </div>
                 ))}
             </div>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={handleGetInfo}
-              className="mt-3 w-full"
-            >
-              <Heart className="w-3 h-3 mr-1" />
-              What does this mean? (Health Info)
-            </Button>
+            {classification.class !== 'Unclassified abnormal' && (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={handleGetInfo}
+                className="mt-3 w-full"
+              >
+                <Heart className="w-3 h-3 mr-1" />
+                What does this mean? (Health Info)
+              </Button>
+            )}
           </div>
         ) : (
           <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">

@@ -43,6 +43,10 @@ type AlertItem = {
     signal?: number[]
     reconstruction?: number[]
     fs?: number
+    score_type?: 'abnormal_probability' | 'reconstruction_error'
+    analysis_mode?: string
+    rr_seconds?: number
+    classification_mode?: string
   }
 }
 
@@ -102,7 +106,7 @@ export function SessionsTab() {
     try {
       const r = await api.generateReport(selected.id, physicianName || undefined, notes || undefined)
       if (r.ok && r.data?.filename) {
-        setReportUrl(api.reportDownloadUrl(r.data.filename))
+        setReportUrl(r.data.filename)
         toast({ title: 'Report generated', description: 'Click download to save the PDF.' })
       }
     } catch (e: any) {
@@ -146,8 +150,8 @@ export function SessionsTab() {
                     <TableHead>Started</TableHead>
                     <TableHead>Source</TableHead>
                     <TableHead>Status</TableHead>
-                    <TableHead className="text-right">Beats</TableHead>
-                    <TableHead className="text-right">Anomalies</TableHead>
+                    <TableHead className="text-right">Analyzed</TableHead>
+                    <TableHead className="text-right">Flagged</TableHead>
                     <TableHead className="text-right">Anomaly %</TableHead>
                     <TableHead></TableHead>
                   </TableRow>
@@ -241,11 +245,11 @@ export function SessionsTab() {
                 <DetailRow label="Status" value={selected.status} />
                 <div className="border-t pt-3 space-y-2">
                   <div className="flex items-center justify-between">
-                    <span className="text-slate-500 flex items-center gap-1.5"><Activity className="w-3 h-3" /> Total beats</span>
+                    <span className="text-slate-500 flex items-center gap-1.5"><Activity className="w-3 h-3" /> Total {selected.summary?.count_unit || 'beats'}</span>
                     <span className="font-mono font-semibold">{selected.total_beats.toLocaleString()}</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-slate-500 flex items-center gap-1.5"><AlertTriangle className="w-3 h-3" /> Anomaly beats</span>
+                    <span className="text-slate-500 flex items-center gap-1.5"><AlertTriangle className="w-3 h-3" /> Flagged {selected.summary?.count_unit || 'beats'}</span>
                     <span className={`font-mono font-semibold ${selected.anomaly_beats > 0 ? 'text-rose-600' : ''}`}>
                       {selected.anomaly_beats.toLocaleString()}
                     </span>
@@ -255,6 +259,14 @@ export function SessionsTab() {
                     <span className="font-mono">
                       {selected.summary?.duration_s ? `${selected.summary.duration_s.toFixed(1)}s` : '—'}
                     </span>
+                  </div>
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-slate-500">Analysis mode</span>
+                    <Badge variant="outline" className="text-[10px]">
+                      {selected.summary?.analysis_mode === 'beat-aligned-hierarchical'
+                        ? 'Beat + RR'
+                        : 'Reconstruction'}
+                    </Badge>
                   </div>
                 </div>
 
@@ -306,7 +318,11 @@ export function SessionsTab() {
                             </Badge>
                           </div>
                           <div className="text-xs text-slate-500 mt-0.5">
-                            score={a.anomaly_score.toFixed(4)} • threshold={a.threshold.toFixed(4)} • {new Date(a.timestamp).toLocaleTimeString()}
+                            {ctx.score_type === 'abnormal_probability'
+                              ? `abnormal probability=${(a.anomaly_score * 100).toFixed(1)}%`
+                              : `score=${a.anomaly_score.toFixed(4)}`}
+                            {' • '}threshold={a.threshold.toFixed(4)}{' • '}
+                            {new Date(a.timestamp).toLocaleTimeString()}
                           </div>
                           {hasSignal && (
                             <div className="mt-1 h-16 bg-white rounded border border-slate-200 overflow-hidden">
@@ -376,15 +392,18 @@ export function SessionsTab() {
             {reportUrl && (
               <div className="bg-emerald-50 border border-emerald-200 rounded-md p-3 text-sm">
                 <div className="font-medium text-emerald-700 mb-2">Report ready!</div>
-                <a
-                  href={reportUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                <button
+                  type="button"
+                  onClick={() => {
+                    api.downloadReport(reportUrl).catch((e: Error) => {
+                      toast({ title: 'Download failed', description: e.message, variant: 'destructive' })
+                    })
+                  }}
                   className="inline-flex items-center gap-2 text-emerald-700 hover:underline"
                 >
                   <Download className="w-4 h-4" />
                   Download PDF
-                </a>
+                </button>
               </div>
             )}
           </div>
