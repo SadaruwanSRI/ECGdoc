@@ -75,11 +75,13 @@ channel consistently and describes it as the \emph{first NSRDB ECG channel}.
 It is not renamed Lead II. The second channel never enters autoencoder fitting,
 validation, threshold estimation, or residual calculation.
 
-The supervised branch uses MLII only. In the deployed placement, MLII is formed
-from torso electrodes with the negative electrode near the right upper chest,
-the positive electrode on the left lower chest or rib region, and a reference
-electrode on the lower right torso. This modified Lead-II axis usually shows a
-prominent QRS complex, making beat shape and RR timing clear \cite{mitdb}. The
+The supervised branch uses MLII only. Modified Lead II is a bipolar torso
+lead with a negative RA-equivalent electrode on the right upper torso and a
+positive LL-equivalent electrode on the left lower torso. Figure~\ref{fig:data-lead-positions}
+shows this polarity schematically; the separate reference electrode is shown
+for the project's sensor connection. It does not represent a second ECG
+channel. PhysioNet describes the modified torso lead and its generally
+prominent normal QRS complexes \cite{physionetLeadFAQ,mitdb}. The
 loader selects MLII by its header name rather than assuming a channel number.
 MLII is stored first in 45 eligible records; record 114 stores V5 first and
 MLII second. Records 102 and 104 contain V5 and V2 but no MLII and are
@@ -95,11 +97,12 @@ NSRDB channel is not documented.
 \begin{figure}[H]
 \centering
 \includegraphics[width=.98\textwidth]{pic/generated/real_lead_positions.pdf}
-\caption{Physical MLII placement and the exact one-channel rule. The normal
-autoencoder uses only the first stored NSRDB ECG channel, whose anatomical
-placement is unspecified. The supervised and deployed system uses only MLII:
-negative electrode on the right upper chest, positive electrode on the left
-lower chest/rib region, and reference electrode on the lower right torso.}
+\caption[MLII polarity and the channel used by each model.]{MLII polarity and
+the channel used by each model. Panel A is an anterior-view schematic of the
+modified Lead-II axis, with the project's reference connection shown separately;
+it is not an exact map of the database electrode coordinates
+\cite{physionetLeadFAQ}. Panel B distinguishes the NSRDB ECG1 normal reference
+from the MLII input used by the supervised models.}
 \label{fig:data-lead-positions}
 \end{figure}
 
@@ -324,10 +327,12 @@ abnormal beats remain in binary testing but not six-class scoring.
 \begin{figure}[H]
 \centering
 \includegraphics[width=.95\textwidth]{pic/generated/real_data_preparation_flow.pdf}
-\caption{Data preparation during model development and use. Panel A separates
-normal-only autoencoder development from labeled MLII development. Panel B
-shows one new MLII signal passing through the frozen abnormality gate and then,
-only when abnormal, the subtype classifier.}
+\caption[Preparation of normal-reference windows and labelled MLII beats.]{Preparation
+of normal-reference windows and labelled MLII beats. Panel A develops the frozen
+autoencoder from subject-disjoint NSRDB fitting and validation data. Panel B
+uses local filtering and standardisation for each MITDB beat, then combines
+waveform, RR timing, and frozen-autoencoder residual features. Expert labels
+remain separate from the model input.}
 \label{fig:data-feed-real}
 \end{figure}
 

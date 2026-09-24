@@ -4,6 +4,11 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+try:
+    from . import thesis_diagrams
+except ImportError:
+    import thesis_diagrams
+
 import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
@@ -13,7 +18,7 @@ from matplotlib.patches import FancyArrowPatch, Rectangle
 matplotlib.use("Agg")
 
 REPORT_DIR = Path(__file__).resolve().parents[1]
-RESULT_PATH = REPORT_DIR / "experiments" / "final_temporal_holdout.json"
+RESULT_PATH = REPORT_DIR / "experiments" / "corrected_temporal_holdout.json"
 OUTPUT_DIR = REPORT_DIR / "pic" / "generated"
 
 INK = "#111827"
@@ -55,57 +60,7 @@ def arrow(ax, xy1, xy2, color=INK, label: str | None = None, rad=0.0) -> None:
 
 
 def method_workflow_figure(result: dict) -> None:
-    protocol = result["protocol"]
-    fig, ax = plt.subplots(figsize=(11.6, 6.4))
-    ax.set_axis_off()
-    ax.set_xlim(0, 1)
-    ax.set_ylim(0, 1)
-
-    ax.text(0.02, 0.95, "Experimental method for the final temporal-holdout run",
-            fontsize=15, weight="bold", color=INK)
-    ax.text(0.02, 0.91,
-            "One-lead MLII experiment: select with earlier beats, freeze decisions, score only the final 20% timeline.",
-            fontsize=9, color=SLATE)
-
-    lane_y = [0.75, 0.55, 0.35, 0.15]
-    lane_labels = ["Data", "Feature evidence", "Model development", "Final validation"]
-    lane_colors = [NAVY, PURPLE, TEAL, RED]
-    for y, label, color in zip(lane_y, lane_labels, lane_colors):
-        ax.hlines(y, 0.22, 0.96, color=color, lw=3, alpha=0.75)
-        ax.text(0.02, y, label, va="center", fontsize=9.2, weight="bold", color=color)
-
-    events = [
-        (0.30, lane_y[0], "NSRDB ECG1\nnormal reference", NAVY),
-        (0.50, lane_y[0], f"MITDB MLII\n{protocol['records']} records", NAVY),
-        (0.34, lane_y[1], "223 waveform\nstatistics", PURPLE),
-        (0.55, lane_y[1], "15 RR\ntiming", PURPLE),
-        (0.72, lane_y[1], "4 AE\nresiduals", PURPLE),
-        (0.30, lane_y[2], "0-64%\nfit candidates", TEAL),
-        (0.48, lane_y[2], "64-80%\nvalidation", ORANGE),
-        (0.66, lane_y[2], "0-80%\nfinal refit", TEAL),
-        (0.83, lane_y[2], "80-100%\ntemporal test", RED),
-        (0.28, lane_y[3], "binary\nall beats", RED),
-        (0.51, lane_y[3], "subtype\nsupported abnormal", RED),
-        (0.74, lane_y[3], "whole system\nsix classes", RED),
-        (0.91, lane_y[3], "clustered\n95% CI", RED),
-    ]
-    for x, y, label, color in events:
-        ax.scatter([x], [y], s=165, color=color, edgecolor="white", lw=1.6, zorder=4)
-        if y == lane_y[3]:
-            ax.text(x, y - 0.055, label, ha="center", va="top", fontsize=7.8, color=INK)
-        else:
-            ax.text(x, y + 0.060, label, ha="center", va="bottom", fontsize=8.0, color=INK)
-
-    arrow(ax, (0.30, lane_y[0] - 0.025), (0.72, lane_y[1] + 0.025), NAVY, "frozen AE")
-    arrow(ax, (0.50, lane_y[0] - 0.025), (0.55, lane_y[1] + 0.025), NAVY, "MLII beats")
-    arrow(ax, (0.72, lane_y[1] - 0.025), (0.48, lane_y[2] + 0.025), PURPLE, "242 features", rad=0.10)
-    arrow(ax, (0.66, lane_y[2] - 0.025), (0.28, lane_y[3] + 0.025), TEAL, "frozen model", rad=-0.12)
-    arrow(ax, (0.83, lane_y[2] - 0.025), (0.74, lane_y[3] + 0.025), RED, "test only")
-
-    ax.text(0.50, 0.015,
-            "The test timeline is not used for candidate choice, threshold choice, or final fitting in this rerun.",
-            ha="center", fontsize=9, color=INK)
-    save(fig, "method_final_workflow.pdf")
+    thesis_diagrams.method_workflow(result)
 
 
 def split_audit_figure(result: dict) -> None:
@@ -182,48 +137,31 @@ def model_selection_figure(result: dict) -> None:
 
 
 def evaluation_order_figure(result: dict) -> None:
-    binary = result["test_binary"]
-    subtype = result["test_subtype_on_true_supported_arrhythmias"]
-    whole = result["test_whole_system"]
-
-    fig = plt.figure(figsize=(11.4, 5.5))
-    gs = fig.add_gridspec(2, 2, height_ratios=[0.12, 1.0], width_ratios=[1.10, 1.0], wspace=0.30)
-    title_ax = fig.add_subplot(gs[0, :])
-    title_ax.axis("off")
-    title_ax.text(0, 0.5, "Evaluation order and test support", fontsize=15,
-                  weight="bold", color=INK, va="center")
-
-    ax1 = fig.add_subplot(gs[1, 0])
-    ax1.set_axis_off()
-    ax1.set_xlim(0, 1)
-    ax1.set_ylim(0, 1)
-    stages = [
-        (0.12, 0.70, "1", "Binary gate", f"{binary['support']:,} held-out beats", NAVY),
-        (0.48, 0.70, "2", "Subtype naming", f"{subtype['support']:,} supported abnormal beats", PURPLE),
-        (0.84, 0.70, "3", "Whole system", f"{whole['support']:,} supported six-class beats", TEAL),
-    ]
-    for x, y, number, title, body, color in stages:
-        ax1.scatter([x], [y], s=950, color=color, alpha=0.92, edgecolor="white", lw=2.0, zorder=3)
-        ax1.text(x, y, number, ha="center", va="center", fontsize=18, weight="bold", color="white")
-        ax1.text(x, y - 0.18, title, ha="center", fontsize=10.5, weight="bold", color=INK)
-        ax1.text(x, y - 0.27, body, ha="center", fontsize=8.3, color=SLATE)
-    arrow(ax1, (0.22, 0.70), (0.38, 0.70), SLATE)
-    arrow(ax1, (0.58, 0.70), (0.74, 0.70), SLATE)
-    ax1.text(0.50, 0.15,
-             "Separate supports identify where errors happen: abnormal gate, conditional subtype name, or complete deployed decision.",
-             ha="center", fontsize=8.8, color=INK)
-
-    ax2 = fig.add_subplot(gs[1, 1])
-    labels = ["binary\nall", "subtype\nsupported abnormal", "whole\nsix-class"]
-    supports = np.asarray([binary["support"], subtype["support"], whole["support"]])
-    colors = [NAVY, PURPLE, TEAL]
-    bars = ax2.bar(labels, supports, color=colors, alpha=0.86)
-    ax2.set_ylabel("Beats included in score")
-    clean_axis(ax2, "Support differs by evaluation question")
-    for bar, support in zip(bars, supports):
-        ax2.text(bar.get_x() + bar.get_width() / 2, support + 350, f"{support:,}",
-                 ha="center", va="bottom", fontsize=8.5, weight="bold")
-    ax2.set_ylim(0, max(supports) * 1.20)
+    values = [result["test_binary"]["support"],
+              result["test_subtype_on_true_supported_arrhythmias"]["support"],
+              result["test_whole_system"]["support"]]
+    labels = ["Binary detection\nAll accepted test beats",
+              "Subtype classification\nTrue supported abnormal beats",
+              "Complete system\nNormal + supported abnormal"]
+    fig, ax = plt.subplots(figsize=(7.2, 3.6))
+    fig.subplots_adjust(left=.38, right=.92, top=.79, bottom=.29)
+    bars = ax.barh(range(3), values, color=[NAVY, PURPLE, TEAL], height=.53)
+    ax.set_yticks(range(3), labels, fontsize=9.5)
+    ax.invert_yaxis()
+    ax.set_xlim(0, max(values)*1.19)
+    ax.set_xlabel("Number of test beats", fontsize=10)
+    ax.spines[["top", "right", "left"]].set_visible(False)
+    ax.tick_params(axis="y", length=0, pad=10)
+    ax.tick_params(axis="x", labelsize=9)
+    ax.set_axisbelow(True)
+    ax.grid(axis="x", color=GRID, linewidth=.7)
+    for bar, value in zip(bars, values):
+        ax.text(value+350, bar.get_y()+bar.get_height()/2, f"{value:,}",
+                va="center", fontsize=10, weight="bold", color=INK)
+    fig.text(.06,.92,"Three distinct evaluation populations", fontsize=12,
+             weight="bold", color=INK)
+    fig.text(.06,.08,"These groups overlap. Unsupported abnormal labels enter only binary evaluation.",
+             fontsize=9.5, color=SLATE)
     save(fig, "method_evaluation_order.pdf")
 
 

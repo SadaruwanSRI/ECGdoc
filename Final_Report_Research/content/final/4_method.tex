@@ -7,7 +7,8 @@ new-patient external validation and it is not a shuffled random beat split.
 
 \section{Method overview}
 
-Figure~\ref{fig:method-workflow} gives the complete final method. The normal
+Figure~\ref{fig:method-workflow} shows how accepted beats are allocated to
+model selection, final refitting, and testing. The normal
 autoencoder was already frozen from NSRDB. The supervised experiment then used
 only MITDB MLII beats. Candidate models were selected with earlier temporal
 regions, refitted before the test boundary, and evaluated only on the final
@@ -16,9 +17,10 @@ regions, refitted before the test boundary, and evaluated only on the final
 \begin{figure}[H]
 \centering
 \includegraphics[width=.98\textwidth]{pic/generated/method_final_workflow.pdf}
-\caption{Experimental workflow for the final run. The method keeps source data,
-feature construction, temporal splitting, model selection, final fitting,
-temporal scoring, and subject-clustered validation as separate steps.}
+\caption[Chronological model selection, refitting, and final testing.]{Chronological
+selection, refitting, and testing by accepted-beat order. Selection excludes
+16 beats before both boundaries; refitting retains only the exclusion before
+the test. The test region was observed during earlier development.}
 \label{fig:method-workflow}
 \end{figure}
 
@@ -155,9 +157,11 @@ classifier chooses PVC, PAC, LBBB, RBBB, or AFib.
 \begin{figure}[H]
 \centering
 \includegraphics[width=.98\textwidth]{pic/generated/method_evaluation_order.pdf}
-\caption{Evaluation order used by the final method. Binary, conditional
-subtype, and whole-system evaluations answer different questions and therefore
-use different supports.}
+\caption[Populations used for the three evaluation questions.]{Populations used
+for the three evaluation questions. Conditional subtype scoring uses true
+supported abnormal beats independently of the gate. Complete-system scoring
+uses the gate and subtype model together. The populations overlap; unsupported
+abnormal labels enter only the binary evaluation.}
 \label{fig:method-evaluation-order}
 \end{figure}
 

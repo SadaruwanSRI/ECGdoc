@@ -14,33 +14,33 @@
 \newlabel{fig:architecture-streaming-window}{{5.2}{30}{R-peak-aligned beat window used by the final model. The R peak is at sample index 200, giving the model pre-QRS context and post-QRS recovery information}{figure.caption.27}{}}
 \@writefile{toc}{\contentsline {section}{\numberline {5.3}Three trained components}{30}{section.5.3}\protected@file@percent }
 \citation{vincent2008denoising}
-\@writefile{lof}{\contentsline {figure}{\numberline {5.3}{\ignorespaces Separation between normal-reference training, supervised temporal development, final testing, and installed use. Live/session use applies the frozen bundle; it does not update model weights.}}{31}{figure.caption.28}\protected@file@percent }
-\newlabel{fig:architecture-training-live}{{5.3}{31}{Separation between normal-reference training, supervised temporal development, final testing, and installed use. Live/session use applies the frozen bundle; it does not update model weights}{figure.caption.28}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {5.3}{\ignorespaces Training and use of the saved three-component model.}}{31}{figure.caption.28}\protected@file@percent }
+\newlabel{fig:architecture-training-live}{{5.3}{31}{Training and use of the saved three-component model}{figure.caption.28}{}}
 \@writefile{toc}{\contentsline {section}{\numberline {5.4}Normal-only autoencoder}{31}{section.5.4}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {5.4.1}Purpose}{31}{subsection.5.4.1}\protected@file@percent }
 \newlabel{eq:ae-loss-final}{{5.2}{31}{Purpose}{equation.5.2}{}}
-\@writefile{brf}{\backcite{vincent2008denoising}{{31}{5.4.1}{equation.5.2}}}
-\citation{nsrdb}
+\@writefile{brf}{\backcite{vincent2008denoising}{{32}{5.4.1}{equation.5.2}}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {5.4.2}Network structure}{32}{subsection.5.4.2}\protected@file@percent }
-\@writefile{lof}{\contentsline {figure}{\numberline {5.4}{\ignorespaces Layer flow of the 2,680,641-parameter dilated U-Net autoencoder. The encoder compresses the window, the dilated bottleneck expands temporal context, and the decoder reconstructs the original 512-sample signal.}}{32}{figure.caption.29}\protected@file@percent }
-\newlabel{fig:final-ae-layers}{{5.4}{32}{Layer flow of the 2,680,641-parameter dilated U-Net autoencoder. The encoder compresses the window, the dilated bottleneck expands temporal context, and the decoder reconstructs the original 512-sample signal}{figure.caption.29}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {5.4.3}Normal-reference data and checkpoint}{32}{subsection.5.4.3}\protected@file@percent }
-\@writefile{brf}{\backcite{nsrdb}{{32}{5.4.3}{subsection.5.4.3}}}
+\@writefile{lof}{\contentsline {figure}{\numberline {5.4}{\ignorespaces Autoencoder architecture with verified tensor dimensions.}}{32}{figure.caption.29}\protected@file@percent }
+\newlabel{fig:final-ae-layers}{{5.4}{32}{Autoencoder architecture with verified tensor dimensions}{figure.caption.29}{}}
+\citation{nsrdb}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.4.3}Normal-reference data and checkpoint}{33}{subsection.5.4.3}\protected@file@percent }
+\@writefile{brf}{\backcite{nsrdb}{{33}{5.4.3}{subsection.5.4.3}}}
 \@writefile{lof}{\contentsline {figure}{\numberline {5.5}{\ignorespaces Autoencoder fitting and validation loss.}}{33}{figure.caption.30}\protected@file@percent }
 \newlabel{fig:lead-ii-ae-learning}{{5.5}{33}{Autoencoder fitting and validation loss}{figure.caption.30}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {5.4.4}Four autoencoder residual features}{33}{subsection.5.4.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.4.4}Four autoencoder residual features}{34}{subsection.5.4.4}\protected@file@percent }
 \@writefile{lof}{\contentsline {figure}{\numberline {5.6}{\ignorespaces Real healthy and abnormal ECG examples through the frozen autoencoder. The residual between input and reconstruction is converted into four numerical features for the supervised detector.}}{34}{figure.caption.31}\protected@file@percent }
 \newlabel{fig:final-real-ae}{{5.6}{34}{Real healthy and abnormal ECG examples through the frozen autoencoder. The residual between input and reconstruction is converted into four numerical features for the supervised detector}{figure.caption.31}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {5.5}Final 242-value feature vector}{34}{section.5.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {5.5}Final 242-value feature vector}{35}{section.5.5}\protected@file@percent }
 \@writefile{lof}{\contentsline {figure}{\numberline {5.7}{\ignorespaces Feature-vector layout used by both supervised models. The same 242-value vector is passed first to the abnormality detector and, if required, to the subtype classifier.}}{35}{figure.caption.32}\protected@file@percent }
 \newlabel{fig:architecture-feature-vector}{{5.7}{35}{Feature-vector layout used by both supervised models. The same 242-value vector is passed first to the abnormality detector and, if required, to the subtype classifier}{figure.caption.32}{}}
 \@writefile{lot}{\contentsline {table}{\numberline {5.1}{\ignorespaces Organised feature groups in the final architecture.}}{35}{table.caption.33}\protected@file@percent }
 \newlabel{tab:final-feature-vector}{{5.1}{35}{Organised feature groups in the final architecture}{table.caption.33}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {5.6}Binary abnormality detector}{35}{section.5.6}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {5.6}Binary abnormality detector}{36}{section.5.6}\protected@file@percent }
 \newlabel{countitems@4}{{6}{36}{Binary abnormality detector}{section.5.6}{}}
 \@writefile{toc}{\contentsline {section}{\numberline {5.7}Abnormal-subtype classifier}{36}{section.5.7}\protected@file@percent }
 \newlabel{countitems@5}{{6}{36}{Abnormal-subtype classifier}{section.5.7}{}}
-\newlabel{eq:final-decision}{{5.10}{36}{Abnormal-subtype classifier}{equation.5.10}{}}
+\newlabel{eq:final-decision}{{5.10}{37}{Abnormal-subtype classifier}{equation.5.10}{}}
 \@writefile{toc}{\contentsline {section}{\numberline {5.8}Final decision logic}{37}{section.5.8}\protected@file@percent }
 \@writefile{toc}{\contentsline {section}{\numberline {5.9}Why this architecture was selected}{38}{section.5.9}\protected@file@percent }
 \@writefile{lot}{\contentsline {table}{\numberline {5.2}{\ignorespaces Reason for each major final-architecture decision.}}{38}{table.caption.34}\protected@file@percent }

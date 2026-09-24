@@ -133,6 +133,11 @@ G.~S. Collins, K.~G.~M. Moons, P.~Dhiman, R.~D. Riley, A.~L. Beam,
   prediction models that use regression or machine learning methods,'' {\em
   BMJ}, vol.~385, p.~e078378, 2024.
 
+\bibitem{physionetLeadFAQ}
+{PhysioNet}, ``Frequently asked questions: What do the signal names mlii, v2,
+  ... mean?.'' \url{https://archive.physionet.org/faq.shtml}.
+\newblock Accessed September 23, 2026.
+
 \bibitem{butterworth1930filter}
 S.~Butterworth, ``On the theory of filter amplifiers,'' {\em Experimental
   Wireless and the Wireless Engineer}, vol.~7, pp.~536--541, 1930.

@@ -3,8 +3,6 @@ Capacity: max_strings=200000, hash_size=200000, hash_prime=170003
 The top-level auxiliary file: main.aux
 Reallocating 'name_of_file' (item size: 1) to 26 items.
 A level-1 auxiliary file: content/0_pre/1_title.aux
-Reallocating 'name_of_file' (item size: 1) to 30 items.
-A level-1 auxiliary file: content/0_pre/2_affidavit.aux
 Reallocating 'name_of_file' (item size: 1) to 32 items.
 A level-1 auxiliary file: content/0_pre/3_acknowledge.aux
 Reallocating 'name_of_file' (item size: 1) to 29 items.
@@ -31,36 +29,36 @@ Reallocating 'name_of_file' (item size: 1) to 12 items.
 Reallocating 'name_of_file' (item size: 1) to 27 items.
 A level-1 auxiliary file: content/final/appendix.aux
 Database file #1: bib/library.bib
-You've used 28 entries,
+You've used 29 entries,
             1876 wiz_defined-function locations,
-            663 strings with 10349 characters,
-and the built_in function-call counts, 9384 in all, are:
-= -- 896
-> -- 487
+            668 strings with 10507 characters,
+and the built_in function-call counts, 9516 in all, are:
+= -- 909
+> -- 491
 < -- 0
-+ -- 173
-- -- 145
-* -- 683
-:= -- 1326
-add.period$ -- 28
-call.type$ -- 28
-change.case$ -- 28
++ -- 175
+- -- 146
+* -- 687
+:= -- 1345
+add.period$ -- 30
+call.type$ -- 29
+change.case$ -- 29
 chr.to.int$ -- 0
-cite$ -- 28
-duplicate$ -- 475
-empty$ -- 771
-format.name$ -- 145
-if$ -- 2271
+cite$ -- 29
+duplicate$ -- 479
+empty$ -- 789
+format.name$ -- 146
+if$ -- 2305
 int.to.chr$ -- 0
-int.to.str$ -- 28
+int.to.str$ -- 29
 missing$ -- 25
-newline$ -- 87
-num.names$ -- 28
-pop$ -- 87
+newline$ -- 91
+num.names$ -- 29
+pop$ -- 94
 preamble$ -- 1
 purify$ -- 0
 quote$ -- 0
-skip$ -- 396
+skip$ -- 399
 stack$ -- 0
 substring$ -- 606
 swap$ -- 247
@@ -69,6 +67,6 @@ text.prefix$ -- 0
 top$ -- 0
 type$ -- 0
 warning$ -- 0
-while$ -- 84
-width$ -- 30
-write$ -- 281
+while$ -- 85
+width$ -- 31
+write$ -- 290

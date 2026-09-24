@@ -68,9 +68,11 @@ of MIT--BIH Arrhythmia Database records.
 \begin{figure}[H]
 \centering
 \includegraphics[width=.98\textwidth]{pic/generated/architecture_training_live_map.pdf}
-\caption{Separation between normal-reference training, supervised temporal
-development, final testing, and installed use. Live/session use applies the
-frozen bundle; it does not update model weights.}
+\caption[Training and use of the saved three-component model.]{Training and use
+of the saved three-component model. Offline development produces the frozen
+autoencoder, binary gate, subtype classifier, and validation-selected threshold.
+The same fixed components support retrospective temporal evaluation and session
+prediction; session use does not update its parameters.}
 \label{fig:architecture-training-live}
 \end{figure}
 
@@ -103,30 +105,13 @@ noise patterns \cite{vincent2008denoising}.
 
 \begin{figure}[H]
 \centering
-\begin{tikzpicture}[node distance=5mm,>=latex,font=\scriptsize,
-layer/.style={draw=thesisnavy,rounded corners,minimum width=3.1cm,minimum height=7mm,align=center,fill=thesislight}]
-\node[layer] (in) {Input $1\times512$};
-\node[layer,below=of in] (e1) {Residual Conv: $32\times256$};
-\node[layer,below=of e1] (e2) {Residual Conv: $64\times128$};
-\node[layer,below=of e2] (e3) {Residual Conv: $128\times64$};
-\node[layer,below=of e3] (e4) {Residual Conv: $256\times32$};
-\node[layer,below=of e4,fill=thesisteal!18] (b) {Dilated bottleneck $d=1,2,4,8$};
-\node[layer,right=22mm of b] (d1) {Up block: $128\times32$};
-\node[layer,above=of d1] (d2) {Up block: $64\times64$};
-\node[layer,above=of d2] (d3) {Up block: $32\times128$};
-\node[layer,above=of d3] (d4) {Up block: $32\times256$};
-\node[layer,above=of d4] (out) {Linear $1\times256$; resize to 512};
-\foreach \a/\b in {in/e1,e1/e2,e2/e3,e3/e4,e4/b,b/d1,d1/d2,d2/d3,d3/d4,d4/out}
-  \draw[->,thick] (\a)--(\b);
-\draw[->,thesisteal,dashed] (e4.east)--(d1.west);
-\draw[->,thesisteal,dashed] (e3.east)--(d2.west);
-\draw[->,thesisteal,dashed] (e2.east)--(d3.west);
-\draw[->,thesisteal,dashed] (e1.east)--(d4.west);
-\node[font=\scriptsize,text=black,align=center] at (4.2,-2.0) {scaled skip\\connections};
-\end{tikzpicture}
-\caption{Layer flow of the 2,680,641-parameter dilated U-Net autoencoder. The
-encoder compresses the window, the dilated bottleneck expands temporal context,
-and the decoder reconstructs the original 512-sample signal.}
+\includegraphics[width=.98\textwidth]{pic/generated/architecture_autoencoder_layers.pdf}
+\caption[Autoencoder architecture with verified tensor dimensions.]{Autoencoder
+architecture with tensor dimensions verified by a forward pass through the
+2,680,641-parameter implementation. Read down the encoder, through the
+bottleneck, and up the decoder. Dashed connections concatenate encoder features
+scaled by 0.5; decoder outputs match their skip lengths before the final
+interpolation restores the 512-sample waveform.}
 \label{fig:final-ae-layers}
 \end{figure}
 

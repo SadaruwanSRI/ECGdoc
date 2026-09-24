@@ -2,6 +2,11 @@ from __future__ import annotations
 
 from pathlib import Path
 
+try:
+    from . import thesis_diagrams
+except ImportError:
+    import thesis_diagrams
+
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.patches import FancyArrowPatch, Rectangle
@@ -173,40 +178,7 @@ def feature_vector() -> None:
 
 
 def training_live_map() -> None:
-    fig, ax = plt.subplots(figsize=(11.5, 5.5))
-    ax.set_axis_off()
-    ax.set_xlim(0, 1)
-    ax.set_ylim(0, 1)
-
-    ax.text(0.02, 0.94, "Training, testing, and installed use of the final bundle",
-            fontsize=15, weight="bold", color=INK)
-
-    y1, y2, y3 = 0.72, 0.47, 0.22
-    ax.hlines([y1, y2, y3], 0.08, 0.93, colors=[TEAL, NAVY, RED], lw=3, alpha=0.75)
-    ax.text(0.03, y1, "AE reference", va="center", fontsize=10, weight="bold", color=TEAL)
-    ax.text(0.03, y2, "MITDB MLII", va="center", fontsize=10, weight="bold", color=NAVY)
-    ax.text(0.03, y3, "installed use", va="center", fontsize=10, weight="bold", color=RED)
-
-    markers = [
-        (0.17, y1, "NSRDB ECG1\n18 normal subjects", TEAL),
-        (0.43, y1, "frozen autoencoder\n4 residual features", TEAL),
-        (0.17, y2, "first 64%\nfit candidates", NAVY),
-        (0.40, y2, "64-80%\nvalidation", ORANGE),
-        (0.57, y2, "16-beat gap", MUTED),
-        (0.73, y2, "final 20%\ntemporal test", RED),
-        (0.31, y3, "MLII session\nor replay", RED),
-        (0.55, y3, "same 242\nfeatures", PURPLE),
-        (0.78, y3, "frozen decision\nno retraining", RED),
-    ]
-    for x, y, text, color in markers:
-        ax.scatter([x], [y], s=140, color=color, zorder=4, edgecolor="white", lw=1.5)
-        ax.text(x, y + 0.075, text, ha="center", va="bottom", fontsize=8.4, color=INK)
-    arrow(ax, (0.43, y1 - 0.02), (0.55, y3 + 0.03), TEAL, "AE residuals", rad=-0.18)
-    arrow(ax, (0.40, y2 - 0.02), (0.55, y3 + 0.03), ORANGE, "selected models", rad=0.08)
-    ax.text(0.50, 0.06,
-            "The performance claim is known-patient temporal continuation: later MLII from patients whose earlier MLII was used for development.",
-            ha="center", fontsize=9, color=INK)
-    save(fig, "architecture_training_live_map.pdf")
+    thesis_diagrams.training_lifecycle()
 
 
 def streaming_window() -> None:
@@ -238,6 +210,7 @@ def main() -> None:
     current_system_flow()
     feature_vector()
     training_live_map()
+    thesis_diagrams.autoencoder_architecture()
     streaming_window()
 
 

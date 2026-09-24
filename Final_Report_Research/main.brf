@@ -44,7 +44,9 @@
 \backcite {nsrdb}{{11}{3.1}{table.caption.12}}
 \backcite {mitdb}{{11}{3.1}{table.caption.12}}
 \backcite {moody2001impact}{{11}{3.1}{table.caption.12}}
+\backcite {physionetLeadFAQ}{{13}{3.1}{figure.caption.13}}
 \backcite {mitdb}{{13}{3.1}{figure.caption.13}}
+\backcite {physionetLeadFAQ}{{13}{3.2}{figure.caption.14}}
 \backcite {butterworth1930filter}{{15}{3.3}{table.caption.16}}
 \backcite {virtanen2020scipy}{{15}{3.3}{table.caption.16}}
 \backcite {dechazal2004heartbeat}{{21}{4.1}{figure.caption.20}}
@@ -59,8 +61,8 @@
 \backcite {cui2019classbalanced}{{26}{4.7}{equation.4.14}}
 \backcite {saito2015pr}{{27}{4.9}{figure.caption.24}}
 \backcite {rutter2000clustered}{{27}{4.9}{figure.caption.24}}
-\backcite {vincent2008denoising}{{31}{5.4.1}{equation.5.2}}
-\backcite {nsrdb}{{32}{5.4.3}{subsection.5.4.3}}
+\backcite {vincent2008denoising}{{32}{5.4.1}{equation.5.2}}
+\backcite {nsrdb}{{33}{5.4.3}{subsection.5.4.3}}
 \backcite {rutter2000clustered}{{45}{6.8}{Item.41}}
 \backcite {incartdb}{{52}{7.6}{section.7.6}}
 \backcite {collins2024tripodai}{{57}{8.6}{section.8.6}}
