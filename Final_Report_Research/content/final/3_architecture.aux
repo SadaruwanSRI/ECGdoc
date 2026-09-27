@@ -1,10 +1,10 @@
 \relax 
 \providecommand\hyper@newdestlabel[2]{}
-\@writefile{toc}{\contentsline {chapter}{\numberline {5}System Architecture and Implementation}{36}{chapter.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {chapter}{\numberline {5}Methodology}{36}{chapter.5}\protected@file@percent }
 \@writefile{lof}{\addvspace {10\p@ }}
 \@writefile{lot}{\addvspace {10\p@ }}
 \@writefile{lol}{\addvspace {10\p@ }}
-\newlabel{ch:architecture}{{5}{36}{System Architecture and Implementation}{chapter.5}{}}
+\newlabel{ch:architecture}{{5}{36}{Methodology}{chapter.5}{}}
 \@writefile{toc}{\contentsline {section}{\numberline {5.1}System overview}{36}{section.5.1}\protected@file@percent }
 \@writefile{lof}{\contentsline {figure}{\numberline {5.1}{\ignorespaces Exact runtime order of the final ECG system. The autoencoder supplies features; the supervised tree models make the final class decision.}}{36}{figure.caption.29}\protected@file@percent }
 \newlabel{fig:architecture-current-flow}{{5.1}{36}{Exact runtime order of the final ECG system. The autoencoder supplies features; the supervised tree models make the final class decision}{figure.caption.29}{}}
@@ -76,13 +76,47 @@
 \newlabel{eq:final-decision}{{5.26}{50}{Abnormal-subtype classifier}{equation.5.26}{}}
 \@writefile{toc}{\contentsline {section}{\numberline {5.9}Final decision logic}{50}{section.5.9}\protected@file@percent }
 \newlabel{eq:method-complete-decision}{{5.27}{51}{Final decision logic}{equation.5.27}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {5.10}Why this architecture was selected}{51}{section.5.10}\protected@file@percent }
-\@writefile{lot}{\contentsline {table}{\numberline {5.3}{\ignorespaces Reason for each major final-architecture decision.}}{51}{table.caption.39}\protected@file@percent }
-\newlabel{tab:final-design-rationale}{{5.3}{51}{Reason for each major final-architecture decision}{table.caption.39}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {5.10}Mathematical training and inference procedure}{51}{section.5.10}\protected@file@percent }
+\newlabel{sec:method-training-inference}{{5.10}{51}{Mathematical training and inference procedure}{section.5.10}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.10.1}Notation, targets, and separation of data}{51}{subsection.5.10.1}\protected@file@percent }
+\newlabel{eq:method-target-sets}{{5.28}{51}{Notation, targets, and separation of data}{equation.5.28}{}}
+\newlabel{eq:method-training-index-sets}{{5.30}{52}{Notation, targets, and separation of data}{equation.5.30}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {5.3}{\ignorespaces Illustrative allocation of a record containing 1,000 accepted beats.}}{52}{table.caption.39}\protected@file@percent }
+\newlabel{tab:method-example-split}{{5.3}{52}{Illustrative allocation of a record containing 1,000 accepted beats}{table.caption.39}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.10.2}Model 1: learning and freezing the autoencoder}{52}{subsection.5.10.2}\protected@file@percent }
+\newlabel{eq:method-sequential-ae-loss}{{5.31}{52}{Model 1: learning and freezing the autoencoder}{equation.5.31}{}}
+\newlabel{eq:method-ae-checkpoint-selection}{{5.32}{53}{Model 1: learning and freezing the autoencoder}{equation.5.32}{}}
+\newlabel{eq:method-example-ae-loss}{{5.33}{53}{Model 1: learning and freezing the autoencoder}{equation.5.33}{}}
+\newlabel{eq:method-example-adam-step}{{5.36}{53}{Model 1: learning and freezing the autoencoder}{equation.5.36}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.10.3}Core calculation shared by training and prediction}{54}{subsection.5.10.3}\protected@file@percent }
+\newlabel{eq:method-shared-feature-map}{{5.37}{54}{Core calculation shared by training and prediction}{equation.5.37}{}}
+\newlabel{eq:method-feature-pooling}{{5.38}{54}{Core calculation shared by training and prediction}{equation.5.38}{}}
+\newlabel{eq:method-feature-spectrum}{{5.39}{54}{Core calculation shared by training and prediction}{equation.5.39}{}}
+\newlabel{eq:method-base-rr-calculation}{{5.40}{54}{Core calculation shared by training and prediction}{equation.5.40}{}}
+\newlabel{eq:method-example-rr}{{5.41}{55}{Core calculation shared by training and prediction}{equation.5.41}{}}
+\newlabel{eq:method-example-residual-totals}{{5.42}{55}{Core calculation shared by training and prediction}{equation.5.42}{}}
+\newlabel{eq:method-example-residual-features}{{5.43}{55}{Core calculation shared by training and prediction}{equation.5.43}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.10.4}Model 2: fitting and selecting the binary detector}{55}{subsection.5.10.4}\protected@file@percent }
+\newlabel{eq:method-randomised-node-fit}{{5.44}{55}{Model 2: fitting and selecting the binary detector}{equation.5.44}{}}
+\newlabel{eq:method-validation-threshold-selection}{{5.45}{56}{Model 2: fitting and selecting the binary detector}{equation.5.45}{}}
+\newlabel{eq:method-example-weighted-entropy}{{5.46}{56}{Model 2: fitting and selecting the binary detector}{equation.5.46}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {5.4}{\ignorespaces Illustrative validation comparison of three binary-score thresholds.}}{56}{table.caption.40}\protected@file@percent }
+\newlabel{tab:method-example-threshold}{{5.4}{56}{Illustrative validation comparison of three binary-score thresholds}{table.caption.40}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.10.5}Model 3: fitting the abnormal-subtype classifier}{57}{subsection.5.10.5}\protected@file@percent }
+\newlabel{eq:method-subtype-training-population}{{5.47}{57}{Model 3: fitting the abnormal-subtype classifier}{equation.5.47}{}}
+\newlabel{eq:method-subtype-selection-objective}{{5.48}{57}{Model 3: fitting the abnormal-subtype classifier}{equation.5.48}{}}
+\newlabel{eq:method-example-subtype-gain}{{5.49}{57}{Model 3: fitting the abnormal-subtype classifier}{equation.5.49}{}}
+\newlabel{eq:method-example-subtype-selection}{{5.51}{57}{Model 3: fitting the abnormal-subtype classifier}{equation.5.51}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.10.6}Applying the saved models to an unseen beat}{58}{subsection.5.10.6}\protected@file@percent }
+\newlabel{eq:method-saved-model-collection}{{5.52}{58}{Applying the saved models to an unseen beat}{equation.5.52}{}}
+\newlabel{eq:method-unseen-inference}{{5.54}{58}{Applying the saved models to an unseen beat}{equation.5.54}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {5.11}Why this architecture was selected}{60}{section.5.11}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {5.5}{\ignorespaces Reason for each major final-architecture decision.}}{60}{table.caption.41}\protected@file@percent }
+\newlabel{tab:final-design-rationale}{{5.5}{60}{Reason for each major final-architecture decision}{table.caption.41}{}}
 \@setckpt{content/final/3_architecture}{
-\setcounter{page}{52}
-\setcounter{equation}{27}
-\setcounter{enumi}{6}
+\setcounter{page}{61}
+\setcounter{equation}{54}
+\setcounter{enumi}{5}
 \setcounter{enumii}{0}
 \setcounter{enumiii}{0}
 \setcounter{enumiv}{0}
@@ -90,13 +124,13 @@
 \setcounter{mpfootnote}{0}
 \setcounter{part}{0}
 \setcounter{chapter}{5}
-\setcounter{section}{10}
+\setcounter{section}{11}
 \setcounter{subsection}{0}
 \setcounter{subsubsection}{0}
 \setcounter{paragraph}{0}
 \setcounter{subparagraph}{0}
 \setcounter{figure}{8}
-\setcounter{table}{3}
+\setcounter{table}{5}
 \setcounter{NAT@ctr}{0}
 \setcounter{parentequation}{0}
 \setcounter{ALC@unique}{0}
@@ -111,7 +145,7 @@
 \setcounter{subfigure}{0}
 \setcounter{subtable}{0}
 \setcounter{section@level}{0}
-\setcounter{Item}{24}
+\setcounter{Item}{29}
 \setcounter{Hfootnote}{0}
 \setcounter{bookmark@seq@number}{0}
 \setcounter{nlinenum}{0}

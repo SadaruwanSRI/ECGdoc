@@ -14,17 +14,19 @@
 \addvspace {10\p@ }
 \contentsline {table}{\numberline {5.1}{\ignorespaces Architecture, training target, and output of each fitted component.}}{38}{table.caption.31}%
 \contentsline {table}{\numberline {5.2}{\ignorespaces Organised feature groups in the final architecture.}}{46}{table.caption.37}%
-\contentsline {table}{\numberline {5.3}{\ignorespaces Reason for each major final-architecture decision.}}{51}{table.caption.39}%
+\contentsline {table}{\numberline {5.3}{\ignorespaces Illustrative allocation of a record containing 1,000 accepted beats.}}{52}{table.caption.39}%
+\contentsline {table}{\numberline {5.4}{\ignorespaces Illustrative validation comparison of three binary-score thresholds.}}{56}{table.caption.40}%
+\contentsline {table}{\numberline {5.5}{\ignorespaces Reason for each major final-architecture decision.}}{60}{table.caption.41}%
 \addvspace {10\p@ }
-\contentsline {table}{\numberline {6.1}{\ignorespaces Exact evidence supplied to the final supervised models.}}{53}{table.caption.41}%
+\contentsline {table}{\numberline {6.1}{\ignorespaces Exact evidence supplied to the final supervised models.}}{62}{table.caption.43}%
 \addvspace {10\p@ }
-\contentsline {table}{\numberline {7.1}{\ignorespaces Distinct denominators for the three evaluation questions.}}{61}{table.caption.46}%
-\contentsline {table}{\numberline {7.2}{\ignorespaces Corrected temporal results. Confidence intervals estimate equal-subject accuracy, not pooled beat accuracy.}}{62}{table.caption.48}%
-\contentsline {table}{\numberline {7.3}{\ignorespaces Whole-system performance by supported abnormal output group.}}{64}{table.caption.52}%
-\contentsline {table}{\numberline {7.4}{\ignorespaces Corrected model on complete INCART I01 and I02 recordings.}}{67}{table.caption.55}%
+\contentsline {table}{\numberline {7.1}{\ignorespaces Distinct denominators for the three evaluation questions.}}{70}{table.caption.48}%
+\contentsline {table}{\numberline {7.2}{\ignorespaces Corrected temporal results. Confidence intervals estimate equal-subject accuracy, not pooled beat accuracy.}}{71}{table.caption.50}%
+\contentsline {table}{\numberline {7.3}{\ignorespaces Whole-system performance by supported abnormal output group.}}{73}{table.caption.54}%
+\contentsline {table}{\numberline {7.4}{\ignorespaces Corrected model on complete INCART I01 and I02 recordings.}}{76}{table.caption.57}%
 \addvspace {10\p@ }
 \addvspace {10\p@ }
 \def \@chapapp {\appendixname }
 \addvspace {10\p@ }
-\contentsline {table}{\numberline {A.1}{\ignorespaces Settings used for the final experiment.}}{75}{table.caption.57}%
+\contentsline {table}{\numberline {A.1}{\ignorespaces Settings used for the final experiment.}}{84}{table.caption.59}%
 \providecommand \tocbasic@end@toc@file {}\tocbasic@end@toc@file 

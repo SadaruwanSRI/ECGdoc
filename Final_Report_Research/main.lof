@@ -26,18 +26,18 @@
 \contentsline {figure}{\numberline {5.7}{\ignorespaces Feature-vector layout used by both supervised models. The same 242-value vector is passed first to the abnormality detector and, if required, to the subtype classifier.}}{46}{figure.caption.36}%
 \contentsline {figure}{\numberline {5.8}{\ignorespaces Worked example of entropy reduction in a tree.}}{48}{figure.caption.38}%
 \addvspace {10\p@ }
-\contentsline {figure}{\numberline {6.1}{\ignorespaces Chronological model selection, refitting, and final testing.}}{52}{figure.caption.40}%
-\contentsline {figure}{\numberline {6.2}{\ignorespaces Temporal split audit for every eligible MITDB MLII record. Blue beats are available for final fitting, yellow beats are the boundary gap before the test, and red beats are the held-out final 20\% temporal test.}}{55}{figure.caption.42}%
-\contentsline {figure}{\numberline {6.3}{\ignorespaces Model selection on the 64--80\% validation region. The binary detector is selected by balanced accuracy and F1; the subtype classifier is selected by macro F1 and accuracy.}}{56}{figure.caption.43}%
-\contentsline {figure}{\numberline {6.4}{\ignorespaces Populations used for the three evaluation questions.}}{57}{figure.caption.44}%
+\contentsline {figure}{\numberline {6.1}{\ignorespaces Chronological model selection, refitting, and final testing.}}{61}{figure.caption.42}%
+\contentsline {figure}{\numberline {6.2}{\ignorespaces Temporal split audit for every eligible MITDB MLII record. Blue beats are available for final fitting, yellow beats are the boundary gap before the test, and red beats are the held-out final 20\% temporal test.}}{64}{figure.caption.44}%
+\contentsline {figure}{\numberline {6.3}{\ignorespaces Model selection on the 64--80\% validation region. The binary detector is selected by balanced accuracy and F1; the subtype classifier is selected by macro F1 and accuracy.}}{65}{figure.caption.45}%
+\contentsline {figure}{\numberline {6.4}{\ignorespaces Populations used for the three evaluation questions.}}{66}{figure.caption.46}%
 \addvspace {10\p@ }
-\contentsline {figure}{\numberline {7.1}{\ignorespaces Three evaluation questions and their test populations.}}{60}{figure.caption.45}%
-\contentsline {figure}{\numberline {7.2}{\ignorespaces Reference-class composition of the corrected temporal test.}}{61}{figure.caption.47}%
-\contentsline {figure}{\numberline {7.3}{\ignorespaces Pooled temporal scores after the preprocessing correction.}}{62}{figure.caption.49}%
-\contentsline {figure}{\numberline {7.4}{\ignorespaces Subject-clustered confidence intervals.}}{63}{figure.caption.50}%
-\contentsline {figure}{\numberline {7.5}{\ignorespaces Corrected whole-system accuracy across 45 known-patient clusters.}}{64}{figure.caption.51}%
-\contentsline {figure}{\numberline {7.6}{\ignorespaces True and correctly classified supported abnormal beats. PAC remains below the 90\% recall target.}}{65}{figure.caption.53}%
-\contentsline {figure}{\numberline {7.7}{\ignorespaces Whole-system confusion matrix for 20,043 supported temporal beats.}}{66}{figure.caption.54}%
+\contentsline {figure}{\numberline {7.1}{\ignorespaces Three evaluation questions and their test populations.}}{69}{figure.caption.47}%
+\contentsline {figure}{\numberline {7.2}{\ignorespaces Reference-class composition of the corrected temporal test.}}{70}{figure.caption.49}%
+\contentsline {figure}{\numberline {7.3}{\ignorespaces Pooled temporal scores after the preprocessing correction.}}{71}{figure.caption.51}%
+\contentsline {figure}{\numberline {7.4}{\ignorespaces Subject-clustered confidence intervals.}}{72}{figure.caption.52}%
+\contentsline {figure}{\numberline {7.5}{\ignorespaces Corrected whole-system accuracy across 45 known-patient clusters.}}{73}{figure.caption.53}%
+\contentsline {figure}{\numberline {7.6}{\ignorespaces True and correctly classified supported abnormal beats. PAC remains below the 90\% recall target.}}{74}{figure.caption.55}%
+\contentsline {figure}{\numberline {7.7}{\ignorespaces Whole-system confusion matrix for 20,043 supported temporal beats.}}{75}{figure.caption.56}%
 \addvspace {10\p@ }
 \addvspace {10\p@ }
 \def \@chapapp {\appendixname }

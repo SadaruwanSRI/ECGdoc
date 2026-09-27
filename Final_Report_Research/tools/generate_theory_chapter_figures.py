@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -200,6 +201,8 @@ def reconstruction_principle() -> None:
 
 
 def hierarchy_probability() -> None:
+    result = json.loads((ROOT / "experiments/corrected_temporal_holdout.json").read_text())
+    threshold = result["selected_binary"]["threshold_from_64_to_80_validation"]
     fig = plt.figure(figsize=(11.4, 5.4))
     gs = fig.add_gridspec(2, 2, height_ratios=[0.12, 1.0], width_ratios=[1.25, 1.0], wspace=0.30)
     title_ax = fig.add_subplot(gs[0, :])
@@ -210,13 +213,13 @@ def hierarchy_probability() -> None:
     ax1 = fig.add_subplot(gs[1, 0])
     probs = np.linspace(0, 1, 300)
     ax1.plot(probs, probs, color=NAVY, lw=2.0)
-    ax1.axvspan(0, 0.6208333, color=TEAL, alpha=0.12)
-    ax1.axvspan(0.6208333, 1, color=RED, alpha=0.10)
-    ax1.axvline(0.6208333, color=RED, lw=2.2, linestyle="--")
+    ax1.axvspan(0, threshold, color=TEAL, alpha=0.12)
+    ax1.axvspan(threshold, 1, color=RED, alpha=0.10)
+    ax1.axvline(threshold, color=RED, lw=2.2, linestyle="--")
     ax1.scatter([0.48, 0.79], [0.48, 0.79], s=85, color=[TEAL, RED], zorder=4)
     ax1.text(0.27, 0.82, "Output N", color=TEAL, fontsize=12, weight="bold")
     ax1.text(0.70, 0.25, "Run subtype model", color=RED, fontsize=12, weight="bold")
-    ax1.text(0.6208333, 1.02, "threshold 0.6208333", ha="center",
+    ax1.text(threshold, 1.02, f"threshold {threshold:.7f}", ha="center",
              fontsize=8.5, color=RED, weight="bold")
     ax1.set_xlabel(r"binary probability $P(\mathrm{abnormal}\mid x)$")
     ax1.set_ylabel("gate response")
@@ -236,7 +239,8 @@ def hierarchy_probability() -> None:
     ax2.set_xlim(0, 0.65)
     for yi, value in zip(y, values):
         ax2.text(value + 0.015, yi, f"{value:.2f}", va="center", fontsize=8.5)
-    ax2.text(0.52, 3, "max", color=RED, fontsize=10, weight="bold", va="center")
+    ax2.text(0.48, 3, "max", color="white", fontsize=10, weight="bold",
+             va="center", ha="right")
     ax2.set_xlabel(r"subtype probability $q_c$")
     style_axis(ax2, "B. Conditional subtype selection")
     save(fig, "theory_hierarchy_probability.pdf")

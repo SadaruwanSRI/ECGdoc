@@ -42,7 +42,7 @@
 \contentsline {section}{\numberline {4.10}From saved models to a live ECG decision}{32}{section.4.10}%
 \contentsline {section}{\numberline {4.11}Validation theory}{33}{section.4.11}%
 \contentsline {section}{\numberline {4.12}Summary of the theoretical framework}{35}{section.4.12}%
-\contentsline {chapter}{\numberline {5}System Architecture and Implementation}{36}{chapter.5}%
+\contentsline {chapter}{\numberline {5}Methodology}{36}{chapter.5}%
 \contentsline {section}{\numberline {5.1}System overview}{36}{section.5.1}%
 \contentsline {section}{\numberline {5.2}Input signal and beat window}{37}{section.5.2}%
 \contentsline {section}{\numberline {5.3}Three trained components}{38}{section.5.3}%
@@ -62,41 +62,48 @@
 \contentsline {section}{\numberline {5.7}Binary abnormality detector}{48}{section.5.7}%
 \contentsline {section}{\numberline {5.8}Abnormal-subtype classifier}{49}{section.5.8}%
 \contentsline {section}{\numberline {5.9}Final decision logic}{50}{section.5.9}%
-\contentsline {section}{\numberline {5.10}Why this architecture was selected}{51}{section.5.10}%
-\contentsline {chapter}{\numberline {6}Experimental Method}{52}{chapter.6}%
-\contentsline {section}{\numberline {6.1}Method overview}{52}{section.6.1}%
-\contentsline {section}{\numberline {6.2}Research objective and success conditions}{53}{section.6.2}%
-\contentsline {section}{\numberline {6.3}Input data and feature construction}{53}{section.6.3}%
-\contentsline {section}{\numberline {6.4}Normal-reference autoencoder training procedure}{54}{section.6.4}%
-\contentsline {section}{\numberline {6.5}Temporal split}{54}{section.6.5}%
-\contentsline {section}{\numberline {6.6}Model selection and final fitting}{55}{section.6.6}%
-\contentsline {section}{\numberline {6.7}Evaluation order}{57}{section.6.7}%
-\contentsline {section}{\numberline {6.8}Metrics}{58}{section.6.8}%
-\contentsline {section}{\numberline {6.9}Subject-clustered confidence interval}{58}{section.6.9}%
-\contentsline {section}{\numberline {6.10}Exploratory tests against the 90\% target}{59}{section.6.10}%
-\contentsline {section}{\numberline {6.11}Reproducibility and leakage controls}{59}{section.6.11}%
-\contentsline {chapter}{\numberline {7}Results and Statistical Validation}{60}{chapter.7}%
-\contentsline {section}{\numberline {7.1}Evaluation populations and sample sizes}{60}{section.7.1}%
-\contentsline {section}{\numberline {7.2}Model selection}{61}{section.7.2}%
-\contentsline {section}{\numberline {7.3}Main temporal results}{62}{section.7.3}%
-\contentsline {section}{\numberline {7.4}Uncertainty and subject variation}{63}{section.7.4}%
-\contentsline {section}{\numberline {7.5}Errors by stage and class}{64}{section.7.5}%
-\contentsline {section}{\numberline {7.6}Limited external INCART check}{66}{section.7.6}%
-\contentsline {section}{\numberline {7.7}Answers to the research questions}{67}{section.7.7}%
-\contentsline {chapter}{\numberline {8}Discussion and Conclusion}{68}{chapter.8}%
-\contentsline {section}{\numberline {8.1}Main findings}{68}{section.8.1}%
-\contentsline {section}{\numberline {8.2}Interpretation of the findings}{68}{section.8.2}%
-\contentsline {section}{\numberline {8.3}Achievement of the objectives}{69}{section.8.3}%
-\contentsline {section}{\numberline {8.4}Effect of the preprocessing revision}{69}{section.8.4}%
-\contentsline {section}{\numberline {8.5}Limitations}{69}{section.8.5}%
-\contentsline {section}{\numberline {8.6}Further research}{70}{section.8.6}%
-\contentsline {section}{\numberline {8.7}Conclusion}{70}{section.8.7}%
-\contentsline {chapter}{\nonumberline Bibliography}{71}{chapter*.56}%
+\contentsline {section}{\numberline {5.10}Mathematical training and inference procedure}{51}{section.5.10}%
+\contentsline {subsection}{\numberline {5.10.1}Notation, targets, and separation of data}{51}{subsection.5.10.1}%
+\contentsline {subsection}{\numberline {5.10.2}Model 1: learning and freezing the autoencoder}{52}{subsection.5.10.2}%
+\contentsline {subsection}{\numberline {5.10.3}Core calculation shared by training and prediction}{54}{subsection.5.10.3}%
+\contentsline {subsection}{\numberline {5.10.4}Model 2: fitting and selecting the binary detector}{55}{subsection.5.10.4}%
+\contentsline {subsection}{\numberline {5.10.5}Model 3: fitting the abnormal-subtype classifier}{57}{subsection.5.10.5}%
+\contentsline {subsection}{\numberline {5.10.6}Applying the saved models to an unseen beat}{58}{subsection.5.10.6}%
+\contentsline {section}{\numberline {5.11}Why this architecture was selected}{60}{section.5.11}%
+\contentsline {chapter}{\numberline {6}Experimental Method}{61}{chapter.6}%
+\contentsline {section}{\numberline {6.1}Method overview}{61}{section.6.1}%
+\contentsline {section}{\numberline {6.2}Research objective and success conditions}{62}{section.6.2}%
+\contentsline {section}{\numberline {6.3}Input data and feature construction}{62}{section.6.3}%
+\contentsline {section}{\numberline {6.4}Normal-reference autoencoder training procedure}{63}{section.6.4}%
+\contentsline {section}{\numberline {6.5}Temporal split}{63}{section.6.5}%
+\contentsline {section}{\numberline {6.6}Model selection and final fitting}{64}{section.6.6}%
+\contentsline {section}{\numberline {6.7}Evaluation order}{66}{section.6.7}%
+\contentsline {section}{\numberline {6.8}Metrics}{67}{section.6.8}%
+\contentsline {section}{\numberline {6.9}Subject-clustered confidence interval}{67}{section.6.9}%
+\contentsline {section}{\numberline {6.10}Exploratory tests against the 90\% target}{68}{section.6.10}%
+\contentsline {section}{\numberline {6.11}Reproducibility and leakage controls}{68}{section.6.11}%
+\contentsline {chapter}{\numberline {7}Results and Statistical Validation}{69}{chapter.7}%
+\contentsline {section}{\numberline {7.1}Evaluation populations and sample sizes}{69}{section.7.1}%
+\contentsline {section}{\numberline {7.2}Model selection}{70}{section.7.2}%
+\contentsline {section}{\numberline {7.3}Main temporal results}{71}{section.7.3}%
+\contentsline {section}{\numberline {7.4}Uncertainty and subject variation}{72}{section.7.4}%
+\contentsline {section}{\numberline {7.5}Errors by stage and class}{73}{section.7.5}%
+\contentsline {section}{\numberline {7.6}Limited external INCART check}{75}{section.7.6}%
+\contentsline {section}{\numberline {7.7}Answers to the research questions}{76}{section.7.7}%
+\contentsline {chapter}{\numberline {8}Discussion and Conclusion}{77}{chapter.8}%
+\contentsline {section}{\numberline {8.1}Main findings}{77}{section.8.1}%
+\contentsline {section}{\numberline {8.2}Interpretation of the findings}{77}{section.8.2}%
+\contentsline {section}{\numberline {8.3}Achievement of the objectives}{78}{section.8.3}%
+\contentsline {section}{\numberline {8.4}Effect of the preprocessing revision}{78}{section.8.4}%
+\contentsline {section}{\numberline {8.5}Limitations}{78}{section.8.5}%
+\contentsline {section}{\numberline {8.6}Further research}{79}{section.8.6}%
+\contentsline {section}{\numberline {8.7}Conclusion}{79}{section.8.7}%
+\contentsline {chapter}{\nonumberline Bibliography}{80}{chapter*.58}%
 \def \@chapapp {\appendixname }
-\contentsline {chapter}{\numberline {A}Reproducibility Record}{75}{appendix.A}%
-\contentsline {section}{\numberline {A.1}Experiment files}{75}{section.A.1}%
-\contentsline {section}{\numberline {A.2}Frozen constants}{75}{section.A.2}%
-\contentsline {section}{\numberline {A.3}Recorded evaluation targets}{76}{section.A.3}%
-\contentsline {section}{\numberline {A.4}Safety statement}{76}{section.A.4}%
-\contentsline {section}{\numberline {A.5}Verification and historical record}{76}{section.A.5}%
+\contentsline {chapter}{\numberline {A}Reproducibility Record}{84}{appendix.A}%
+\contentsline {section}{\numberline {A.1}Experiment files}{84}{section.A.1}%
+\contentsline {section}{\numberline {A.2}Frozen constants}{84}{section.A.2}%
+\contentsline {section}{\numberline {A.3}Recorded evaluation targets}{85}{section.A.3}%
+\contentsline {section}{\numberline {A.4}Safety statement}{85}{section.A.4}%
+\contentsline {section}{\numberline {A.5}Verification and historical record}{85}{section.A.5}%
 \providecommand \tocbasic@end@toc@file {}\tocbasic@end@toc@file 

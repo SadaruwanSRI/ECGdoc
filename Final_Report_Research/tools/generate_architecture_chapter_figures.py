@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 try:
@@ -69,6 +70,8 @@ def beat_wave(t: np.ndarray, wide: bool = False) -> np.ndarray:
 
 
 def current_system_flow() -> None:
+    result = json.loads((ROOT / "experiments/corrected_temporal_holdout.json").read_text())
+    threshold = result["selected_binary"]["threshold_from_64_to_80_validation"]
     fig = plt.figure(figsize=(11.6, 6.3))
     gs = fig.add_gridspec(2, 3, height_ratios=[0.12, 1.0], wspace=0.38)
     fig.subplots_adjust(left=0.06, right=0.98, top=0.94, bottom=0.18)
@@ -77,8 +80,9 @@ def current_system_flow() -> None:
     title_ax.text(0, 0.5, "Final ECG system: from one MLII beat to one decision",
                   fontsize=15, weight="bold", color=INK, va="center")
 
-    t = np.linspace(0, 4.0, 512)
-    normalised = np.linspace(0, 1, 512)
+    t = np.arange(512) / 128.0
+    # Place the illustrative R wave at the same sample as the window marker.
+    normalised = np.linspace(0, 1, 512) + (0.47 - 200 / 511)
     x = beat_wave(normalised) + 0.018 * np.sin(2 * np.pi * 6 * normalised)
 
     ax1 = fig.add_subplot(gs[1, 0])
@@ -126,13 +130,13 @@ def current_system_flow() -> None:
     ax3 = fig.add_subplot(gs[1, 2])
     ax3.set_xlim(0, 1)
     ax3.set_ylim(0, 1)
-    ax3.axvspan(0, 0.6208333, color=TEAL, alpha=0.13)
-    ax3.axvspan(0.6208333, 1, color=RED, alpha=0.11)
-    ax3.axvline(0.6208333, color=RED, linestyle="--", lw=2.0)
+    ax3.axvspan(0, threshold, color=TEAL, alpha=0.13)
+    ax3.axvspan(threshold, 1, color=RED, alpha=0.11)
+    ax3.axvline(threshold, color=RED, linestyle="--", lw=2.0)
     ax3.scatter([0.42, 0.78], [0.65, 0.65], s=95, color=[TEAL, RED], zorder=4)
     ax3.text(0.31, 0.78, "N", color=TEAL, fontsize=15, weight="bold")
     ax3.text(0.69, 0.78, "subtype", color=RED, fontsize=12, weight="bold")
-    ax3.text(0.6208333, 0.12, "0.6208333", ha="center", fontsize=8.2,
+    ax3.text(threshold, 0.12, f"{threshold:.7f}", ha="center", fontsize=8.2,
              color=RED, weight="bold")
     ax3.set_xlabel(r"$P(\mathrm{abnormal})$")
     ax3.set_yticks([])

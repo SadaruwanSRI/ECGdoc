@@ -1,10 +1,15 @@
-\chapter{System Architecture and Implementation}\label{ch:architecture}
+\chapter{Methodology}\label{ch:architecture}
 
-This chapter describes how the theoretical components are implemented in the
-ECG prototype. The system uses one MLII channel and three trained components:
+This chapter presents the computational methodology, model training, and
+prediction procedure implemented in the ECG prototype. The system uses one
+MLII channel and three trained components:
 a normal-reference autoencoder, a binary abnormality detector, and an abnormal
 subtype classifier. The two supervised models use the same 242-value feature
 vector. All model parameters remain fixed during prediction.
+Section~\ref{sec:method-training-inference} connects the individual calculations
+into a mathematical account of fitting each model and applying the saved
+hierarchy to previously unscored ECG. Chapter~\ref{ch:method} gives the
+experimental protocol and evaluation measures.
 
 \section{System overview}
 
@@ -631,6 +636,522 @@ $(0.05,0.10,0.70,0.10,0.05)$ in the order above, the result is LBBB.
 These numbers illustrate the rule and are not measured results. The second
 stage's score is conditional on the first stage being passed, so the two
 stages must be evaluated both separately and together.
+
+\section{Mathematical training and inference procedure}
+\label{sec:method-training-inference}
+
+The preceding sections define the individual components. This section brings
+them together as one reproducible procedure: learn a normal reconstruction
+function, freeze it, construct supervised features, fit and select the two
+forests, and apply the saved hierarchy to a new beat. The three models are
+trained sequentially; there is no joint loss that backpropagates a
+classification error through the complete system.
+
+The worked examples below use deliberately small, hypothetical numbers to
+make each operation visible. They are teaching examples, not additional
+experimental observations. Whenever a window or forest is simplified, the
+full implementation still uses 512 waveform samples, 242 features, and the
+model sizes stated above. The final example connects the calculations into
+one complete prediction.
+
+\subsection{Notation, targets, and separation of data}
+
+Let $\mathcal{A}_{\mathrm{fit}}$ and $\mathcal{A}_{\mathrm{val}}$ denote the
+NSRDB normal-reference fitting and validation windows. They contain 288,673
+windows from 15 subjects and 57,177 windows from three different subjects,
+respectively. These are consecutive four-second ECG1 windows, whereas the
+supervised examples are R-peak-aligned MLII windows. The common length is
+$T=512$; the source channels and window alignment are not identical.
+
+For supervised beat $i$, let $x_i\in\mathbb{R}^{512}$ be the prepared waveform,
+$\rho_i\in\mathbb{R}^{15}$ its RR measurements, $r_i$ its subject cluster,
+$b_i\in\{0,1\}$ its binary target, and $c_i$ its subtype target. Define
+\begin{equation}
+ \mathcal{C}=\{\mathrm{PVC},\mathrm{PAC},\mathrm{LBBB},\mathrm{RBBB},
+ \mathrm{AFib}\},\qquad
+ c_i\in\{\mathrm{N}\}\cup\mathcal{C}\cup\{\bot\}.
+ \label{eq:method-target-sets}
+\end{equation}
+Here $\bot$ means an unsupported abnormal subtype: it still has $b_i=1$ and
+can train the binary model. Targets follow the annotation mapping in
+Chapter~\ref{ch:data}; in particular, the project AFib target uses rhythm
+annotations. Neither a target nor a subject identifier is an input feature.
+
+For record $r$ with $n_r$ accepted beats, use zero-based chronological index
+$j$, cuts $k_r=\lfloor0.64n_r\rfloor$, $d_r=\lfloor0.80n_r\rfloor$, and
+gap $g=16$. The index sets are
+\begin{align}
+ \mathcal{I}_{\mathrm{fit}}^{(r)}&=\{j:0\leq j<k_r-g\}, &
+ \mathcal{I}_{\mathrm{val}}^{(r)}&=\{j:k_r\leq j<d_r-g\},\\
+ \mathcal{I}_{\mathrm{dev}}^{(r)}&=\{j:0\leq j<d_r-g\}, &
+ \mathcal{I}_{\mathrm{test}}^{(r)}&=\{j:d_r\leq j<n_r\}.
+ \label{eq:method-training-index-sets}
+\end{align}
+Their unions over records define the corresponding study sets. Candidate
+fitting uses 66,285 beats and validation uses 16,029. Final refitting uses
+83,050 development beats, including the earlier validation region and the
+gap that was needed only for candidate selection. The 16-beat exclusion
+before the temporal test remains in place. No test target enters these
+fitting or selection calculations in the final rerun.
+
+\subsubsection*{Worked example: deciding which beats may teach the models}
+
+Suppose one record contains exactly 1,000 accepted beats. Then
+$k_r=640$, $d_r=800$, and $g=16$. Using the same zero-based indices as
+Equation~\ref{eq:method-training-index-sets} gives:
+\begin{table}[H]
+\centering
+\small
+\caption{Illustrative allocation of a record containing 1,000 accepted beats.}
+\label{tab:method-example-split}
+\begin{tabular}{@{}lll@{}}
+\toprule
+Role & Beat indices & Number of beats\\
+\midrule
+Candidate fitting & 0--623 & 624\\
+Gap before validation & 624--639 & 16\\
+Validation & 640--783 & 144\\
+Gap before temporal test & 784--799 & 16\\
+Temporal test & 800--999 & 200\\
+\midrule
+Final refitting & 0--783 & 784\\
+\bottomrule
+\end{tabular}
+\end{table}
+For example, beat 700 helps compare candidate models during validation. After
+selection it may join the final refitting set. Beat 850 does neither: the
+saved models predict it only during testing. If a fitting beat is labelled
+PVC, it teaches the binary model with $b_i=1$ and the subtype model with
+$c_i=\mathrm{PVC}$. A project-normal beat teaches only the binary model with
+$b_i=0$. An unsupported abnormal beat teaches the binary model with $b_i=1$
+but is excluded from subtype fitting. This separates \emph{when a beat is
+used} from \emph{which model its label can train}.
+
+\subsection{Model 1: learning and freezing the autoencoder}
+
+Write the complete encoder--decoder as $A_\psi=g_\phi\circ f_\theta$, where
+$\psi=(\theta,\phi)$ collects its trainable parameters. At optimisation
+step $k$, a shuffled mini-batch $\mathcal{B}_k\subset\mathcal{A}_{\mathrm{fit}}$
+contains up to 256 windows. The training calculation is
+\begin{equation}
+ \mathcal{L}_k(\psi)=\frac{1}{512|\mathcal{B}_k|}
+ \sum_{x\in\mathcal{B}_k}
+ \left\|x-A_\psi(x+\epsilon_x)\right\|_2^2,
+ \qquad \epsilon_x\sim\mathcal{N}(0,0.03^2I_{512}).
+ \label{eq:method-sequential-ae-loss}
+\end{equation}
+Here $I_{512}$ is the identity matrix, so the added noise is independent
+across samples. Fresh noise is generated for each batch, and the clean window supplies the
+target. Backpropagation calculates $\nabla_\psi\mathcal{L}_k$; Adam applies
+Equation~\ref{eq:method-ae-adam} with learning rate 0.001. Thus the learned
+objects are convolutional weights, biases, and other network parameters,
+rather than stored arrhythmia labels.
+
+After each of the two epochs, dropout is disabled and the network is evaluated
+on clean validation windows without a parameter update. If $\psi^{(e)}$
+denotes the parameters after epoch $e$, checkpoint selection is
+\begin{equation}
+ e^*=\arg\min_{e\in\{1,2\}}
+ \frac{\displaystyle\sum_{x\in\mathcal{A}_{\mathrm{val}}}
+ \|x-A_{\psi^{(e)}}(x)\|_2^2}
+ {512|\mathcal{A}_{\mathrm{val}}|},\qquad
+ \psi^*=\psi^{(e^*)}.
+ \label{eq:method-ae-checkpoint-selection}
+\end{equation}
+The recorded minimum occurs at epoch two. The saved $A_{\psi^*}$ is then
+used in evaluation mode for every supervised example. MITDB labels cannot
+change $\psi^*$, and no artificial noise is added during feature extraction.
+The separately saved normal-residual threshold does not determine the final
+normal/abnormal decision.
+
+\subsubsection*{Worked example: one reconstruction and one weight update}
+
+For arithmetic only, replace a 512-sample window by the four-sample clean
+target $x=(-1,1,1,-1)$. Suppose the added noise is
+$\epsilon=(0.03,-0.03,0.02,-0.02)$. The network sees
+$\widetilde x=(-0.97,0.97,1.02,-1.02)$, but must reproduce $x$.
+If its output is $\widehat x=(-0.8,0.7,0.9,-0.8)$, the loss is
+\begin{equation}
+ \mathcal{L}_{\mathrm{example}}=
+ \frac{(-0.2)^2+(0.3)^2+(0.1)^2+(-0.2)^2}{4}=0.045.
+ \label{eq:method-example-ae-loss}
+\end{equation}
+The output derivatives are
+$\partial\mathcal{L}/\partial\widehat x=(0.10,-0.15,-0.05,0.10)$.
+For instance, the second output is below its target, so its negative
+derivative indicates that increasing this output would locally reduce the
+error. Backpropagation carries these derivatives through the network to
+calculate how each parameter contributed to the error.
+
+Suppose one parameter has value $w_0=0.500$ and its resulting gradient is
+$g_1=-0.15$. At Adam's first step, with initially zero moments and
+$\beta_1=0.9$, $\beta_2=0.999$, the calculations are
+\begin{align}
+ m_1&=0.1(-0.15)=-0.015,&v_1&=0.001(-0.15)^2=0.0000225,\\
+ \widehat m_1&=-0.15,&\widehat v_1&=0.0225,\\
+ w_1&=0.500-0.001\frac{-0.15}{\sqrt{0.0225}+10^{-8}}
+ \approx0.501.
+ \label{eq:method-example-adam-step}
+\end{align}
+This shows a concrete parameter change. In the real network, all trainable
+parameters receive their own updates, and a single update need not improve
+every sample. Repeated batches provide the learning signal. If illustrative
+clean-input validation losses after the two epochs were 0.060 and 0.050,
+epoch two would be saved. These example losses are separate from the measured
+losses reported earlier. Once saved, the network reconstructs new windows
+without repeating this training update.
+
+\subsection{Core calculation shared by training and prediction}
+
+Define $h(x_i)\in\mathbb{R}^{223}$ as the fixed waveform, spectrum, and
+statistics calculation, and $a(x_i,A_{\psi^*}(x_i))\in\mathbb{R}^{4}$ as the
+four residual summaries defined earlier. Both forests receive exactly
+\begin{equation}
+ z_i=\Phi_{\psi^*}(x_i,\rho_i)=
+ \begin{bmatrix}
+ h(x_i)\\ \rho_i\\ a(x_i,A_{\psi^*}(x_i))
+ \end{bmatrix}\in\mathbb{R}^{242}.
+ \label{eq:method-shared-feature-map}
+\end{equation}
+This makes the dependency explicit: the feature map depends on the frozen
+autoencoder, but not on $b_i$ or $c_i$. The same feature order is required
+when fitting and predicting.
+
+For example, the pooling operation used within $h$ divides a sequence
+$v=(v_0,\ldots,v_{L-1})$ into $B$ equal bins with
+$m=\lfloor L/B\rfloor$ and calculates
+\begin{equation}
+ [\operatorname{pool}_B(v)]_j=
+ \frac{1}{m}\sum_{\ell=0}^{m-1}v_{jm+\ell},\qquad 0\leq j<B.
+ \label{eq:method-feature-pooling}
+\end{equation}
+It uses the first $Bm$ values. The full waveform gives 64 means of eight
+samples; the central 240 samples give 80 means of three samples. The central
+first-difference sequence has 239 values, of which the implementation uses
+the first 180 to form 60 means of three values. This truncation is part of
+the saved feature definition.
+
+Using zero-based sample indices, the eight spectral values use the discrete Fourier transform
+$X_k=\sum_{t=0}^{511}x_t\exp(-2\pi\mathrm{i}kt/512)$ and frequencies
+$\nu_k=128k/512$ Hz, where $\mathrm{i}^2=-1$. For a band $[\ell_b,u_b)$, the stored value is
+\begin{equation}
+ P_b=\log\left(1+
+ \frac{\sum_{k:\ell_b\leq\nu_k<u_b}|X_k|^2}
+ {\max\{\sum_{k:0.5\leq\nu_k\leq50}|X_k|^2,10^{-8}\}}
+ \right).
+ \label{eq:method-feature-spectrum}
+\end{equation}
+The bands have edges $0.5,3,5,8,12,20,30,40,50$ Hz. Together with
+11 waveform statistics, these values give $64+80+60+8+11=223$.
+
+RR features supply information that waveform shape alone cannot encode.
+With peak indices $s_i$ at 128 Hz, define
+$\Delta_i=(s_i-s_{i-1})/128$ seconds. If $\mu_i$ and $\sigma_i$ are the
+mean and population standard deviation of up to ten intervals ending at
+beat $i$, the seven base values are
+\begin{equation}
+ \rho_i^{\mathrm{base}}=
+ \left(\Delta_i,\Delta_{i+1},\mu_i,
+ \frac{\Delta_i}{\mu_i},\frac{\Delta_{i+1}}{\mu_i},
+ \frac{\sigma_i}{\mu_i},\frac{60}{\Delta_i}\right).
+ \label{eq:method-base-rr-calculation}
+\end{equation}
+Eight additional summaries use up to 20 intervals ending at the current beat:
+median, interquartile range, median absolute deviation, RMSSD, pNN50,
+median-normalised range, slope, and latest interval change. The base vector
+requires the next observed peak through $\Delta_{i+1}$; only the eight
+additional history summaries use exclusively current and earlier intervals.
+
+\subsubsection*{Worked example: turning one beat into numerical evidence}
+
+Consider a new beat at $s_*=1280$, with preceding peak 1184 and following
+peak 1392. Its raw window contains samples 1080--1591, placing the current
+peak at position 200. Suppose the filtered window has mean 2.0 and standard
+deviation 0.5 in the signal's amplitude units. A filtered sample of 2.5
+becomes $(2.5-2.0)/(0.5+10^{-8})\approx1.0$. Every sample is scaled using
+these same window statistics.
+
+For one illustrative eight-sample group of the standardised waveform,
+$(-1,-1,0,0,1,1,0,0)$, the stored pooled value is
+$(-1-1+0+0+1+1+0+0)/8=0$. The next eight samples produce the next value,
+until 64 whole-window values are obtained. If one frequency band has power
+20 and the total power used for normalisation is 100, its spectral feature
+is $\log(1+20/100)=\log(1.2)\approx0.1823$.
+
+Suppose the available preceding RR intervals, including the interval ending
+at the current beat, are $(0.875,0.750,0.875,0.750)$ seconds. Their mean is
+0.8125 and their population standard deviation is 0.0625. Since
+$\Delta_*=(1280-1184)/128=0.750$ and
+$\Delta_{*+1}=(1392-1280)/128=0.875$, the base RR vector becomes
+\begin{equation}
+ \rho_*^{\mathrm{base}}\approx
+ (0.750,0.875,0.8125,0.9231,1.0769,0.0769,80).
+ \label{eq:method-example-rr}
+\end{equation}
+The last value is $60/0.750=80$ beats per minute. For the same four-interval
+history, the median is 0.8125, each successive change has magnitude 0.125,
+and hence RMSSD is 0.125 seconds and pNN50 is 1.0. The latter means that
+all three observed changes exceed 0.05 seconds; it is stored as a fraction.
+With more history, the implementation uses up to the stated ten or twenty
+intervals for the respective calculations.
+
+Next, reconstruct the full 512-sample window with the frozen autoencoder.
+Suppose its residuals give the following totals:
+\begin{equation}
+ \sum_t|e_t|=51.2,\quad \sum_te_t^2=10.24,\quad
+ \sum_{t=105}^{344}|e_t|=36,\quad
+ \sum_{t=2}^{512}|e_t-e_{t-1}|=20.44.
+ \label{eq:method-example-residual-totals}
+\end{equation}
+These residual sums use the earlier one-based convention. Dividing by the
+appropriate numbers of samples gives
+\begin{equation}
+ a_*=(51.2/512,10.24/512,36/240,20.44/511)
+     =(0.10,0.02,0.15,0.04).
+ \label{eq:method-example-residual-features}
+\end{equation}
+The 223 waveform values, all 15 RR values, and these four residual values
+are concatenated into $z_*$. Only selected entries are shown here; the
+model always receives all 242. A residual of 0.10 alone does not label
+this beat abnormal: the binary forest considers the combined evidence.
+
+\subsection{Model 2: fitting and selecting the binary detector}
+
+The binary training set is
+$\mathcal{D}_{B,\mathrm{fit}}=\{(z_i,b_i,r_i):i\in\mathcal{I}_{\mathrm{fit}}\}$.
+Within this set, class and subject counts determine the weights in
+Equation~\ref{eq:method-record-weight}. For each node containing index set
+$S$, a candidate feature $j$ and cut $t$ define
+\begin{equation}
+ S_L(j,t)=\{i\in S:z_{ij}\leq t\},\qquad
+ S_R(j,t)=S\setminus S_L(j,t),\qquad
+ (j^*,t^*)\in\arg\max_{(j,t)\in\mathcal{R}_S}\Delta H(j,t).
+ \label{eq:method-randomised-node-fit}
+\end{equation}
+Here $\mathcal{R}_S$ is the randomly proposed set of admissible splits and
+$\Delta H$ is the weighted entropy reduction in
+Equation~\ref{eq:method-tree-gain}. Recursive splitting learns the node
+features, thresholds, and weighted leaf class shares. Randomisation concerns
+candidate features and thresholds; the final configuration does not bootstrap
+training rows. The forest has no gradient update or epoch loop.
+
+For binary candidate setting $\lambda$, let $B_\lambda(z)$ be its abnormal
+score and $\mathcal{T}_\lambda$ the distinct validation scores together with
+$\{0,0.5,1\}$. Threshold selection maximises validation balanced accuracy:
+\begin{equation}
+ \tau_\lambda\in\arg\max_{t\in\mathcal{T}_\lambda}
+ \operatorname{BA}_{\mathrm{val}}
+ \bigl(\mathbf{1}[B_\lambda(z_i)>t],b_i\bigr).
+ \label{eq:method-validation-threshold-selection}
+\end{equation}
+Ties are resolved by F1, sensitivity, specificity, and closeness to 0.5,
+in that order. The three candidates are then compared by balanced accuracy
+and F1 at their selected thresholds. This selects 240 trees, entropy,
+unrestricted maximum depth, minimum leaf size one, square-root feature
+sampling, and weighting exponent 0.35. The selected threshold is stored
+at full precision and displayed as $\tau^*\approx0.5708333$.
+
+Finally, a new forest $B^*$ is fitted with that setting on all 83,050
+development beats. Weights are recomputed from the development labels and
+subject counts. The selected validation threshold is retained after refitting;
+it is not adjusted using the temporal-test labels.
+
+\subsubsection*{Worked example: learning a split and choosing a gate}
+
+Suppose the training rows at a node have total normal weight 4 and total
+abnormal weight 4. These are sums of sample weights, not necessarily four
+beats per class. The parent entropy is $H(S)=1$ bit. A random candidate
+asks whether the whole-window residual MAE is at most 0.12. Suppose its
+left child has normal and abnormal weights $(3.5,0.5)$, and its right child
+has weights $(0.5,3.5)$. Both children have entropy
+\begin{equation}
+ H_{\mathrm{child}}=-\frac{7}{8}\log_2\frac{7}{8}
+                    -\frac{1}{8}\log_2\frac{1}{8}
+                    \approx0.5436.
+ \label{eq:method-example-weighted-entropy}
+\end{equation}
+Each child contains half the parent weight, giving
+$\Delta H=1-\tfrac12(0.5436)-\tfrac12(0.5436)=0.4564$ bit.
+A competing split that leaves equal normal and abnormal weight in both
+children gives zero gain. The first candidate is therefore preferred between
+these two. Subsequent nodes repeat this calculation. This example shows how
+a threshold becomes a learned tree rule; 0.12 is an illustrative \emph{feature
+split}, not the final abnormal-score threshold.
+
+After fitting a whole candidate forest, suppose four validation beats have
+true targets $(0,0,1,1)$ and abnormal scores $(0.20,0.55,0.60,0.90)$.
+Applying the strict comparison $p>t$ gives:
+\begin{table}[H]
+\centering
+\small
+\caption{Illustrative validation comparison of three binary-score thresholds.}
+\label{tab:method-example-threshold}
+\begin{tabular}{@{}lcccc@{}}
+\toprule
+Threshold $t$ & Predicted targets & Sensitivity & Specificity & Balanced accuracy\\
+\midrule
+0.50 & $(0,1,1,1)$ & 1.00 & 0.50 & 0.75\\
+0.55 & $(0,0,1,1)$ & 1.00 & 1.00 & 1.00\\
+0.60 & $(0,0,0,1)$ & 0.50 & 1.00 & 0.75\\
+\bottomrule
+\end{tabular}
+\end{table}
+The middle threshold wins this small example. At equality, a score of 0.55
+does not pass a threshold of 0.55. The actual experiment searches its own
+validation scores and saves $\tau^*\approx0.5708333$, rather than the toy
+value 0.55. Validation selects a setting and threshold; final refitting then
+learns new tree rules from the larger development set.
+
+\subsection{Model 3: fitting the abnormal-subtype classifier}
+
+The subtype training population is selected using the true supported labels:
+\begin{equation}
+ \mathcal{D}_{C,\mathrm{fit}}=
+ \{(z_i,c_i,r_i):i\in\mathcal{I}_{\mathrm{fit}},\ c_i\in\mathcal{C}\}.
+ \label{eq:method-subtype-training-population}
+\end{equation}
+It contains 22,844 beats. Normal and unsupported abnormal targets are
+excluded, and inclusion does not depend on whether the binary model predicts
+the beat correctly. This prevents binary training errors from deciding which
+labelled examples the subtype model can learn from.
+
+The same node-fitting rule in
+Equation~\ref{eq:method-randomised-node-fit} is applied with five target
+classes. For candidate $\gamma$, prediction is the class with the largest
+mean leaf score. Candidate selection uses 5,651 true supported abnormal
+validation beats and maximises
+\begin{equation}
+ \operatorname{MacroF1}_{\mathrm{val}}(\gamma)=
+ \frac{1}{5}\sum_{c\in\mathcal{C}}
+ \frac{2TP_c}{2TP_c+FP_c+FN_c},
+ \label{eq:method-subtype-selection-objective}
+\end{equation}
+with a zero score for a zero denominator and accuracy as the tie-break.
+The selected setting uses 260 trees, entropy, unrestricted maximum depth,
+minimum leaf size one, feature fraction 0.33, and weighting exponent 0.25.
+It is refitted as $C^*$ on the 28,758 supported abnormal development beats,
+with weights recomputed for that population. The stored model learns five
+abnormal alternatives; it has neither a normal class nor an unknown-class
+rejection rule.
+
+\subsubsection*{Worked example: learning to distinguish abnormal subtypes}
+
+For a small node with equal effective sample weights, suppose the labels are
+two PVC, two PAC, one LBBB, one RBBB, and two AFib beats. Its class shares
+are $(1/4,1/4,1/8,1/8,1/4)$ and its entropy is 2.25 bits. If a candidate
+morphology split places the two PVC beats in one child and the remaining
+six beats in the other, the first child has zero entropy and the second
+has entropy approximately 1.9183. The gain is
+\begin{equation}
+ \Delta H=2.25-\frac{2}{8}(0)-\frac{6}{8}(1.9183)
+          \approx0.8113\ \text{bits}.
+ \label{eq:method-example-subtype-gain}
+\end{equation}
+This split helps isolate PVC. Later splits can separate the remaining
+classes. Real fitting uses the class-and-subject weights, but the same
+weighted-share arithmetic applies. No normal target appears in this node.
+
+To illustrate model selection, suppose two completed candidate forests have
+validation F1 scores, in the order PVC, PAC, LBBB, RBBB, AFib, of
+\begin{align}
+ \text{candidate A: }&(0.90,0.60,0.80,0.85,0.75),
+ &\operatorname{MacroF1}_A&=3.90/5=0.78,\\
+ \text{candidate B: }&(0.85,0.75,0.80,0.80,0.80),
+ &\operatorname{MacroF1}_B&=4.00/5=0.80.
+ \label{eq:method-example-subtype-selection}
+\end{align}
+Candidate B wins even though A has the better PVC score, because the stated
+criterion gives every subtype equal influence. The winning configuration is
+then refitted using all supported abnormal development beats. Training uses
+the true subtype labels; at deployment the saved subtype model is called
+only after the binary gate has passed the beat.
+
+\subsection{Applying the saved models to an unseen beat}
+
+The result of training is the fixed collection
+\begin{equation}
+ \mathcal{M}^*=\{A_{\psi^*},\Phi_{\psi^*},B^*,C^*,\tau^*\}.
+ \label{eq:method-saved-model-collection}
+\end{equation}
+For a previously unscored waveform $u_*$, preparation produces $x_*$ using
+the same 128 Hz sampling, 512-sample geometry, local filtering, and
+standardisation as the supervised fitting data. Observed peaks supply
+$\rho_*$. Prediction then evaluates
+\begin{align}
+ \widehat x_*&=A_{\psi^*}(x_*),&
+ z_*&=\Phi_{\psi^*}(x_*,\rho_*),& p_*&=B^*(z_*),\\
+ \widehat y_*&=
+ \begin{cases}
+ \mathrm{N},&p_*\leq\tau^*,\\
+ \displaystyle\arg\max_{c\in\mathcal{C}} C_c^*(z_*),&p_*>\tau^*.
+ \end{cases}
+ \label{eq:method-unseen-inference}
+\end{align}
+The autoencoder makes one reconstruction, and the binary trees route $z_*$
+through their stored split rules. Only a gated abnormal beat needs subtype
+routing. No label is required, no optimiser is called, and no split, leaf
+share, network weight, or threshold is updated. Window standardisation uses
+the new window's own mean and standard deviation; this deterministic
+preparation is not model retraining. The displayed score is $1-p_*$ on the
+normal branch and $\max_c C_c^*(z_*)$ on the abnormal branch. The latter is
+the subtype forest's score, not the product of the two forest scores or a
+calibrated clinical probability.
+
+Inference also requires sufficient signal context. If $n_{\mathrm{obs}}$ is
+the number of available 128 Hz samples, the beat window requires
+$n_{\mathrm{obs}}\geq s_*+312$, and the next peak $s_{*+1}$ must already
+have been detected. Thus the waveform alone requires about 2.44 seconds of
+post-peak context; a longer next RR interval or acquisition and detection
+delays can increase the wait. The system is a delayed beat classifier.
+Database testing uses annotated beat locations, while live use detects peaks
+from the signal, adding a source of error not isolated by the temporal test.
+
+Here ``unseen'' means absent from the fitting rows of the saved models, or
+newly arriving during use. The final temporal evaluation concerns later beats
+from known patients, and its test region had been inspected during earlier
+development. The equations specify how a new patient's beat would be
+processed, but do not establish equivalent accuracy on unseen patients.
+Likewise, because every gated abnormal beat receives a supported subtype,
+an unfamiliar abnormality can be detected by $B^*$ yet mislabelled by $C^*$.
+
+\newpage
+\subsubsection*{Worked example: the complete path from a new beat to a label}
+
+Return to the illustrative beat at sample 1280. The following sequence
+shows what changes at each step and what remains fixed:
+\begin{enumerate}
+\item \textbf{Wait for the required signal.} The backend needs the full
+window through sample 1591 and the detected following peak at 1392.
+Detecting the following peak alone is insufficient if the rest of the
+window has not yet arrived.
+\item \textbf{Prepare and describe the beat.} Filtering and scaling produce
+$x_*$. Its RR measurements include the values in
+Equation~\ref{eq:method-example-rr}. The saved autoencoder reconstructs
+$x_*$, giving the illustrative residual features
+$(0.10,0.02,0.15,0.04)$. These join the waveform measurements to form
+the complete $z_*\in\mathbb{R}^{242}$.
+\item \textbf{Apply the binary forest.} Suppose 180 of the 240 trees return
+an abnormal leaf score of 1 and the other 60 return 0. Then
+$p_*=(180\times1+60\times0)/240=0.75$. Since
+$0.75>0.5708333$, this beat passes to the subtype model. The real forest
+can also return fractional leaf scores.
+\item \textbf{Apply the subtype forest.} Suppose the mean scores are
+$(0.70,0.10,0.08,0.07,0.05)$ for PVC, PAC, LBBB, RBBB, and AFib,
+after averaging the 260 trees.
+The largest score is 0.70, so the reported subtype is PVC. These are
+hypothetical model outputs, not scores calculated from only the few feature
+entries printed in this example.
+\item \textbf{Report without learning.} The output is an abnormal beat
+labelled PVC, with binary score 0.75 and displayed subtype score 0.70.
+It is not assigned the product $0.75(0.70)=0.525$ as its displayed score.
+The saved weights, tree splits, and threshold remain unchanged.
+\end{enumerate}
+
+For comparison, if another new beat has $p_*=0.40$, the binary gate returns
+N with displayed score $1-0.40=0.60$, and its subtype calculation is skipped.
+Neither beat needs a known diagnosis to obtain a prediction. If an expert
+label becomes available later, it can be compared with the prediction for
+evaluation; that comparison does not automatically retrain any model.
 
 \section{Why this architecture was selected}
 
