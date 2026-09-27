@@ -17,8 +17,6 @@ values cannot be compared directly without accounting for these differences. Thi
 from an easier class mapping, or from placing beats from the same person in
 both training and test data.
 
-\section{ECG datasets and evaluation protocols}
-
 PhysioNet provides open physiological databases and common software tools
 \cite{goldberger2000physionet}. The MIT--BIH Arrhythmia Database (MITDB) became
 a widely used benchmark because it contains expert beat annotations and two ECG
@@ -47,9 +45,9 @@ retrospective temporal evidence with possible selection optimism. The separate N
 cohort is used only for the normal autoencoder; no healthy record trains either
 supervised tree model.
 
-\section{Supervised heartbeat classification}
-
-Early automatic ECG systems used measured morphology and timing. De Chazal et
+Alongside the evaluation protocol, the choice of ECG representation shapes
+what a classifier can learn. Early automatic ECG systems used measured
+morphology and timing. De Chazal et
 al. combined waveform information with RR intervals, showing why beat shape and
 beat timing should be treated as complementary evidence
 \cite{dechazal2004heartbeat}. This idea remains useful even when the classifier
@@ -98,8 +96,7 @@ present study has only 45 eligible subject clusters, so the final system uses a
 simpler tree hierarchy. This is a data-availability decision, not a claim that
 deep learning is generally inferior.
 
-\section{Normal-reference reconstruction}
-
+Normal-reference reconstruction provides a complementary source of evidence.
 Autoencoders learn an internal representation by reconstructing their input
 \cite{hinton2006autoencoder}. Denoising training corrupts the input but retains a
 clean target, encouraging the network to learn stable structure rather than an
@@ -123,10 +120,8 @@ classification. It uses four residual summaries as features in a supervised abno
 detector. The normal-only idea is kept, but the final decision can combine
 residual, morphology, spectral, and RR evidence.
 
-\section{Class imbalance and statistical validation}
-
-ECG datasets contain unequal class counts and unequal numbers of patients per
-class. A high overall accuracy can therefore hide failure on a rare arrhythmia.
+Evaluation of these approaches must also account for unequal class counts
+and unequal numbers of patients per class in ECG datasets. A high overall accuracy can therefore hide failure on a rare arrhythmia.
 Precision--recall analysis is more informative than ROC analysis in strongly
 imbalanced binary problems \cite{saito2015pr}, while class-balanced learning can
 increase the influence of rare classes \cite{cui2019classbalanced}. This thesis
@@ -141,8 +136,6 @@ each of 45 subject clusters equal weight and resamples complete subjects. This
 also follows modern guidance to report the data split, model development, and
 validation population clearly \cite{collins2024tripodai}.
 
-\section{Research gap and contribution}
-
 The reviewed studies cover normal-reference reconstruction, waveform and RR
 features, and methods that reduce dependence on patient identity. They also
 address bundle-branch classification and statistical analysis of clustered
@@ -151,18 +144,15 @@ leads; others adapt to a known patient or detect an anomaly without assigning
 a subtype.
 
 This study brings these methods together in a two-stage system and evaluates
-both its component models and its complete output. Its contribution is the
-integration and evaluation of the following elements:
-\begin{enumerate}
-    \item develop a normal-reference reconstruction model using one stored channel
-    from 18 MIT--BIH normal-sinus subjects, with 15 for fitting and three
-    for checkpoint validation;
-    \item use a chronological 80/20 experiment for patient-adapted temporal evidence;
-    \item exclude the final test portion from selection in the rerun and report
-    its earlier use during development; and
-    \item report separate abnormal, subtype, whole-system, patient-level, and
-    uncertainty results.
-\end{enumerate}
+both its component models and its complete output. It develops a normal-reference
+reconstruction model using one stored channel from 18 MIT--BIH normal-sinus
+subjects, with 15 for fitting and three for checkpoint validation. A
+chronological 80/20 experiment provides patient-adapted temporal evidence.
+The final test portion is excluded from model selection in the rerun, while
+its earlier use during development is reported explicitly. Separate binary,
+subtype, whole-system, patient-level, and uncertainty results make the scope
+of each performance claim clear. The contribution is the integration and
+evaluation of these elements.
 
 Table~\ref{tab:literature-comparison} summarises the papers that contributed most
 directly to the data protocol, model architecture, and evaluation method used in
