@@ -1,4 +1,7 @@
-\begin{thebibliography}{10}
+\begin{thebibliography}{1}
+
+\bibitem{mitdb}
+G.~B. Moody and R.~G. Mark, ``Mit--bih arrhythmia database.'' PhysioNet, 2005.
 
 \bibitem{dechazal2004heartbeat}
 P.~de~Chazal, M.~O'Dwyer, and R.~B. Reilly, ``Automatic classification of
@@ -6,31 +9,12 @@ P.~de~Chazal, M.~O'Dwyer, and R.~B. Reilly, ``Automatic classification of
   Transactions on Biomedical Engineering}, vol.~51, no.~7, pp.~1196--1206,
   2004.
 
-\bibitem{moody2001impact}
-G.~B. Moody and R.~G. Mark, ``The impact of the mit--bih arrhythmia database,''
-  {\em IEEE Engineering in Medicine and Biology Magazine}, vol.~20, no.~3,
-  pp.~45--50, 2001.
-
-\bibitem{mitdb}
-G.~B. Moody and R.~G. Mark, ``Mit--bih arrhythmia database.'' PhysioNet, 2005.
-
 \bibitem{nsrdb}
 G.~B. Moody, ``Mit--bih normal sinus rhythm database.'' PhysioNet, 1999.
 
-\bibitem{mousavi2019seq2seq}
-S.~Mousavi and F.~Afghah, ``Inter- and intra-patient ecg heartbeat
-  classification for arrhythmia detection: A sequence to sequence deep learning
-  approach,'' in {\em IEEE International Conference on Acoustics, Speech and
-  Signal Processing}, pp.~1308--1312, 2019.
-
-\bibitem{kligfield2007standardization}
-P.~Kligfield {\em et~al.}, ``Recommendations for the standardization and
-  interpretation of the electrocardiogram: Part i,'' {\em Circulation},
-  vol.~115, no.~10, pp.~1306--1324, 2007.
-
-\bibitem{butterworth1930filter}
-S.~Butterworth, ``On the theory of filter amplifiers,'' {\em Experimental
-  Wireless and the Wireless Engineer}, vol.~7, pp.~536--541, 1930.
+\bibitem{incartdb}
+E.~Yakushenko, ``St petersburg incart 12-lead arrhythmia database.''
+  \url{https://physionet.org/content/incartdb/1.0.0/}, 2008.
 
 \bibitem{hinton2006autoencoder}
 G.~E. Hinton and R.~R. Salakhutdinov, ``Reducing the dimensionality of data
@@ -43,9 +27,9 @@ P.~Vincent, H.~Larochelle, Y.~Bengio, and P.-A. Manzagol, ``Extracting and
   of the 25th International Conference on Machine Learning}, pp.~1096--1103,
   2008.
 
-\bibitem{chandola2009anomaly}
-V.~Chandola, A.~Banerjee, and V.~Kumar, ``Anomaly detection: A survey,'' {\em
-  ACM Computing Surveys}, vol.~41, no.~3, pp.~1--58, 2009.
+\bibitem{geurts2006extratrees}
+P.~Geurts, D.~Ernst, and L.~Wehenkel, ``Extremely randomized trees,'' {\em
+  Machine Learning}, vol.~63, pp.~3--42, 2006.
 
 \bibitem{rutter2000clustered}
 C.~M. Rutter, ``Bootstrap estimation of diagnostic accuracy with

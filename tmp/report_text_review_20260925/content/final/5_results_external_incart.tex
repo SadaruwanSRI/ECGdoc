@@ -1,0 +1,57 @@
+\section{Limited external INCART check}\label{sec:external-incart}
+
+After fitting the corrected hierarchy, its frozen threshold was applied to
+complete INCART records I01 and I02. These were the two lead-II recordings
+already cached locally at the start of the audit. Selection was by local
+availability, not measured performance. This is a convenience sample.
+INCART contains 75 half-hour records from 32 source patients, with 12 leads
+sampled at 257 Hz \cite{incartdb}. I01 and I02 both carry the header identifier
+\emph{patient 1}: the two records represent one independent source patient.
+
+Standard lead II is a practical external counterpart to MITDB MLII, not an
+identical lead. This check combines source, acquisition and lead differences.
+Scoring uses annotated beats, not live R-peak detections.
+
+\begin{table}[H]
+\centering
+\caption{Corrected model on complete INCART I01 and I02 recordings.}
+\label{tab:external-incart-summary}
+\begin{tabular}{lr}
+\toprule
+Quantity & Value\\
+\midrule
+Records / source patients & 2 / 1\\
+Accepted annotated beats & 5,416\\
+Reference N / PVC & 4,845 / 571\\
+Fixed abnormal threshold & 0.5708333333\\
+Binary accuracy & 94.11\%\\
+Binary balanced accuracy & 96.55\%\\
+Sensitivity / specificity & 99.65\% / 93.46\%\\
+Binary precision / F1 & 64.22\% / 0.7811\\
+AUROC / average precision & 0.9914 / 0.9152\\
+TP / TN / FP / FN & 569 / 4,528 / 317 / 2\\
+Whole-system accuracy & 92.85\%\\
+End-to-end PVC recall & 87.74\%\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Only N and PVC have reference support. The binary model detects 569 of 571
+PVC beats but produces 317 false alarms among 4,845 N beats. End to end,
+501 PVC beats receive the correct label. Binary accuracies by record are
+94.47\% for I01 and 93.74\% for I02. High binary sensitivity therefore
+coexists with lower precision and subtype errors.
+
+The stored six-label macro F1 is 0.3039 because it includes four zero-support
+classes with F1 set to zero. The mean over the two reference-supported
+classes is 0.9116. These summaries are not directly comparable to a six-class
+test with support in every class. PAC, LBBB, RBBB and AFib sensitivity cannot
+be estimated from this subset. A patient-cluster population confidence
+interval is not reported because there is only one source patient.
+
+The August check used only 120 I01 beats and reported 98.33\% binary
+accuracy. It remains historical evidence and is superseded here by the
+complete-record check of the corrected model. No exploratory threshold
+optimum from external labels is installed or reported as validation performance.
+Both external records have now been inspected and must not be reused as an
+untouched test in a future study.

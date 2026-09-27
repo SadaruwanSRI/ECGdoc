@@ -1,8 +1,11 @@
 \chapter{Reproducibility Record}
 
-\section{Final experiment artifacts}
+\section{Experiment files}
 
-The fixed temporal-holdout experiment is stored in:
+Paths in this appendix are relative to \nolinkurl{Final_Report_Research/}
+unless they begin with \nolinkurl{backend/} or
+\nolinkurl{Final_Report_Research/}; those paths are relative to the repository
+root. The main temporal experiment is stored in:
 \begin{itemize}
     \item \nolinkurl{experiments/corrected_temporal_holdout.json};
     \item \nolinkurl{experiments/corrected_temporal_holdout.joblib}; and
@@ -26,12 +29,12 @@ Setting & Value\\
 \midrule
 Experiment seed & 20260801\\
 Healthy-autoencoder seed & 20260802\\
-Healthy fitting/validation subjects & 15 / 3 NSRDB records\\
-Healthy fitting/validation windows & 288,673 / 57,177\\
+Autoencoder fitting/validation subjects & 15 / 3 NSRDB records\\
+Autoencoder fitting/validation windows & 288,673 / 57,177\\
 Bootstrap seed and replicates & 20260801; 10,000\\
 Development/test boundary & 80\% / 20\% per record\\
 Candidate training/validation & approximately 64\% / 16\% per record\\
-Boundary gap & 16 beats before test\\
+Boundary gap & 16 beats before validation and test\\
 Binary threshold & 0.5708333333\\
 Binary ensemble & 240 fully grown Extra Trees\\
 Subtype ensemble & 260 fully grown Extra Trees\\
@@ -41,11 +44,12 @@ Independent uncertainty units & 45 subject clusters\\
 \end{tabular}
 \end{table}
 
-\section{Saved success checks}
+\section{Recorded evaluation targets}
 
-The JSON artifact records three Boolean checks. Pooled whole-system accuracy
-above 90\% is true. A whole-system subject-cluster lower 95\% bound above 90\%
-is true. Interval width at most three percentage points is true for the corrected rerun.
+The saved JSON file records that all three whole-system targets were met:
+pooled accuracy above 90\%, a lower 95\% confidence bound above 90\%, and
+an interval width of at most three percentage points. These checks describe
+the retrospective evaluation; they do not establish independent validation.
 
 \section{Safety statement}
 
@@ -55,22 +59,27 @@ is not a certified medical device and must not be used to diagnose or treat a
 patient.
 
 \section{Verification and historical record}
-The original August results remain in
+The following files retain the results and verification record:
+\begin{itemize}
+\item Original August results:\newline
 \nolinkurl{experiments/final_temporal_holdout.json}.
-The corrected run saves all test predictions in
-\nolinkurl{experiments/corrected_test_predictions.npz}, and independent checks
-are recorded in \nolinkurl{experiments/final_verification.json}.
-The INCART result and predictions are
-\nolinkurl{experiments/corrected_external_incart.json} and
+\item Revised temporal predictions:\newline
+\nolinkurl{experiments/corrected_test_predictions.npz}.
+\item Independent verification:\newline
+\nolinkurl{experiments/final_verification.json}.
+\item External INCART results:\newline
+\nolinkurl{experiments/corrected_external_incart.json}.
+\item External INCART predictions:\newline
 \nolinkurl{experiments/corrected_external_predictions.npz}.
+\end{itemize}
 Model SHA-256 digests link the evaluated bundle to its deployed copy.
 
-From the repository root, use the backend Python environment to run
-\nolinkurl{Final_Report_Research/tools/verify_final_results.py}.
-The corrected training entry point is
-\nolinkurl{Final_Report_Research/tools/final_temporal_holdout.py};
-it uses \nolinkurl{tools/corrected_dataset.py} and the shared
-\nolinkurl{backend/app/ml/beat_preparation.py}.
+Use the backend Python environment to run the verification script at
+\nolinkurl{tools/verify_final_results.py} within the report directory.
+The supervised training entry point is
+\nolinkurl{tools/final_temporal_holdout.py}.
+It uses \nolinkurl{tools/corrected_dataset.py} and the shared preparation
+module at \nolinkurl{backend/app/ml/beat_preparation.py}.
 The NSRDB checkpoint is frozen and is not retrained by this entry point.
 Running training again replaces the corrected artifacts, so preserve the
 current experiment directory before any future research change.

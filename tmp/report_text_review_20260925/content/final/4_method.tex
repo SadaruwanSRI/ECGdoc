@@ -1,0 +1,313 @@
+\chapter{Experimental Method}\label{ch:method}
+
+The final experiment measures one specific use case: the system has already
+seen earlier MLII ECG from a patient, and it must classify later ECG from that
+same patient. This is a known-patient temporal holdout. It is not a
+new-patient external validation and it is not a shuffled random beat split.
+
+\section{Method overview}
+
+Figure~\ref{fig:method-workflow} shows how accepted beats are allocated to
+model selection, final refitting, and testing. The normal
+autoencoder was already frozen from NSRDB. The supervised experiment then used
+only MITDB MLII beats. Candidate models were selected with earlier temporal
+regions, refitted before the test boundary, and evaluated only on the final
+20\% of accepted beats.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=.98\textwidth]{pic/generated/method_final_workflow.pdf}
+\caption[Chronological model selection, refitting, and final testing.]{Chronological
+selection, refitting, and testing by accepted-beat order. Selection excludes
+16 beats before both boundaries; refitting retains only the exclusion before
+the test. The test region was observed during earlier development.}
+\label{fig:method-workflow}
+\end{figure}
+
+\section{Research objective and success conditions}
+
+The final experiment asks:
+\begin{quote}
+After the model has access to the earlier ECG of each patient, how accurately
+does it classify that patient's later ECG?
+\end{quote}
+
+The primary outcome is whole-system six-class accuracy on the final 20\%
+temporal holdout. The planned success conditions were:
+\begin{enumerate}
+    \item pooled whole-system accuracy at least 90\%;
+    \item lower bound of the equal-subject 95\% confidence interval above
+    90\%; and
+    \item total confidence-interval width no greater than three percentage
+    points.
+\end{enumerate}
+Per-class recall and macro F1 were also checked so that a high overall score
+could not hide failure on a smaller arrhythmia class.
+
+\section{Input data and feature construction}
+
+The method uses one ECG channel at every stage, but the two data sources have
+different roles. NSRDB supplies healthy windows for the frozen normal
+autoencoder. MITDB supplies MLII beat windows, binary labels, six-class labels,
+and the final temporal test. No NSRDB beat is scored in the final test.
+
+\begin{table}[H]
+\centering
+\caption{Exact evidence supplied to the final supervised models.}
+\label{tab:method-feature-input}
+\begin{tabular}{>{\raggedright\arraybackslash}p{.26\textwidth}
+                >{\raggedright\arraybackslash}p{.20\textwidth}
+                >{\raggedright\arraybackslash}p{.44\textwidth}}
+\toprule
+Evidence block & Count & Role\\
+\midrule
+MLII morphology and spectrum & 223 values & Describes the beat-centred
+512-sample MLII waveform. This is the direct ECG evidence for both supervised
+stages.\\
+RR timing context & 15 values & Describes previous RR, next RR, local timing,
+and recent rhythm history. In live use the beat is scored only after this
+next-RR context is available; labels are never used during prediction.\\
+Frozen autoencoder residuals & 4 values & Summarises how the frozen
+NSRDB-trained normal autoencoder reconstructs the same MLII beat.\\
+\midrule
+Total per MITDB beat & 242 values & The binary detector and subtype classifier
+receive the same one-lead feature vector.\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+This feature construction matches the saved final model bundle:
+\texttt{lead\_count} is one, \texttt{required\_lead} is MLII,
+\texttt{rr\_feature\_count} is 15, and \texttt{ae\_feature\_count} is four.
+The method therefore does not use a second MITDB lead during training,
+validation, temporal testing, or deployment.
+
+\section{Normal-reference autoencoder training procedure}
+
+The autoencoder was trained \emph{before} either supervised model. All 18
+NSRDB records supplied first-channel ECG1 data. After filtering,
+four-second windowing, per-window standardisation, and quality checks,
+15 entire subjects contributed 288,673 fitting windows and three different
+subjects contributed 57,177 validation windows. The split is by subject, so
+adjacent windows from the same recording cannot appear on opposite sides of
+this validation boundary.
+
+One training step takes a shuffled batch of 256 clean windows, adds fresh
+Gaussian noise with standard deviation 0.03 to the inputs, reconstructs them,
+and computes mean squared error against the original clean windows. PyTorch
+backpropagates this error through the convolutional encoder and decoder;
+Adam updates their weights with learning rate 0.001. The training code repeats
+these steps for two complete epochs. After each epoch it disables dropout and
+measures clean-input MSE on the three untouched validation subjects. It saves
+the checkpoint with the lowest validation MSE. The precise objective and
+gradient logic are in Equations~\ref{eq:theory-denoising-loss} and
+\ref{eq:theory-adam}; Figure~\ref{fig:theory-training-mechanisms} contrasts
+this loop with tree fitting. The measured loss curve appears in
+Figure~\ref{fig:lead-ii-ae-learning}.
+
+After checkpoint selection, the model is frozen. For every MITDB MLII window,
+its reconstruction is compared with the input to create four residual
+measurements. No MITDB class label updates the autoencoder. The saved
+normal-residual threshold is descriptive for the normal-reference model;
+the final classifier uses residual measurements as features and uses the
+separately validated binary-tree threshold for its final gate.
+
+\section{Temporal split}
+
+The eligible supervised records are the 46 MITDB records that contain MLII.
+Records 102 and 104 were excluded before fitting because their available leads
+are V5 and V2, not MLII. Records 201 and 202 are treated as one subject cluster
+for uncertainty analysis because they belong to the same person.
+
+Every eligible record is kept in chronological order. Percentages refer to
+accepted-beat counts, not exact elapsed recording time. With $n_r$ accepted
+beats, the cuts are $\lfloor0.64n_r\rfloor$ and $\lfloor0.80n_r\rfloor$:
+\begin{enumerate}
+    \item the first 64\% is the candidate-training region;
+    \item a 16-beat gap is removed before validation during candidate
+    selection;
+    \item the 64--80\% region is the validation region;
+    \item a 16-beat gap is removed before the final temporal test; and
+    \item the final 20\% is the fixed temporal test.
+\end{enumerate}
+For final fitting, the selected binary and subtype models are refitted on the
+earlier 80\% development region after the 16-beat boundary gap before the test
+is removed. The test segment itself remains intact.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=.98\textwidth,height=.70\textheight,keepaspectratio]{pic/generated/method_temporal_split_audit.pdf}
+\caption{Temporal split audit for every eligible MITDB MLII record. Blue beats
+are available for final fitting, yellow beats are the boundary gap before the
+test, and red beats are the held-out final 20\% temporal test.}
+\label{fig:method-split-audit}
+\end{figure}
+
+The final held-out test contains 20,969 accepted beats. These are later beats
+from known patients, not beats from unseen patients. The method prevents signal
+overlap across the test boundary, but it intentionally keeps patient overlap.
+
+\section{Model selection and final fitting}
+
+Model selection uses only the earlier temporal validation region. In this
+rerun, the final 20\% test region does not choose the candidate, threshold, or
+hyperparameters.
+
+Three binary Extra Trees candidates were fitted on the earlier candidate
+region and ranked by validation balanced accuracy, then by F1. Three subtype
+Extra Trees candidates were fitted only on supported abnormal candidate beats
+and ranked by validation macro F1, then by accuracy. Figure~\ref{fig:method-model-selection}
+shows the validation scores that selected the final pair.
+
+The fitting sequence for each candidate is explicit:
+\begin{enumerate}
+    \item Build one 242-value row per accepted MLII beat, keeping the label and
+    subject identifier outside the row. The autoencoder is already frozen.
+    \item Select candidate-training rows from the first 64\% of each record,
+    subject to the 16-beat gap before validation. For the binary stage, use
+    every normal/abnormal target. For the subtype stage, keep only supported
+    abnormal targets.
+    \item Compute class-and-record sample weights within these selected rows.
+    At each tree node, propose random feature thresholds and choose the one
+    giving the largest weighted entropy decrease in
+    Equation~\ref{eq:theory-information-gain}. Continue until that candidate's
+    depth and leaf-size rules stop growth, then average all tree outputs.
+    \item Score the candidate on the 64--80\% validation region. For each
+    binary candidate, choose an abnormal-score threshold using validation
+    balanced accuracy and tie-breaks; compare candidates by balanced accuracy
+    then F1. Compare subtype candidates by macro F1 then accuracy.
+    \item Fix the winning structures and threshold. Refit the binary model on
+    all 83,050 eligible development beats and the subtype model on 28,758
+    supported abnormal development beats. Apply the frozen pair once to the
+    final temporal segment.
+\end{enumerate}
+Tree fitting is a recursive partitioning procedure, so the supervised models
+have no epoch-by-epoch training-loss curve. Their training criterion is node
+entropy; the evidence used for model selection is held-out validation
+performance. The two kinds of decrease should not be conflated.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=.98\textwidth]{pic/generated/method_model_selection.pdf}
+\caption{Model selection on the 64--80\% validation region. The binary detector
+is selected by balanced accuracy and F1; the subtype classifier is selected by
+macro F1 and accuracy.}
+\label{fig:method-model-selection}
+\end{figure}
+
+The selected binary detector was the fully grown 240-tree candidate with
+square-root feature sampling, minimum leaf size one, and record-weighting
+power 0.35. Its validation-selected abnormal threshold was 0.5708333. The
+selected subtype classifier was the fully grown 260-tree candidate with
+one-third feature sampling, minimum leaf size one, and record-weighting power
+0.25. After selection, the binary model was refitted on all development beats,
+whereas the subtype model was refitted only on supported abnormal development
+beats.
+
+\section{Evaluation order}
+
+The deployed decision is hierarchical. First, the binary detector estimates
+whether a beat is abnormal. If the abnormal probability is not above the fixed
+threshold, the final output is N. If the beat passes the gate, the subtype
+classifier chooses PVC, PAC, LBBB, RBBB, or AFib.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=.98\textwidth]{pic/generated/method_evaluation_order.pdf}
+\caption[Populations used for the three evaluation questions.]{Populations used
+for the three evaluation questions. Conditional subtype scoring uses true
+supported abnormal beats independently of the gate. Complete-system scoring
+uses the gate and subtype model together. The populations overlap; unsupported
+abnormal labels enter only the binary evaluation.}
+\label{fig:method-evaluation-order}
+\end{figure}
+
+The temporal evaluation reports three supports:
+\begin{enumerate}
+    \item binary abnormality detection on all 20,969 held-out beats, including
+    unsupported abnormal MITDB symbols;
+    \item conditional subtype classification on 7,958 true supported abnormal
+    beats; and
+    \item whole-system N/PVC/PAC/LBBB/RBBB/AFib classification on 20,043
+    supported held-out beats.
+\end{enumerate}
+The 926 unsupported abnormal beats are useful for testing the binary
+normal/abnormal gate, but they are not scored in the six-class whole-system
+confusion matrix.
+
+\section{Metrics}
+
+For a binary outcome,
+\begin{align}
+ \mathrm{Accuracy}&=\frac{TP+TN}{TP+TN+FP+FN},\\
+ \mathrm{Sensitivity}&=\frac{TP}{TP+FN},\\
+ \mathrm{Specificity}&=\frac{TN}{TN+FP},\\
+ \mathrm{Balanced\ accuracy}&=\frac{\mathrm{Sensitivity}+\mathrm{Specificity}}{2}.
+\end{align}
+For class $c$,
+\begin{align}
+ \mathrm{Precision}_c&=\frac{TP_c}{TP_c+FP_c},\\
+ \mathrm{Recall}_c&=\frac{TP_c}{TP_c+FN_c},\\
+ F1_c&=\frac{2\,\mathrm{Precision}_c\mathrm{Recall}_c}
+ {\mathrm{Precision}_c+\mathrm{Recall}_c}.
+\end{align}
+Macro F1 is the unweighted mean of class F1 values. It gives PAC the same
+weight as N even though N contains many more beats.
+
+Two accuracy summaries are reported. Pooled beat accuracy gives every beat
+equal weight. Subject-macro accuracy first calculates accuracy inside each of
+the 45 eligible subject clusters and then gives every subject equal weight:
+\begin{equation}
+ A_{macro}=\frac{1}{45}\sum_{s=1}^{45}A_s.
+ \label{eq:subject-macro}
+\end{equation}
+The subject-macro value is primary for uncertainty because a long record should
+not behave like many independent patients.
+
+\section{Subject-clustered confidence interval}
+
+The primary 95\% confidence interval uses a non-parametric percentile
+bootstrap:
+\begin{enumerate}
+    \item keep every beat from one subject together;
+    \item treat records 201 and 202 as one subject cluster;
+    \item sample 45 subject clusters with replacement;
+    \item calculate the equal-subject mean accuracy;
+    \item repeat 10,000 times using seed 20260801; and
+    \item take the 2.5th and 97.5th percentiles.
+\end{enumerate}
+These intervals describe variation across the evaluated subject clusters with
+the fitted model held fixed. They do not include retraining variability,
+uncertainty from earlier test exposure, or a new population shift.
+Resampling individual beats would create an artificially narrow interval
+because adjacent beats from the same recording are correlated. The clustered
+bootstrap keeps that dependence \cite{rutter2000clustered}.
+
+\section{Tests against the 90\% target}
+
+The confidence interval is the primary statistical evidence. Two
+non-parametric tests provide sensitivity analyses. The exact one-sided sign
+test asks whether more than half of subjects exceed 90\%. The one-sided
+Wilcoxon signed-rank test asks whether subject accuracies are shifted above
+90\%, under the additional symmetry assumption of a signed-rank location
+test. Accuracy is bounded and has ceiling effects, so the Wilcoxon analysis is
+secondary. The sign test concerns the fraction of subjects above the target,
+not pooled beat accuracy. These tests are interpreted together with the confidence interval,
+interval width, per-class recall, macro F1, and subject accuracy distribution.
+
+\section{Reproducibility and leakage controls}
+
+The final experiment saves the temporal boundary audit for every record, the
+candidate scores, selected models, probability threshold, final confusion
+matrix, per-class counts, per-subject accuracies, bootstrap seed, and headline
+metrics. The rerun used seed 20260801 and did not use the final 20\% segment
+for candidate selection, threshold selection, or final refitting.
+
+The final 20\% segment had been observed during earlier system development, so
+the evaluation is a retrospective rerun on previously observed data.
+This prior exposure can influence design choices and cause optimism even
+when the present selection code excludes test rows. It is not a confirmatory
+first-use test, and the bootstrap does not correct development-selection bias. Patient overlap is
+also intentional: the test is later ECG from known patients. Therefore, the
+method supports a patient-adapted temporal-performance claim, not a
+patient-independent generalisation claim.

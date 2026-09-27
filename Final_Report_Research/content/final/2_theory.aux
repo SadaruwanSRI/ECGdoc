@@ -9,51 +9,92 @@
 \@writefile{toc}{\contentsline {section}{\numberline {4.1}Why ECG evidence has more than one form}{21}{section.4.1}\protected@file@percent }
 \@writefile{lof}{\contentsline {figure}{\numberline {4.1}{\ignorespaces Two evidence scales used by the final model. Morphology describes the local shape of a beat; RR timing describes rhythm context around the beat.}}{21}{figure.caption.20}\protected@file@percent }
 \newlabel{fig:theory-evidence-scales}{{4.1}{21}{Two evidence scales used by the final model. Morphology describes the local shape of a beat; RR timing describes rhythm context around the beat}{figure.caption.20}{}}
-\@writefile{brf}{\backcite{dechazal2004heartbeat}{{21}{4.1}{figure.caption.20}}}
-\@writefile{brf}{\backcite{mousavi2019seq2seq}{{21}{4.1}{figure.caption.20}}}
+\citation{mitdb,nsrdb}
+\@writefile{brf}{\backcite{dechazal2004heartbeat}{{22}{4.1}{figure.caption.20}}}
+\@writefile{brf}{\backcite{mousavi2019seq2seq}{{22}{4.1}{figure.caption.20}}}
+\@writefile{lof}{\contentsline {figure}{\numberline {4.2}{\ignorespaces Learning map for the final ECG system.}}{22}{figure.caption.21}\protected@file@percent }
+\newlabel{fig:theory-learning-map}{{4.2}{22}{Learning map for the final ECG system}{figure.caption.21}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {4.2}From voltage to a comparable four-second window}{22}{section.4.2}\protected@file@percent }
+\@writefile{brf}{\backcite{mitdb}{{22}{4.2}{section.4.2}}}
+\@writefile{brf}{\backcite{nsrdb}{{22}{4.2}{section.4.2}}}
+\citation{butterworth1930filter,virtanen2020scipy}
+\@writefile{brf}{\backcite{butterworth1930filter}{{23}{4.2}{section.4.2}}}
+\@writefile{brf}{\backcite{virtanen2020scipy}{{23}{4.2}{section.4.2}}}
+\newlabel{eq:theory-window-zscore}{{4.1}{23}{From voltage to a comparable four-second window}{equation.4.1}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {4.3}Feature extraction theory}{23}{section.4.3}\protected@file@percent }
 \citation{kligfield2007standardization,butterworth1930filter}
-\@writefile{toc}{\contentsline {section}{\numberline {4.2}Feature extraction theory}{22}{section.4.2}\protected@file@percent }
-\@writefile{lof}{\contentsline {figure}{\numberline {4.2}{\ignorespaces Feature-extraction operations behind the final 242-value vector. The tree models learn from compact numerical evidence, not from raw ECG samples directly.}}{22}{figure.caption.21}\protected@file@percent }
-\newlabel{fig:theory-feature-math}{{4.2}{22}{Feature-extraction operations behind the final 242-value vector. The tree models learn from compact numerical evidence, not from raw ECG samples directly}{figure.caption.21}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {4.3}{\ignorespaces Feature-extraction operations behind the final 242-value vector. The tree models learn from compact numerical evidence, not from raw ECG samples directly.}}{24}{figure.caption.22}\protected@file@percent }
+\newlabel{fig:theory-feature-math}{{4.3}{24}{Feature-extraction operations behind the final 242-value vector. The tree models learn from compact numerical evidence, not from raw ECG samples directly}{figure.caption.22}{}}
+\@writefile{brf}{\backcite{kligfield2007standardization}{{24}{4.3}{equation.4.4}}}
+\@writefile{brf}{\backcite{butterworth1930filter}{{24}{4.3}{equation.4.4}}}
+\newlabel{eq:theory-dft}{{4.5}{25}{Feature extraction theory}{equation.4.5}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {4.4}RR timing theory}{25}{section.4.4}\protected@file@percent }
 \citation{hinton2006autoencoder}
 \citation{vincent2008denoising}
-\@writefile{brf}{\backcite{kligfield2007standardization}{{23}{4.2}{equation.4.3}}}
-\@writefile{brf}{\backcite{butterworth1930filter}{{23}{4.2}{equation.4.3}}}
-\@writefile{toc}{\contentsline {section}{\numberline {4.3}RR timing theory}{23}{section.4.3}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {4.4}Normal-only reconstruction theory}{23}{section.4.4}\protected@file@percent }
-\newlabel{eq:ae-objective}{{4.6}{23}{Normal-only reconstruction theory}{equation.4.6}{}}
-\@writefile{brf}{\backcite{hinton2006autoencoder}{{23}{4.4}{equation.4.6}}}
-\@writefile{brf}{\backcite{vincent2008denoising}{{23}{4.4}{equation.4.6}}}
 \citation{chandola2009anomaly}
-\@writefile{lof}{\contentsline {figure}{\numberline {4.3}{\ignorespaces Normal-only reconstruction principle. A larger residual can indicate novelty, but it is evidence only; the final arrhythmia decision is made by the supervised hierarchy.}}{24}{figure.caption.22}\protected@file@percent }
-\newlabel{fig:theory-reconstruction-principle}{{4.3}{24}{Normal-only reconstruction principle. A larger residual can indicate novelty, but it is evidence only; the final arrhythmia decision is made by the supervised hierarchy}{figure.caption.22}{}}
-\@writefile{brf}{\backcite{chandola2009anomaly}{{24}{4.4}{figure.caption.22}}}
-\@writefile{toc}{\contentsline {section}{\numberline {4.5}Hierarchical classification theory}{24}{section.4.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {4.5}Normal-only reconstruction theory}{26}{section.4.5}\protected@file@percent }
+\newlabel{eq:ae-objective}{{4.8}{26}{Normal-only reconstruction theory}{equation.4.8}{}}
+\@writefile{brf}{\backcite{hinton2006autoencoder}{{26}{4.5}{equation.4.8}}}
+\@writefile{brf}{\backcite{vincent2008denoising}{{26}{4.5}{equation.4.8}}}
+\@writefile{lof}{\contentsline {figure}{\numberline {4.4}{\ignorespaces Normal-only reconstruction principle. A larger residual can indicate novelty, but it is evidence only; the final arrhythmia decision is made by the supervised hierarchy.}}{26}{figure.caption.23}\protected@file@percent }
+\newlabel{fig:theory-reconstruction-principle}{{4.4}{26}{Normal-only reconstruction principle. A larger residual can indicate novelty, but it is evidence only; the final arrhythmia decision is made by the supervised hierarchy}{figure.caption.23}{}}
+\@writefile{brf}{\backcite{chandola2009anomaly}{{26}{4.5}{figure.caption.23}}}
+\citation{he2016resnet,ronneberger2015unet,srivastava2014dropout}
+\citation{vincent2008denoising}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.5.1}What the encoder and decoder actually compute}{27}{subsection.4.5.1}\protected@file@percent }
+\newlabel{eq:theory-convolution}{{4.13}{27}{What the encoder and decoder actually compute}{equation.4.13}{}}
+\@writefile{brf}{\backcite{he2016resnet}{{27}{4.5.1}{equation.4.13}}}
+\@writefile{brf}{\backcite{ronneberger2015unet}{{27}{4.5.1}{equation.4.13}}}
+\@writefile{brf}{\backcite{srivastava2014dropout}{{27}{4.5.1}{equation.4.13}}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.5.2}How the autoencoder lowers reconstruction loss}{27}{subsection.4.5.2}\protected@file@percent }
+\newlabel{eq:theory-denoising-loss}{{4.14}{27}{How the autoencoder lowers reconstruction loss}{equation.4.14}{}}
+\@writefile{brf}{\backcite{vincent2008denoising}{{27}{4.5.2}{equation.4.14}}}
+\citation{kingma2015adam}
+\newlabel{eq:theory-adam}{{4.15}{28}{How the autoencoder lowers reconstruction loss}{equation.4.15}{}}
+\@writefile{brf}{\backcite{kingma2015adam}{{28}{4.5.2}{equation.4.15}}}
+\@writefile{lof}{\contentsline {figure}{\numberline {4.5}{\ignorespaces Autoencoder and Extra Trees training mechanisms.}}{28}{figure.caption.24}\protected@file@percent }
+\newlabel{fig:theory-training-mechanisms}{{4.5}{28}{Autoencoder and Extra Trees training mechanisms}{figure.caption.24}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {4.6}Hierarchical classification theory}{29}{section.4.6}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {4.6}{\ignorespaces Probability logic of the final hierarchy. The subtype model is conditional: it is used only after the abnormality gate is passed.}}{29}{figure.caption.25}\protected@file@percent }
+\newlabel{fig:theory-hierarchy-probability}{{4.6}{29}{Probability logic of the final hierarchy. The subtype model is conditional: it is used only after the abnormality gate is passed}{figure.caption.25}{}}
+\citation{geurts2006extratrees}
 \citation{geurts2006extratrees}
 \citation{zhang2021interpatient}
-\@writefile{lof}{\contentsline {figure}{\numberline {4.4}{\ignorespaces Probability logic of the final hierarchy. The subtype model is conditional: it is used only after the abnormality gate is passed.}}{25}{figure.caption.23}\protected@file@percent }
-\newlabel{fig:theory-hierarchy-probability}{{4.4}{25}{Probability logic of the final hierarchy. The subtype model is conditional: it is used only after the abnormality gate is passed}{figure.caption.23}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {4.6}Why Extra Trees fits this feature design}{25}{section.4.6}\protected@file@percent }
-\@writefile{brf}{\backcite{geurts2006extratrees}{{25}{4.6}{section.4.6}}}
+\@writefile{toc}{\contentsline {section}{\numberline {4.7}Why Extra Trees fits this feature design}{30}{section.4.7}\protected@file@percent }
+\@writefile{brf}{\backcite{geurts2006extratrees}{{30}{4.7}{section.4.7}}}
+\newlabel{eq:theory-weighted-entropy}{{4.18}{30}{Why Extra Trees fits this feature design}{equation.4.18}{}}
+\newlabel{eq:theory-information-gain}{{4.19}{30}{Why Extra Trees fits this feature design}{equation.4.19}{}}
+\@writefile{brf}{\backcite{geurts2006extratrees}{{30}{4.7}{equation.4.19}}}
+\@writefile{brf}{\backcite{zhang2021interpatient}{{30}{4.7}{equation.4.19}}}
 \citation{cui2019classbalanced}
-\@writefile{brf}{\backcite{zhang2021interpatient}{{26}{4.6}{equation.4.13}}}
-\@writefile{toc}{\contentsline {section}{\numberline {4.7}Class and patient imbalance theory}{26}{section.4.7}\protected@file@percent }
-\newlabel{eq:record-weight}{{4.14}{26}{Class and patient imbalance theory}{equation.4.14}{}}
-\@writefile{brf}{\backcite{cui2019classbalanced}{{26}{4.7}{equation.4.14}}}
-\@writefile{toc}{\contentsline {section}{\numberline {4.8}Temporal patient adaptation theory}{26}{section.4.8}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.7.1}How the two supervised models are fitted}{31}{subsection.4.7.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {4.8}Class and patient imbalance theory}{31}{section.4.8}\protected@file@percent }
+\newlabel{eq:record-weight}{{4.20}{31}{Class and patient imbalance theory}{equation.4.20}{}}
+\citation{ad8232}
+\@writefile{brf}{\backcite{cui2019classbalanced}{{32}{4.8}{equation.4.20}}}
+\@writefile{toc}{\contentsline {section}{\numberline {4.9}Temporal patient adaptation theory}{32}{section.4.9}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.9.1}Why training, validation, and testing have different jobs}{32}{subsection.4.9.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {4.10}From saved models to a live ECG decision}{32}{section.4.10}\protected@file@percent }
+\@writefile{brf}{\backcite{ad8232}{{32}{4.10}{section.4.10}}}
+\citation{virtanen2020scipy}
+\citation{paszke2019pytorch}
+\@writefile{lot}{\contentsline {table}{\numberline {4.1}{\ignorespaces Technologies in the final evidence path and the mathematical task performed by each. The web interface displays results and does not train the models.}}{33}{table.caption.26}\protected@file@percent }
+\newlabel{tab:theory-technology-roles}{{4.1}{33}{Technologies in the final evidence path and the mathematical task performed by each. The web interface displays results and does not train the models}{table.caption.26}{}}
+\@writefile{brf}{\backcite{virtanen2020scipy}{{33}{4.1}{table.caption.26}}}
+\@writefile{brf}{\backcite{paszke2019pytorch}{{33}{4.1}{table.caption.26}}}
+\@writefile{toc}{\contentsline {section}{\numberline {4.11}Validation theory}{33}{section.4.11}\protected@file@percent }
 \citation{saito2015pr}
 \citation{rutter2000clustered}
-\@writefile{toc}{\contentsline {section}{\numberline {4.9}Validation theory}{27}{section.4.9}\protected@file@percent }
-\@writefile{lof}{\contentsline {figure}{\numberline {4.5}{\ignorespaces Theoretical reason for subject-clustered validation. Clustered resampling prevents one long record from being treated as many independent people.}}{27}{figure.caption.24}\protected@file@percent }
-\newlabel{fig:theory-validation-units}{{4.5}{27}{Theoretical reason for subject-clustered validation. Clustered resampling prevents one long record from being treated as many independent people}{figure.caption.24}{}}
-\@writefile{brf}{\backcite{saito2015pr}{{27}{4.9}{figure.caption.24}}}
-\@writefile{brf}{\backcite{rutter2000clustered}{{27}{4.9}{figure.caption.24}}}
-\@writefile{toc}{\contentsline {section}{\numberline {4.10}Theory-to-system alignment}{28}{section.4.10}\protected@file@percent }
-\@writefile{lot}{\contentsline {table}{\numberline {4.1}{\ignorespaces How the theory maps to the implemented final system.}}{28}{table.caption.25}\protected@file@percent }
-\newlabel{tab:theory-system-alignment}{{4.1}{28}{How the theory maps to the implemented final system}{table.caption.25}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {4.7}{\ignorespaces Theoretical reason for subject-clustered validation. Clustered resampling prevents one long record from being treated as many independent people.}}{34}{figure.caption.27}\protected@file@percent }
+\newlabel{fig:theory-validation-units}{{4.7}{34}{Theoretical reason for subject-clustered validation. Clustered resampling prevents one long record from being treated as many independent people}{figure.caption.27}{}}
+\@writefile{brf}{\backcite{saito2015pr}{{34}{4.11}{figure.caption.27}}}
+\@writefile{brf}{\backcite{rutter2000clustered}{{34}{4.11}{figure.caption.27}}}
+\@writefile{toc}{\contentsline {section}{\numberline {4.12}Summary of the theoretical framework}{35}{section.4.12}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {4.2}{\ignorespaces How the theory maps to the implemented final system.}}{35}{table.caption.28}\protected@file@percent }
+\newlabel{tab:theory-system-alignment}{{4.2}{35}{How the theory maps to the implemented final system}{table.caption.28}{}}
 \@setckpt{content/final/2_theory}{
-\setcounter{page}{29}
-\setcounter{equation}{14}
+\setcounter{page}{36}
+\setcounter{equation}{22}
 \setcounter{enumi}{4}
 \setcounter{enumii}{0}
 \setcounter{enumiii}{0}
@@ -62,13 +103,13 @@
 \setcounter{mpfootnote}{0}
 \setcounter{part}{0}
 \setcounter{chapter}{4}
-\setcounter{section}{10}
+\setcounter{section}{12}
 \setcounter{subsection}{0}
 \setcounter{subsubsection}{0}
 \setcounter{paragraph}{0}
 \setcounter{subparagraph}{0}
-\setcounter{figure}{5}
-\setcounter{table}{1}
+\setcounter{figure}{7}
+\setcounter{table}{2}
 \setcounter{NAT@ctr}{0}
 \setcounter{parentequation}{0}
 \setcounter{ALC@unique}{0}

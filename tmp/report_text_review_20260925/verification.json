@@ -1,0 +1,52 @@
+{
+  "pages": 85,
+  "changed_text_files": [
+    "Final_Report_Research\\content\\0_pre\\2_affidavit.tex",
+    "Final_Report_Research\\content\\0_pre\\3_acknowledge.tex",
+    "Final_Report_Research\\content\\0_pre\\4_abstract.tex",
+    "Final_Report_Research\\content\\final\\1_introduction.tex",
+    "Final_Report_Research\\content\\final\\2_data.tex",
+    "Final_Report_Research\\content\\final\\2_literature_review.tex",
+    "Final_Report_Research\\content\\final\\2_theory.tex",
+    "Final_Report_Research\\content\\final\\3_architecture.tex",
+    "Final_Report_Research\\content\\final\\4_method.tex",
+    "Final_Report_Research\\content\\final\\5_results.tex",
+    "Final_Report_Research\\content\\final\\5_results_external_incart.tex",
+    "Final_Report_Research\\content\\final\\6_conclusion.tex",
+    "Final_Report_Research\\content\\final\\appendix.tex"
+  ],
+  "image_files_unchanged": 35,
+  "figure_inclusions_and_drawings_unchanged": 33,
+  "references_resolved": true,
+  "checks": {
+    "corrected_temporal_holdout": "confusion matrix, accuracy and macro F1 match saved predictions",
+    "bootstrap": "10,000-replicate equal-subject interval reproduced",
+    "corrected_external_incart": "confusion matrix, accuracy and macro F1 match saved predictions"
+  },
+  "chapter_pages": [
+    [
+      3,
+      [
+        "Abstract",
+        "Long ECG recordings contain many beats, making manual review difficult. This study devel-",
+        "oped a single-lead electrocardiogram (ECG) system to detect abnormal beats and classify them"
+      ]
+    ],
+    [
+      84,
+      [
+        "A Reproducibility Record",
+        "A.1 Experiment files",
+        "Paths in this appendix are relative to Final_Report_Research/ unless they begin"
+      ]
+    ],
+    [
+      85,
+      [
+        "A Reproducibility Record",
+        "76",
+        "A.3 Recorded evaluation targets"
+      ]
+    ]
+  ]
+}

@@ -1,8 +1,8 @@
 \section{Limited external INCART check}\label{sec:external-incart}
 
-After fitting the corrected hierarchy, its frozen threshold was applied to
+After model fitting, the fixed hierarchy and threshold were applied to
 complete INCART records I01 and I02. These were the two lead-II recordings
-already cached locally at the start of the audit. Selection was by local
+already cached locally at the start of the external evaluation. Selection was by local
 availability, not measured performance. This is a convenience sample.
 INCART contains 75 half-hour records from 32 source patients, with 12 leads
 sampled at 257 Hz \cite{incartdb}. I01 and I02 both carry the header identifier
@@ -36,22 +36,15 @@ End-to-end PVC recall & 87.74\%\\
 \end{tabular}
 \end{table}
 
-Only N and PVC have reference support. The binary model detects 569 of 571
+Only N and PVC occur in the reference labels. The binary model detects 569 of 571
 PVC beats but produces 317 false alarms among 4,845 N beats. End to end,
 501 PVC beats receive the correct label. Binary accuracies by record are
 94.47\% for I01 and 93.74\% for I02. High binary sensitivity therefore
 coexists with lower precision and subtype errors.
 
-The stored six-label macro F1 is 0.3039 because it includes four zero-support
-classes with F1 set to zero. The mean over the two reference-supported
+Macro F1 over the six predefined labels is 0.3039 when the four classes
+absent from the reference labels are assigned F1 values of zero. The mean over the two observed reference
 classes is 0.9116. These summaries are not directly comparable to a six-class
-test with support in every class. PAC, LBBB, RBBB and AFib sensitivity cannot
+test containing reference examples of every class. PAC, LBBB, RBBB and AFib sensitivity cannot
 be estimated from this subset. A patient-cluster population confidence
 interval is not reported because there is only one source patient.
-
-The August check used only 120 I01 beats and reported 98.33\% binary
-accuracy. It remains historical evidence and is superseded here by the
-complete-record check of the corrected model. No exploratory threshold
-optimum from external labels is installed or reported as validation performance.
-Both external records have now been inspected and must not be reused as an
-untouched test in a future study.

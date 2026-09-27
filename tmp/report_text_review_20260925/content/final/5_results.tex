@@ -1,0 +1,205 @@
+\chapter{Results and Statistical Validation}\label{ch:results}
+
+This chapter reports the corrected retrospective temporal experiment in
+\nolinkurl{experiments/corrected_temporal_holdout.json}. The rerun replaces
+record-wide supervised normalisation with local window preparation, removes
+unobserved neighbouring-RR substitutions, and saves beat-level predictions.
+The original August artifact is retained for provenance. No new candidate
+family or threshold was selected from the temporal-test results.
+
+\section{Evaluation population and supports}
+
+The final dataset contains 104,755 accepted beats from 46 MITDB MLII records,
+representing 45 subject clusters. Records 102 and 104 lack MLII and are excluded.
+Records 201 and 202 form one subject cluster. The first and last eligible
+beat in each record are excluded because a preceding or following accepted
+R peak is unavailable. Compared with the original cache, this removes
+92 beats before splitting. Percentages refer to accepted-beat order.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=.98\textwidth]{pic/generated/final_testing_protocol.pdf}
+\caption[Three evaluation questions and their test populations.]{Evaluation
+groups for the corrected retrospective test. Conditional subtype scoring
+bypasses the binary gate; complete-system scoring applies the hierarchy.
+Counts overlap, and records 201 and 202 share one patient cluster.}
+\label{fig:final-testing-protocol}
+\end{figure}
+
+\begin{table}[H]
+\centering
+\caption{Distinct denominators for the three evaluation questions.}
+\label{tab:final-test-data}
+\begin{tabular}{lp{9cm}}
+\toprule
+Evaluation & Support and interpretation\\
+\midrule
+Binary detection & 20,969 beats: 12,085 N and 8,884 abnormal, including
+926 unsupported abnormal beats.\\
+Conditional subtype & 7,958 true supported abnormal beats, scored by the
+subtype model regardless of the binary gate.\\
+Whole system & 20,043 supported beats, scored after the gate:
+N/PVC/PAC/LBBB/RBBB/AFib.\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=.98\textwidth]{pic/generated/final_test_composition.pdf}
+\caption{Reference-class composition of the corrected temporal test.}
+\label{fig:final-test-composition}
+\end{figure}
+
+\section{Model selection}
+
+Candidate selection uses the earlier 64--80\% region after the boundary
+exclusions. The chosen binary model has 240 fully grown Extra Trees,
+square-root feature sampling, minimum leaf size one, entropy criterion,
+and subject/class weighting power 0.35. Its validation balanced accuracy is
+98.73\%.
+The chosen subtype model has 260 trees, feature sampling 0.33, minimum
+leaf size one, entropy criterion, and weighting power 0.25. Its validation
+macro F1 is 0.9811.
+
+The binary threshold is 0.5708333333. The selected models are refitted on
+83,050 development beats and 28,758 supported abnormal development beats,
+respectively. The final test does not change this threshold.
+
+\section{Headline temporal results}
+
+\begin{table}[H]
+\centering
+\caption{Corrected temporal results. Confidence intervals estimate
+equal-subject accuracy, not pooled beat accuracy.}
+\label{tab:final-headline}
+\begin{tabular}{lrrrr}
+\toprule
+Outcome & Pooled & Subject mean & 95\% CI & Width\\
+\midrule
+Binary accuracy & 98.81\% & 98.84\% & 98.01--99.45\% & 1.44 pp\\
+Conditional subtype & 97.63\% & 94.77\% & 89.03--99.08\% & 10.05 pp\\
+Whole-system accuracy & 98.07\% & 98.03\% & 96.29--99.25\% & 2.95 pp\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Binary balanced accuracy is 98.69\%, sensitivity is 97.91\%, specificity is
+99.47\%, precision is 99.27\%, and F1 is 0.9858. Conditional subtype macro
+F1 is 0.9574; whole-system macro F1 is 0.9524.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=.96\textwidth]{pic/generated/final_metrics.pdf}
+\caption{Pooled temporal scores after the preprocessing correction.}
+\label{fig:final-metrics}
+\end{figure}
+
+The three aggregate checks pass: pooled accuracy exceeds 90\%, the
+equal-subject lower confidence bound exceeds 90\%, and the interval width is
+at most three percentage points. These are descriptive outcomes of the
+retrospective study. Prior test exposure prevents interpreting them as an
+unbiased confirmatory success.
+
+\section{Uncertainty and subject variation}
+
+The bootstrap resamples 45 complete subject clusters with equal weight,
+10,000 times using seed 20260801. It holds the fitted model fixed.
+For subtype accuracy, subjects without supported abnormal test beats have
+no subtype score and are omitted from that replicate's mean.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=.90\textwidth]{pic/generated/final_clustered_ci.pdf}
+\caption[Subject-clustered confidence intervals.]{Equal-subject accuracy
+and percentile bootstrap intervals. The conditional subtype interval remains
+wide even though the whole-system width target is met.}
+\label{fig:final-ci}
+\end{figure}
+
+Forty-three of 45 subject clusters exceed 90\% whole-system accuracy.
+The exact one-sided sign test gives $p=2.94\times10^{-11}$ against the
+null that no more than half of subjects exceed the target. The secondary
+Wilcoxon statistic is 987, with $p=4.24\times10^{-8}$. Its location-shift
+interpretation requires additional symmetry assumptions. Neither test
+corrects selection optimism or establishes new-patient performance.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=.98\textwidth]{pic/generated/final_subject_accuracy.pdf}
+\caption{Corrected whole-system accuracy across 45 known-patient clusters.}
+\label{fig:final-subjects}
+\end{figure}
+
+The below-target clusters are 207 (67.92\%) and 222 (84.85\%). Cluster 207
+has high binary accuracy but poorer subtype classification. Cluster 222 has
+binary accuracy 85.45\%, so failures in the gate also matter. This variation
+is not visible from pooled accuracy alone.
+
+\section{Errors by stage and class}
+
+The gate detects 8,698 of 8,884 abnormal beats and correctly rejects
+12,021 of 12,085 N beats. Thus it produces 186 missed abnormal beats and
+64 false alarms. The independent subtype model correctly names 7,769 of
+7,958 supported abnormal beats. Gate errors can still send correctly
+classifiable abnormalities to N.
+
+\begin{table}[H]
+\centering
+\caption{Whole-system performance by supported abnormal output group.}
+\label{tab:final-arrhythmias}
+\begin{tabular}{lrrrrr}
+\toprule
+Group & True & Correct & Precision & Recall & F1\\
+\midrule
+PVC & 1,527 & 1,499 & 92.36\% & 98.17\% & 0.9517\\
+PAC & 589 & 416 & 98.58\% & 70.63\% & 0.8229\\
+LBBB & 1,481 & 1,476 & 96.72\% & 99.66\% & 0.9817\\
+RBBB & 1,383 & 1,365 & 99.78\% & 98.70\% & 0.9924\\
+AFib & 2,978 & 2,879 & 98.26\% & 96.68\% & 0.9746\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=.95\textwidth]{pic/generated/final_arrhythmia_counts.pdf}
+\caption{True and correctly classified supported abnormal beats.
+PAC remains below the 90\% recall target.}
+\label{fig:final-arrhythmia-counts}
+\end{figure}
+
+Of 589 PAC-group beats, 549 pass the binary gate, 441 receive the correct
+subtype when the gate is ignored, and 416 are correct end to end.
+PAC errors therefore arise in both stages. AFib denotes the project's
+AFIB/AFL rhythm grouping on normal-like beat symbols; the 96.68\% recall
+is not an episode-level or AF-only sensitivity estimate.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=.86\textwidth]{pic/generated/final_confusion_matrix.pdf}
+\caption{Whole-system confusion matrix for 20,043 supported temporal beats.}
+\label{fig:final-confusion}
+\end{figure}
+
+The largest abnormal-subtype confusion is 113 PAC beats assigned to PVC.
+The gate sends 91 AFib-group and 40 PAC-group beats to N. Among reference N
+beats, 34 become LBBB and 26 become AFib. Unsupported abnormal beats are
+excluded from this matrix, but a deployed gated beat still receives a supported
+subtype because the model has no unknown-class rejection rule.
+
+\input{content/final/5_results_external_incart.tex}
+
+\section{Answers to the research questions}
+\begin{description}
+\item[RQ1] The frozen NSRDB autoencoder supplies four residual features.
+No controlled ablation establishes its independent benefit.
+\item[RQ2] Binary, conditional-subtype and whole-system accuracies are
+98.81\%, 97.63\% and 98.07\%, respectively, on their stated supports.
+\item[RQ3] Equal-subject whole-system accuracy is 98.03\%, with a
+96.29--99.25\% interval and two below-target subject clusters.
+\item[RQ4] The three aggregate accuracy/precision checks pass, but PAC
+recall does not. The INCART convenience subset represents one source
+patient and only two reference classes, so broad external validation
+remains incomplete.
+\end{description}

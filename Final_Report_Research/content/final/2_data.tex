@@ -1,7 +1,7 @@
-\chapter{Data}\label{ch:data}
+\chapter{Data and Preparation}\label{ch:data}
 
-This chapter identifies the ECG sources, explains how the real signals are
-cleaned, and shows how examples enter model fitting, validation, and the
+This chapter identifies the ECG sources, explains how the signals are
+prepared, and shows how examples enter model fitting, validation, and the
 temporal test. Keeping these roles separate prevents healthy data or test
 labels from being used in the wrong part of the study.
 
@@ -9,8 +9,8 @@ labels from being used in the wrong part of the study.
 
 Two public PhysioNet databases supply model development data. A separate,
 limited external INCART check is reported in the results chapter. The MIT--BIH Normal Sinus Rhythm
-Database (NSRDB) supplies only healthy ECG for the autoencoder. The MIT--BIH
-Arrhythmia Database (MITDB) supplies labeled normal and abnormal beats for the
+Database (NSRDB) supplies normal-reference ECG for the autoencoder. The MIT--BIH
+Arrhythmia Database (MITDB) supplies labelled normal and abnormal beats for the
 detector, subtype classifier, and final temporal evaluation
 \cite{goldberger2000physionet,nsrdb,mitdb}.
 
@@ -43,10 +43,9 @@ one person.\\
 \end{tabular}
 \end{table}
 
-Figure~\ref{fig:data-source-overview} gives the same information as a flow
-diagram. In short, NSRDB contributes only healthy windows for the frozen
-autoencoder, while MITDB contributes MLII beats for supervised development and
-the final temporal test.
+Figure~\ref{fig:data-source-overview} summarises these roles. NSRDB supplies
+normal-reference windows for the autoencoder, while MITDB supplies labelled
+MLII beats for supervised development and temporal testing.
 
 \begin{figure}[H]
 \centering
@@ -88,8 +87,7 @@ MLII second. Records 102 and 104 contain V5 and V2 but no MLII and are
 excluded. Consequently, the detector, classifier, temporal test, and installed
 replay all receive one MLII waveform.
 
-The two model stages are one-channel systems, but the channel identities are
-not falsely treated as identical: the autoencoder learns healthy structure
+Both data streams contain one channel, but their lead identities differ: the autoencoder learns healthy structure
 from the first NSRDB channel, while the supervised hierarchy operates on MLII.
 This source difference is a limitation because the electrode placement for the
 NSRDB channel is not documented.
@@ -140,21 +138,20 @@ pure AF sensitivity nor episode-level AF detection.
 
 Unsupported symbols remain abnormal in binary evaluation and are excluded
 from six-class scoring. At runtime, a gated unsupported abnormality still
-receives one of the five available subtype labels. The MLII cache contains 104,755 accepted beats: 63,073
-normal and 41,682 abnormal. Of these, 100,072 have a supported six-class label.
+receives one of the five available subtype labels. The prepared MLII dataset contains 104,755 accepted beats: 63,073
+in group N and 41,682 abnormal. Of these, 100,072 have a supported six-class label.
 
 \section{Data Cleaning}
 
-Data cleaning converts two different raw ECG sources into the same numerical
-input: one four-second signal with 512 samples. The cleaning rules are fixed
-before evaluation and are reused after installation.
+Data preparation converts the two ECG sources into a common input shape: one four-second signal with 512 samples. The supervised preparation rules were fixed for the rerun and are also used
+during session prediction. NSRDB retains its original preparation procedure.
 Figure~\ref{fig:data-cleaning-real} shows the full transformation for one
 healthy NSRDB segment and one MITDB MLII beat.
 
 \subsection{Cleaning Checklist}
 
-The cleaning pipeline is easier to check as a list. Each item has one purpose
-and one failure rule.
+Table~\ref{tab:data-cleaning-checklist} lists the preparation steps and their
+purpose. Rejected windows do not enter model fitting or evaluation.
 
 \begin{table}[H]
 \centering
@@ -175,8 +172,8 @@ exactly 512 samples.\\
 \addlinespace
 Band-pass filter & A Butterworth band-pass with prototype order four
 and cutoffs 0.5--50 Hz uses forward--backward filtering. For supervised inputs
-this is applied within the four-second window \cite{butterworth1930filter,virtanen2020scipy}. & Reduces baseline
-movement and high-frequency noise without shifting the QRS complex.\\
+this is applied within the four-second window \cite{butterworth1930filter,virtanen2020scipy}. & Reduces baseline drift and high-frequency noise while avoiding filter-induced
+phase delay.\\
 \addlinespace
 Amplitude standardisation & Each window is converted to approximately zero mean
 and unit standard deviation. & Reduces gain differences while preserving the
@@ -195,8 +192,8 @@ motion artifacts.\\
 The autoencoder and supervised hierarchy build windows in different ways, but
 the final array shape is the same. The autoencoder receives consecutive,
 non-overlapping four-second windows from the first stored NSRDB channel. The
-supervised MLII windows are centred on a beat: 200 samples before the R peak
-and 312 samples after it. During offline experiments, expert annotations give
+supervised MLII windows are aligned to a beat: 200 samples before the R peak
+and 312 samples starting at the R peak. During offline experiments, expert annotations give
 the R-peak location for alignment and later scoring. During live use, detected
 R peaks replace those annotations.
 
@@ -209,8 +206,8 @@ standardisation is
 The corrected supervised pipeline filters each extracted window and applies
 this operation locally. The original experiment instead standardised each
 complete MITDB record before extracting windows. That used test-region signal
-statistics during preparation and differed from sensor chunks. The corrected
-results in this thesis replace that preprocessing. NSRDB remains the frozen
+statistics during preparation and differed from sensor chunks. The results reported here use the local
+preparation procedure. NSRDB remains the frozen
 reference checkpoint, with block filtering followed by per-window scaling.
 
 \subsection{Cleaning Yield}
@@ -221,12 +218,12 @@ records, 393,744 candidate windows were formed. The quality checks kept 345,850
 windows and rejected 47,894. These accepted windows were then split into
 288,673 autoencoder fitting windows and 57,177 validation windows.
 
-MITDB cleaning produces beat-centered MLII examples. The accepted MLII cache
-contains 104,755 beats: 63,073 normal and 41,682 abnormal. Unsupported abnormal
+MITDB cleaning produces beat-aligned MLII examples. The prepared MLII dataset
+contains 104,755 beats: 63,073 in group N and 41,682 abnormal. Unsupported abnormal
 symbols are still used for binary abnormality evaluation, but they are excluded
 from six-class subtype scoring.
 
-\subsection{Installed Use}
+\subsection{Preparation during prediction}
 
 The corrected hierarchy applies the same local window filtering,
 standardisation and feature order during fitting, offline scoring and
@@ -240,7 +237,7 @@ system. Neither supervised model is retrained during prediction.
 \centering
 \includegraphics[width=.96\textwidth]{pic/generated/real_data_cleaning_pipeline.pdf}
 \caption{Cleaning real ECG for the two roles. The healthy example is the first
-channel of NSRDB record 16265. The unseen-use example is MLII from MITDB record
+channel of NSRDB record 16265. The supervised-input example is MLII from MITDB record
 100. Both become one 512-sample input, but their documented channel identities
 remain different.}
 \label{fig:data-cleaning-real}
@@ -257,7 +254,7 @@ raw source to frozen prediction.
 
 After cleaning, the study keeps two kinds of prepared object:
 \begin{itemize}
-    \item \textbf{NSRDB window:} a healthy $[1,512]$ window from the first
+    \item \textbf{NSRDB window:} a normal-reference $[1,512]$ window from the first
     stored ECG channel. It has no arrhythmia label and is used only by the
     normal autoencoder.
     \item \textbf{MITDB beat:} an R-aligned MLII $[1,512]$ window with record
@@ -290,14 +287,15 @@ before it contributes residual features to MITDB evaluation.
 The MITDB split is chronological inside every eligible record:
 \begin{itemize}
     \item the first 64\% fits candidate supervised models;
-    \item the next 16\% selects the model structures and abnormal-probability
+    \item the next 16\% selects the model structures and abnormal-score
     threshold;
-    \item a 16-beat gap is removed before the test boundary; and
+    \item a 16-beat gap is removed before both the validation and test
+    boundaries during selection; and
     \item the final 20\% evaluates the completed frozen hierarchy.
 \end{itemize}
 Percentages count accepted beats in chronological order, not exact elapsed
-time. The final run removes a 16-beat gap before both selection-validation and
-test boundaries and checks sample separation. The test had been observed
+time. Final refitting uses the earlier 80\% while retaining the gap before the test.
+The procedure checks that signal windows do not overlap across each boundary. The test had been observed
 during earlier development, making this a retrospective known-patient
 evaluation with possible optimism.
 
@@ -341,7 +339,8 @@ remain separate from the model input.}
 During autoencoder fitting, Gaussian noise with standard deviation 0.03 is
 added to each input while the clean NSRDB window remains the target. During
 supervised fitting, record-and-class weights reduce domination by long records
-and common classes. During prediction, one MLII window and its causal RR
-history are converted into the same 242-value vector used in the temporal
-experiment. A normal decision stops. An abnormal decision reuses that vector
-for PVC, PAC, LBBB, RBBB, or AFib classification.
+and common classes. During prediction, one MLII window, its observed previous and next RR
+intervals, and its recent RR history are converted into the same 242-value vector used in the temporal
+experiment. A decision of N ends classification for that beat. An abnormal decision passes
+the same vector to the subtype model. The next chapter explains the theory
+behind these features and the two-stage decision.

@@ -2,40 +2,37 @@
 \phantomsection
 \pdfbookmark[1]{Abstract}{abstract}
 \prevspace
-This thesis develops a single-lead electrocardiogram (ECG) research system.
-A binary Extra Trees model detects abnormal beats, and a second ensemble
-assigns a supported abnormal subtype. Its six output codes are N, PVC, PAC,
-LBBB, RBBB and AFib. These are project annotation groups: AFib includes
-atrial flutter, and N/PVC/PAC include selected escape or supraventricular
-symbols rather than representing pure clinical diagnoses.
+Long ECG recordings contain many beats, making manual review difficult.
+This study developed a single-lead electrocardiogram (ECG) system to detect
+abnormal beats and classify them into five supported groups. A binary Extra
+Trees model first separates normal and abnormal beats. A second Extra Trees
+model assigns an abnormal subtype. The six output codes are N, PVC, PAC,
+LBBB, RBBB, and AFib. These are study-specific annotation groups; in
+particular, AFib includes atrial flutter, and some groups include escape beats.
 
-A frozen dilated U-Net autoencoder was developed from the first stored ECG
-channel of all 18 MIT--BIH Normal Sinus Rhythm Database subjects, with
-15 fitting and three validation subjects. The anatomical identity of that
-channel is unspecified. The supervised models use MIT--BIH Arrhythmia
-Database MLII from 46 records representing 45 subject clusters. Each beat
-provides 223 waveform/statistical features, 15 RR features and four
-autoencoder residuals. The corrected pipeline filters and standardises
-each four-second window locally and requires observed neighbouring R peaks.
+A convolutional autoencoder was trained on the first stored ECG channel of
+the MIT--BIH Normal Sinus Rhythm Database, using 15 subjects for fitting and
+three for validation. Its weights were then fixed. The supervised models
+used modified Lead II (MLII) data from 46 MIT--BIH Arrhythmia Database records,
+representing 45 subject clusters. Each beat was described by 223 waveform,
+spectral, and statistical features, 15 RR-interval features, and four
+autoencoder residual features. Supervised windows were filtered and
+standardised separately.
 
-The final rerun uses the last 20\% of chronologically ordered accepted beats
-per record for scoring, with earlier regions for model selection and fitting
-and a 16-beat boundary gap. The test segment had been observed during earlier
-development. The results therefore describe a retrospective known-patient
-evaluation with possible selection optimism, not confirmatory performance
-on new patients.
+The final 20\% of accepted beats in each record formed the temporal test.
+Earlier beats were used for model selection and fitting, with a 16-beat gap
+before each evaluation boundary. Because the test segment had been viewed
+during earlier development, this was a retrospective evaluation of known
+patients, with a risk of optimistic performance estimates.
 
-Binary accuracy was 98.81\% on 20,969 beats. Conditional subtype accuracy was
-97.63\% on 7,958 supported abnormal beats. Whole-system accuracy was 98.07\%
-and macro F1 was 0.9524 on 20,043 supported beats. Equal-subject accuracy was
-98.03\%, with a 10,000-replicate subject-clustered 95\% interval of
-96.29--99.25\%. Its 2.95-percentage-point width meets the three-point target.
-However, PAC end-to-end recall was only 70.63\%.
+Binary accuracy was 98.81\% on 20,969 beats, and conditional subtype accuracy
+was 97.63\% on 7,958 supported abnormal beats. Whole-system accuracy was
+98.07\% and macro F1 was 0.9524 on 20,043 supported beats. Mean accuracy
+across subjects was 98.03\%, with a subject-clustered 95\% confidence interval
+of 96.29--99.25\%. However, PAC recall was only 70.63\%. A limited external
+check used 5,416 beats from two INCART records belonging to one patient.
+Whole-system accuracy was 92.85\%, while binary precision fell to 64.22\%.
 
-A post-fit check on complete INCART records I01 and I02, both from one source
-patient, used 5,416 annotated beats and a fixed threshold. Binary accuracy
-was 94.11\%, whole-system accuracy was 92.85\%, and binary precision was
-64.22\%. Only N and PVC had reference support. These results expose external
-false alarms but cannot establish population generalisation. The prototype
-and its reproducible evaluation are complete; class recall, independent
-validation, and real sensor performance remain research limitations.
+The system met the aggregate accuracy and interval-width targets in the
+retrospective test. It did not meet the recall target for every class.
+Independent patient evaluation and real-sensor testing are still needed.

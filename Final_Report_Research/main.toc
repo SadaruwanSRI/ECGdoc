@@ -2,18 +2,24 @@
 \contentsline {chapter}{List of Figures}{viii}{chapter*.7}%
 \contentsline {chapter}{List of Tables}{ix}{chapter*.8}%
 \contentsline {chapter}{\numberline {1}Introduction}{1}{chapter.1}%
-\contentsline {section}{\numberline {1.1}Introduction}{1}{section.1.1}%
+\contentsline {section}{\numberline {1.1}Background}{1}{section.1.1}%
 \contentsline {section}{\numberline {1.2}Research Problem}{4}{section.1.2}%
-\contentsline {section}{\numberline {1.3}Objective and Expected Outcomes}{4}{section.1.3}%
+\contentsline {section}{\numberline {1.3}Objectives and expected outcomes}{4}{section.1.3}%
 \contentsline {section}{\numberline {1.4}Research questions}{5}{section.1.4}%
+\contentsline {section}{\numberline {1.5}Organisation of the report}{5}{section.1.5}%
 \contentsline {chapter}{\numberline {2}Literature Review}{6}{chapter.2}%
-\contentsline {chapter}{\numberline {3}Data}{11}{chapter.3}%
+\contentsline {section}{\numberline {2.1}ECG datasets and evaluation protocols}{6}{section.2.1}%
+\contentsline {section}{\numberline {2.2}Supervised heartbeat classification}{7}{section.2.2}%
+\contentsline {section}{\numberline {2.3}Normal-reference reconstruction}{7}{section.2.3}%
+\contentsline {section}{\numberline {2.4}Class imbalance and statistical validation}{8}{section.2.4}%
+\contentsline {section}{\numberline {2.5}Research gap and contribution}{8}{section.2.5}%
+\contentsline {chapter}{\numberline {3}Data and Preparation}{11}{chapter.3}%
 \contentsline {section}{\numberline {3.1}Data Sources and Roles}{11}{section.3.1}%
 \contentsline {section}{\numberline {3.2}Data Cleaning}{14}{section.3.2}%
 \contentsline {subsection}{\numberline {3.2.1}Cleaning Checklist}{14}{subsection.3.2.1}%
 \contentsline {subsection}{\numberline {3.2.2}Window Construction}{15}{subsection.3.2.2}%
 \contentsline {subsection}{\numberline {3.2.3}Cleaning Yield}{16}{subsection.3.2.3}%
-\contentsline {subsection}{\numberline {3.2.4}Installed Use}{16}{subsection.3.2.4}%
+\contentsline {subsection}{\numberline {3.2.4}Preparation during prediction}{16}{subsection.3.2.4}%
 \contentsline {section}{\numberline {3.3}Data Preparation}{17}{section.3.3}%
 \contentsline {subsection}{\numberline {3.3.1}Prepared Objects}{17}{subsection.3.3.1}%
 \contentsline {subsection}{\numberline {3.3.2}Splits}{18}{subsection.3.3.2}%
@@ -21,61 +27,76 @@
 \contentsline {subsection}{\numberline {3.3.4}Feeding the Frozen System}{20}{subsection.3.3.4}%
 \contentsline {chapter}{\numberline {4}Theoretical Foundations}{21}{chapter.4}%
 \contentsline {section}{\numberline {4.1}Why ECG evidence has more than one form}{21}{section.4.1}%
-\contentsline {section}{\numberline {4.2}Feature extraction theory}{22}{section.4.2}%
-\contentsline {section}{\numberline {4.3}RR timing theory}{23}{section.4.3}%
-\contentsline {section}{\numberline {4.4}Normal-only reconstruction theory}{23}{section.4.4}%
-\contentsline {section}{\numberline {4.5}Hierarchical classification theory}{24}{section.4.5}%
-\contentsline {section}{\numberline {4.6}Why Extra Trees fits this feature design}{25}{section.4.6}%
-\contentsline {section}{\numberline {4.7}Class and patient imbalance theory}{26}{section.4.7}%
-\contentsline {section}{\numberline {4.8}Temporal patient adaptation theory}{26}{section.4.8}%
-\contentsline {section}{\numberline {4.9}Validation theory}{27}{section.4.9}%
-\contentsline {section}{\numberline {4.10}Theory-to-system alignment}{28}{section.4.10}%
-\contentsline {chapter}{\numberline {5}Final Model Architecture}{29}{chapter.5}%
-\contentsline {section}{\numberline {5.1}Architecture in one sentence}{29}{section.5.1}%
-\contentsline {section}{\numberline {5.2}Input signal and beat window}{29}{section.5.2}%
-\contentsline {section}{\numberline {5.3}Three trained components}{30}{section.5.3}%
-\contentsline {section}{\numberline {5.4}Normal-only autoencoder}{31}{section.5.4}%
-\contentsline {subsection}{\numberline {5.4.1}Purpose}{31}{subsection.5.4.1}%
-\contentsline {subsection}{\numberline {5.4.2}Network structure}{32}{subsection.5.4.2}%
-\contentsline {subsection}{\numberline {5.4.3}Normal-reference data and checkpoint}{33}{subsection.5.4.3}%
-\contentsline {subsection}{\numberline {5.4.4}Four autoencoder residual features}{34}{subsection.5.4.4}%
-\contentsline {section}{\numberline {5.5}Final 242-value feature vector}{35}{section.5.5}%
-\contentsline {section}{\numberline {5.6}Binary abnormality detector}{36}{section.5.6}%
-\contentsline {section}{\numberline {5.7}Abnormal-subtype classifier}{36}{section.5.7}%
-\contentsline {section}{\numberline {5.8}Final decision logic}{37}{section.5.8}%
-\contentsline {section}{\numberline {5.9}Why this architecture was selected}{38}{section.5.9}%
-\contentsline {chapter}{\numberline {6}Experimental Method}{39}{chapter.6}%
-\contentsline {section}{\numberline {6.1}Method overview}{39}{section.6.1}%
-\contentsline {section}{\numberline {6.2}Research objective and success conditions}{40}{section.6.2}%
-\contentsline {section}{\numberline {6.3}Input data and feature construction}{40}{section.6.3}%
-\contentsline {section}{\numberline {6.4}Temporal split}{41}{section.6.4}%
-\contentsline {section}{\numberline {6.5}Model selection and final fitting}{42}{section.6.5}%
-\contentsline {section}{\numberline {6.6}Evaluation order}{43}{section.6.6}%
-\contentsline {section}{\numberline {6.7}Metrics}{44}{section.6.7}%
-\contentsline {section}{\numberline {6.8}Subject-clustered confidence interval}{45}{section.6.8}%
-\contentsline {section}{\numberline {6.9}Tests against the 90\% target}{45}{section.6.9}%
-\contentsline {section}{\numberline {6.10}Reproducibility and leakage controls}{46}{section.6.10}%
-\contentsline {chapter}{\numberline {7}Results and Statistical Validation}{47}{chapter.7}%
-\contentsline {section}{\numberline {7.1}Evaluation population and supports}{47}{section.7.1}%
-\contentsline {section}{\numberline {7.2}Model selection}{48}{section.7.2}%
-\contentsline {section}{\numberline {7.3}Headline temporal results}{49}{section.7.3}%
-\contentsline {section}{\numberline {7.4}Uncertainty and subject variation}{49}{section.7.4}%
-\contentsline {section}{\numberline {7.5}Errors by stage and class}{51}{section.7.5}%
-\contentsline {section}{\numberline {7.6}Limited external INCART check}{52}{section.7.6}%
-\contentsline {section}{\numberline {7.7}Answers to the research questions}{53}{section.7.7}%
-\contentsline {chapter}{\numberline {8}Discussion and Conclusion}{55}{chapter.8}%
-\contentsline {section}{\numberline {8.1}Main findings}{55}{section.8.1}%
-\contentsline {section}{\numberline {8.2}Achievement of the objectives}{55}{section.8.2}%
-\contentsline {section}{\numberline {8.3}Interpretation of the corrections}{55}{section.8.3}%
-\contentsline {section}{\numberline {8.4}Scientific limitations}{56}{section.8.4}%
-\contentsline {section}{\numberline {8.5}Further research}{57}{section.8.5}%
-\contentsline {section}{\numberline {8.6}Final statement}{57}{section.8.6}%
-\contentsline {chapter}{\nonumberline Bibliography}{58}{chapter*.51}%
+\contentsline {section}{\numberline {4.2}From voltage to a comparable four-second window}{22}{section.4.2}%
+\contentsline {section}{\numberline {4.3}Feature extraction theory}{23}{section.4.3}%
+\contentsline {section}{\numberline {4.4}RR timing theory}{25}{section.4.4}%
+\contentsline {section}{\numberline {4.5}Normal-only reconstruction theory}{26}{section.4.5}%
+\contentsline {subsection}{\numberline {4.5.1}What the encoder and decoder actually compute}{27}{subsection.4.5.1}%
+\contentsline {subsection}{\numberline {4.5.2}How the autoencoder lowers reconstruction loss}{27}{subsection.4.5.2}%
+\contentsline {section}{\numberline {4.6}Hierarchical classification theory}{29}{section.4.6}%
+\contentsline {section}{\numberline {4.7}Why Extra Trees fits this feature design}{30}{section.4.7}%
+\contentsline {subsection}{\numberline {4.7.1}How the two supervised models are fitted}{31}{subsection.4.7.1}%
+\contentsline {section}{\numberline {4.8}Class and patient imbalance theory}{31}{section.4.8}%
+\contentsline {section}{\numberline {4.9}Temporal patient adaptation theory}{32}{section.4.9}%
+\contentsline {subsection}{\numberline {4.9.1}Why training, validation, and testing have different jobs}{32}{subsection.4.9.1}%
+\contentsline {section}{\numberline {4.10}From saved models to a live ECG decision}{32}{section.4.10}%
+\contentsline {section}{\numberline {4.11}Validation theory}{33}{section.4.11}%
+\contentsline {section}{\numberline {4.12}Summary of the theoretical framework}{35}{section.4.12}%
+\contentsline {chapter}{\numberline {5}System Architecture and Implementation}{36}{chapter.5}%
+\contentsline {section}{\numberline {5.1}System overview}{36}{section.5.1}%
+\contentsline {section}{\numberline {5.2}Input signal and beat window}{37}{section.5.2}%
+\contentsline {section}{\numberline {5.3}Three trained components}{38}{section.5.3}%
+\contentsline {section}{\numberline {5.4}Normal-only autoencoder}{39}{section.5.4}%
+\contentsline {subsection}{\numberline {5.4.1}Purpose}{39}{subsection.5.4.1}%
+\contentsline {subsection}{\numberline {5.4.2}Network structure}{41}{subsection.5.4.2}%
+\contentsline {subsection}{\numberline {5.4.3}Encoder block}{42}{subsection.5.4.3}%
+\contentsline {subsection}{\numberline {5.4.4}Bottleneck and decoder mathematics}{42}{subsection.5.4.4}%
+\contentsline {subsection}{\numberline {5.4.5}Normal-reference data and checkpoint}{43}{subsection.5.4.5}%
+\contentsline {subsection}{\numberline {5.4.6}How the training update changes network weights}{43}{subsection.5.4.6}%
+\contentsline {subsection}{\numberline {5.4.7}Four autoencoder residual features}{44}{subsection.5.4.7}%
+\contentsline {section}{\numberline {5.5}Final 242-value feature vector}{45}{section.5.5}%
+\contentsline {section}{\numberline {5.6}How an Extra Trees model learns}{46}{section.5.6}%
+\contentsline {subsection}{\numberline {5.6.1}Why some training rows have more weight}{47}{subsection.5.6.1}%
+\contentsline {subsection}{\numberline {5.6.2}The mathematical question at each tree node}{47}{subsection.5.6.2}%
+\contentsline {subsection}{\numberline {5.6.3}From a tree leaf to an ensemble score}{48}{subsection.5.6.3}%
+\contentsline {section}{\numberline {5.7}Binary abnormality detector}{48}{section.5.7}%
+\contentsline {section}{\numberline {5.8}Abnormal-subtype classifier}{49}{section.5.8}%
+\contentsline {section}{\numberline {5.9}Final decision logic}{50}{section.5.9}%
+\contentsline {section}{\numberline {5.10}Why this architecture was selected}{51}{section.5.10}%
+\contentsline {chapter}{\numberline {6}Experimental Method}{52}{chapter.6}%
+\contentsline {section}{\numberline {6.1}Method overview}{52}{section.6.1}%
+\contentsline {section}{\numberline {6.2}Research objective and success conditions}{53}{section.6.2}%
+\contentsline {section}{\numberline {6.3}Input data and feature construction}{53}{section.6.3}%
+\contentsline {section}{\numberline {6.4}Normal-reference autoencoder training procedure}{54}{section.6.4}%
+\contentsline {section}{\numberline {6.5}Temporal split}{54}{section.6.5}%
+\contentsline {section}{\numberline {6.6}Model selection and final fitting}{55}{section.6.6}%
+\contentsline {section}{\numberline {6.7}Evaluation order}{57}{section.6.7}%
+\contentsline {section}{\numberline {6.8}Metrics}{58}{section.6.8}%
+\contentsline {section}{\numberline {6.9}Subject-clustered confidence interval}{58}{section.6.9}%
+\contentsline {section}{\numberline {6.10}Exploratory tests against the 90\% target}{59}{section.6.10}%
+\contentsline {section}{\numberline {6.11}Reproducibility and leakage controls}{59}{section.6.11}%
+\contentsline {chapter}{\numberline {7}Results and Statistical Validation}{60}{chapter.7}%
+\contentsline {section}{\numberline {7.1}Evaluation populations and sample sizes}{60}{section.7.1}%
+\contentsline {section}{\numberline {7.2}Model selection}{61}{section.7.2}%
+\contentsline {section}{\numberline {7.3}Main temporal results}{62}{section.7.3}%
+\contentsline {section}{\numberline {7.4}Uncertainty and subject variation}{63}{section.7.4}%
+\contentsline {section}{\numberline {7.5}Errors by stage and class}{64}{section.7.5}%
+\contentsline {section}{\numberline {7.6}Limited external INCART check}{66}{section.7.6}%
+\contentsline {section}{\numberline {7.7}Answers to the research questions}{67}{section.7.7}%
+\contentsline {chapter}{\numberline {8}Discussion and Conclusion}{68}{chapter.8}%
+\contentsline {section}{\numberline {8.1}Main findings}{68}{section.8.1}%
+\contentsline {section}{\numberline {8.2}Interpretation of the findings}{68}{section.8.2}%
+\contentsline {section}{\numberline {8.3}Achievement of the objectives}{69}{section.8.3}%
+\contentsline {section}{\numberline {8.4}Effect of the preprocessing revision}{69}{section.8.4}%
+\contentsline {section}{\numberline {8.5}Limitations}{69}{section.8.5}%
+\contentsline {section}{\numberline {8.6}Further research}{70}{section.8.6}%
+\contentsline {section}{\numberline {8.7}Conclusion}{70}{section.8.7}%
+\contentsline {chapter}{\nonumberline Bibliography}{71}{chapter*.56}%
 \def \@chapapp {\appendixname }
-\contentsline {chapter}{\numberline {A}Reproducibility Record}{61}{appendix.A}%
-\contentsline {section}{\numberline {A.1}Final experiment artifacts}{61}{section.A.1}%
-\contentsline {section}{\numberline {A.2}Frozen constants}{61}{section.A.2}%
-\contentsline {section}{\numberline {A.3}Saved success checks}{62}{section.A.3}%
-\contentsline {section}{\numberline {A.4}Safety statement}{62}{section.A.4}%
-\contentsline {section}{\numberline {A.5}Verification and historical record}{62}{section.A.5}%
+\contentsline {chapter}{\numberline {A}Reproducibility Record}{75}{appendix.A}%
+\contentsline {section}{\numberline {A.1}Experiment files}{75}{section.A.1}%
+\contentsline {section}{\numberline {A.2}Frozen constants}{75}{section.A.2}%
+\contentsline {section}{\numberline {A.3}Recorded evaluation targets}{76}{section.A.3}%
+\contentsline {section}{\numberline {A.4}Safety statement}{76}{section.A.4}%
+\contentsline {section}{\numberline {A.5}Verification and historical record}{76}{section.A.5}%
 \providecommand \tocbasic@end@toc@file {}\tocbasic@end@toc@file 

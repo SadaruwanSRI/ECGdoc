@@ -1,9 +1,9 @@
 \chapter{Introduction}\label{ch:introduction}
 
-\section{Introduction}
+\section{Background}
 
 An electrocardiogram (ECG) records the small voltage changes that occur when
-electrical activity moves through the heart. Electrodes on the body see this
+electrical activity moves through the heart. Electrodes on the body record this
 activity from different directions. In an ECG trace, the horizontal axis shows
 time and the vertical axis shows voltage. ECG analysis is useful because the
 pattern changes when a heartbeat starts in a different place, happens at a
@@ -51,43 +51,43 @@ educational drawing, not a diagnostic template.}
 \end{figure}
 
 \textbf{Arrhythmia and the classes considered.}
-An arrhythmia is a problem in where the heart's electrical activity starts,
-when it happens, how it is ordered, or how it travels. It may affect one beat,
-many repeated beats, or a longer rhythm. This study uses one normal output and
-five arrhythmia outputs. Table~\ref{tab:intro-arrhythmias} summarises the main
-physiological cause and visible ECG behaviour for each one. These descriptions
-define the model task only. A clinical diagnosis still needs the full ECG and
-patient context \cite{moody2001impact,dechazal2004heartbeat}.
+Arrhythmias affect the timing or sequence of the heart's electrical activity.
+Conduction disorders can also change the ECG waveform. This study uses one
+normal-like output group and five abnormal output groups. Table~\ref{tab:intro-arrhythmias} summarises the main
+physiological cause and visible ECG behaviour for each one. These descriptions explain the underlying ECG patterns. The study's annotation
+groups are broader than these clinical descriptions and are defined in
+Chapter~\ref{ch:data}. A clinical diagnosis requires the full ECG and patient
+context \cite{moody2001impact,dechazal2004heartbeat}.
 
 \begin{table}[H]
 \centering
 \small
-\caption{Normal rhythm and the five arrhythmia types considered in this study.}
+\caption{ECG patterns underlying the six output groups considered in this study.}
 \label{tab:intro-arrhythmias}
 \begin{tabular}{>{\raggedright\arraybackslash}p{2.2cm}>{\raggedright\arraybackslash}p{5.0cm}>{\raggedright\arraybackslash}p{5.4cm}}
 \toprule
-Type & Main reason & Typical ECG behaviour and importance\\
+Pattern & Main cause & Typical ECG features\\
 \midrule
-Normal sinus rhythm (N) & The impulse begins in the sinoatrial node and follows
+Normal sinus rhythm & The impulse begins in the sinoatrial node and follows
 the normal conduction path. & Repeated P--QRS--T patterns and generally regular
 RR intervals. It supplies the reference against which unusual beats are
 compared.\\
-PVC & A premature impulse begins in a ventricle instead of following the normal
+Premature ventricular contraction (PVC) & A premature impulse begins in a ventricle instead of following the normal
 path from the atria. & The beat occurs early and often has a wide, unusual QRS,
 followed by a pause. Detection is important because it is a clear ventricular
 abnormality and can occur repeatedly.\\
-PAC & A premature impulse begins in an atrial location outside the sinoatrial
+Premature atrial contraction (PAC) & A premature impulse begins in an atrial location outside the sinoatrial
 node. & The beat occurs early; the P wave may change, while the QRS can remain
 narrow and similar to normal. Its subtle shape makes PAC difficult to separate
 from normal beats.\\
-LBBB & Electrical conduction through the left bundle branch is delayed or
+Left bundle branch block (LBBB) & Electrical conduction through the left bundle branch is delayed or
 blocked. & The ventricles activate in an altered sequence, producing a broad,
 changed QRS. Recognition is important because the pattern can be associated
 with underlying cardiac disease.\\
-RBBB & Electrical conduction through the right bundle branch is delayed or
+Right bundle branch block (RBBB) & Electrical conduction through the right bundle branch is delayed or
 blocked. & The later part of the QRS changes and can show a second peak in some
 leads. It must be separated from LBBB because the delayed side is different.\\
-AFib & Atrial electrical activity becomes rapid and disorganised rather than
+Atrial fibrillation (AFib) & Atrial electrical activity becomes rapid and disorganised rather than
 following one regular atrial impulse. & Consistent P waves disappear and RR
 intervals become irregular. Identification is important because AFib is linked
 with clinically important complications and requires rhythm-level evidence.\\
@@ -97,10 +97,9 @@ with clinically important complications and requires rhythm-level evidence.\\
 
 Figure~\ref{fig:intro-real-arrhythmias} shows real labelled ECG segments from
 the MIT--BIH Arrhythmia Database instead of drawings. Each panel comes from the
-fixed final 20\% of its record. For each stated record and class, the displayed
-window is the one closest to that held-out group's mean waveform by squared
-distance. This rule gives a representative example without choosing the most
-dramatic-looking beat. The signals were resampled to 128 Hz, standardised, and
+final temporal-test portion of its record. For each stated record and class, the displayed
+window is the one closest to that record-and-class group's mean waveform by squared
+distance. This rule selects an example close to the group mean. The signals were resampled to 128 Hz, standardised, and
 aligned so the labelled R peak is at 1.5625 seconds.
 
 \begin{figure}[H]
@@ -117,7 +116,7 @@ templates.}
 These examples show why one simple threshold is not enough. PVC, LBBB, and RBBB
 mainly change beat shape. PAC can occur early while still looking close to a
 normal beat. AFib is often clearer from changing intervals and rhythm context.
-For this reason, the final system combines MLII waveform shape, frequency
+For this reason, the final system combines modified Lead II (MLII) waveform shape, frequency
 information, RR history, and disagreement with a learned normal reconstruction.
 
 Finding these patterns matters because long ECG recordings can contain too many
@@ -130,8 +129,6 @@ is not a replacement for a clinician.
 
 \section{Research Problem}
 
-The central research problem is stated below.
-
 \begin{tcolorbox}[
   colback=thesislight,
   colframe=thesisteal,
@@ -139,11 +136,11 @@ The central research problem is stated below.
   arc=3pt,
   left=6pt,right=6pt,top=6pt,bottom=6pt
 ]
-\textbf{Main research problem:} How can an explainable two-stage ECG system use
-normal-only reconstruction, beat morphology, and heartbeat timing to detect
-abnormal beats and correctly identify PVC, PAC, LBBB, RBBB, and AFib with more
-than 90\% whole-system accuracy on a fixed temporal test, while providing
-statistically valid evidence across patients?
+\textbf{Main research problem:} How accurately can a two-stage ECG system combine
+normal-reference reconstruction, beat shape, and heartbeat timing to detect
+abnormal beats and classify five supported abnormal groups in later recordings
+from known patients? Can it exceed 90\% whole-system accuracy while meeting
+the study's confidence-interval and per-class recall targets?
 \end{tcolorbox}
 
 The main problem contains four connected sub-problems:
@@ -155,43 +152,42 @@ The main problem contains four connected sub-problems:
     \item Normal and arrhythmia classes have unequal numbers of beats and
     patients, so ordinary accuracy can hide failure on a rare class.
     \item Thousands of neighbouring beats from one patient are correlated.
-    Testing must keep the final signal unseen and must calculate uncertainty
-    using complete patient clusters rather than treating beats as independent
-    people.
+    Evaluation must separate model fitting from testing and estimate uncertainty
+    using complete patient clusters. Any earlier exposure to the test data
+    must also be reported.
 \end{enumerate}
 
 The final experiment handles these problems with a chronological split. The
-first 64\% of each MITDB record trains candidate models, the next 16\% selects
-the models and threshold, and the final 20\% is reserved for temporal testing.
+first 64\% of each MIT--BIH Arrhythmia Database (MITDB) record trains candidate models, the next 16\% selects
+the models and threshold, and the final 20\% is used for temporal testing.
 The present model fitting excludes test rows, but the segment was observed
 during earlier development. Percentages count accepted beats in chronological
 order, rather than exact recording duration. The result is therefore a
 retrospective patient-adapted temporal evaluation, with possible selection
 optimism and no confirmatory claim about completely new patients.
 
-\section{Objective and Expected Outcomes}
+\section{Objectives and expected outcomes}
 
 \textbf{Main objective.}
 The main objective is to develop and statistically evaluate an ECG
-system that first detects abnormal beats and then identifies five supported
-arrhythmia types in later unseen signal from known patients.
+system that first detects abnormal beats and then classifies five supported
+abnormal groups in later ECG from known patients.
 
 \textbf{Specific objectives.}
 \begin{enumerate}
-    \item Train a normal-only autoencoder with the complete first ECG channel
-    from all 18 MIT--BIH Normal Sinus Rhythm Database subjects and use its
-    reconstruction errors as evidence.
+    \item Train a normal-only autoencoder using the first ECG channel from all
+    18 MIT--BIH Normal Sinus Rhythm Database subjects, with separate fitting
+    and validation subjects, and use reconstruction errors as features.
     \item Use the earlier 80\% of every MITDB record containing MLII for
-    supervised development while keeping every final 20\% portion unavailable.
+    supervised development and exclude the final 20\% from fitting and selection in the rerun.
     \item Build a binary abnormality detector using ECG morphology, spectrum,
-    RR timing, and autoencoder-residual features;
+    RR timing, and autoencoder-residual features.
     \item Build a second classifier for PVC, PAC, LBBB, RBBB, and AFib using
-    the same MLII signal and RR context with a next-beat delay;
-    \item measure abnormality-detection accuracy, conditional subtype accuracy,
-    and complete six-class system accuracy separately;
-    \item report the true and correctly classified count for every arrhythmia;
-    and
-    \item validate uncertainty with equal-subject accuracy, a complete-subject
+    the same MLII signal and RR context with a delay until the required signal and next R peak are available.
+    \item Measure abnormality-detection accuracy, conditional subtype accuracy,
+    and complete six-class system accuracy separately.
+    \item Report the true and correctly classified count for every supported abnormal group.
+    \item Estimate uncertainty with equal-subject accuracy, a complete-subject
     bootstrap confidence interval, and subject-level statistical tests.
 \end{enumerate}
 
@@ -203,27 +199,27 @@ The planned outcomes are:
     above 90\% on the fixed temporal test;
     \item a whole-system 95\% confidence interval whose lower bound exceeds
     90\% and whose total width is no more than three percentage points;
-    \item per-arrhythmia results that reveal whether every supported class
-    reaches the accuracy target; and
-    \item an honest statement of the data, statistical, hardware, and clinical
+    \item per-arrhythmia results that reveal whether every supported abnormal class
+    exceeds 90\% recall; and
+    \item a clear account of the data, statistical, hardware, and clinical
     limits of the model.
 \end{itemize}
-
-These are evaluation targets, not assumed conclusions. Chapter~\ref{ch:results}
-reports which targets were reached and which were not.
 
 \section{Research questions}
 \begin{description}
 \item[RQ1] How does the frozen NSRDB reconstruction branch contribute evidence
-to the supervised hierarchy, and has its independent benefit been measured?
+to the supervised hierarchy, and what evidence supports its independent benefit?
 \item[RQ2] What are binary, conditional-subtype, and complete six-class
 performance on the retrospective temporal evaluation?
 \item[RQ3] What do equal-subject accuracy and subject-clustered uncertainty
 show about variation across known patients?
 \item[RQ4] Do the measured accuracy, interval precision, and class recalls
-meet the study targets, and what evidence exists for external use?
+meet the study targets, and what does the external check show?
 \end{description}
 
-The labels PVC, PAC, N and AFib are operational annotation groups defined in
-Chapter~\ref{ch:data}; AFib includes flutter. A successful software
-implementation is distinct from meeting every statistical target.
+\section{Organisation of the report}
+Chapters~\ref{ch:literature} and~\ref{ch:data} review related work and define
+the data and labels. Chapters~\ref{ch:theory} and~\ref{ch:architecture}
+explain the theory and system design. Chapter~\ref{ch:method} describes the
+experiment, Chapter~\ref{ch:results} presents the results, and
+Chapter~\ref{ch:conclusion} discusses the findings and future work.

@@ -8,57 +8,57 @@ P.~Kligfield, L.~S. Gettes, J.~J. Bailey, R.~Childers, B.~J. Deal, E.~W.
   American College of Cardiology}, vol.~49, no.~10, pp.~1109--1127, 2007.
 
 \bibitem{moody2001impact}
-G.~B. Moody and R.~G. Mark, ``The impact of the mit--bih arrhythmia database,''
-  {\em IEEE Engineering in Medicine and Biology Magazine}, vol.~20, no.~3,
-  pp.~45--50, 2001.
+G.~B. Moody and R.~G. Mark, ``The impact of the {MIT--BIH} arrhythmia
+  database,'' {\em IEEE Engineering in Medicine and Biology Magazine}, vol.~20,
+  no.~3, pp.~45--50, 2001.
 
 \bibitem{dechazal2004heartbeat}
 P.~de~Chazal, M.~O'Dwyer, and R.~B. Reilly, ``Automatic classification of
-  heartbeats using ecg morphology and heartbeat interval features,'' {\em IEEE
-  Transactions on Biomedical Engineering}, vol.~51, no.~7, pp.~1196--1206,
+  heartbeats using {ECG} morphology and heartbeat interval features,'' {\em
+  IEEE Transactions on Biomedical Engineering}, vol.~51, no.~7, pp.~1196--1206,
   2004.
 
 \bibitem{goldberger2000physionet}
 A.~L. Goldberger, L.~A.~N. Amaral, L.~Glass, J.~M. Hausdorff, P.~C. Ivanov,
   R.~G. Mark, J.~E. Mietus, G.~B. Moody, C.-K. Peng, and H.~E. Stanley,
-  ``Physiobank, physiotoolkit, and physionet: Components of a new research
+  ``Physiobank, physiotoolkit, and {PhysioNet}: Components of a new research
   resource for complex physiologic signals,'' {\em Circulation}, vol.~101,
   no.~23, pp.~e215--e220, 2000.
 
 \bibitem{mitdb}
-G.~B. Moody and R.~G. Mark, ``Mit--bih arrhythmia database.''
+G.~B. Moody and R.~G. Mark, ``{MIT--BIH} arrhythmia database.''
   \url{https://physionet.org/content/mitdb/1.0.0/}, 2005.
 
 \bibitem{nsrdb}
-G.~B. Moody, ``Mit--bih normal sinus rhythm database.''
+G.~B. Moody, ``{MIT--BIH} normal sinus rhythm database.''
   \url{https://physionet.org/content/nsrdb/1.0.0/}, 1999.
 
 \bibitem{mousavi2019seq2seq}
-S.~Mousavi and F.~Afghah, ``Inter- and intra-patient ecg heartbeat
+S.~Mousavi and F.~Afghah, ``Inter- and intra-patient {ECG} heartbeat
   classification for arrhythmia detection: A sequence to sequence deep learning
   approach,'' in {\em IEEE International Conference on Acoustics, Speech and
   Signal Processing}, pp.~1308--1312, 2019.
 
 \bibitem{zhang2021interpatient}
-J.~Zhang, A.~Liu, D.~Liang, X.~Chen, and M.~Gao, ``Interpatient ecg heartbeat
+J.~Zhang, A.~Liu, D.~Liang, X.~Chen, and M.~Gao, ``Interpatient {ECG} heartbeat
   classification with an adversarial convolutional neural network,'' {\em
   Journal of Healthcare Engineering}, vol.~2021, p.~9946596, 2021.
 
 \bibitem{huang2014bbb}
 H.~Huang, J.~Liu, Q.~Zhu, R.~Wang, and G.~Hu, ``Detection of inter-patient left
-  and right bundle branch block heartbeats in ecg using ensemble classifiers,''
-  {\em BioMedical Engineering OnLine}, vol.~13, p.~72, 2014.
+  and right bundle branch block heartbeats in {ECG} using ensemble
+  classifiers,'' {\em BioMedical Engineering OnLine}, vol.~13, p.~72, 2014.
 
 \bibitem{kiranyaz2016ecgcnn}
-S.~Kiranyaz, T.~Ince, and M.~Gabbouj, ``Real-time patient-specific ecg
+S.~Kiranyaz, T.~Ince, and M.~Gabbouj, ``Real-time patient-specific {ECG}
   classification by 1-d convolutional neural networks,'' {\em IEEE Transactions
   on Biomedical Engineering}, vol.~63, no.~3, pp.~664--675, 2016.
 
 \bibitem{acharya2017cnn}
 U.~R. Acharya, H.~Fujita, O.~S. Lih, Y.~Hagiwara, J.~H. Tan, and M.~Adam,
   ``Automated detection of arrhythmias using different intervals of tachycardia
-  ecg segments with convolutional neural network,'' {\em Information Sciences},
-  vol.~405, pp.~81--90, 2017.
+  {ECG} segments with convolutional neural network,'' {\em Information
+  Sciences}, vol.~405, pp.~81--90, 2017.
 
 \bibitem{hannun2019cardiologist}
 A.~Y. Hannun, P.~Rajpurkar, M.~Haghpanahi, G.~H. Tison, C.~Bourn, M.~P.
@@ -70,7 +70,7 @@ A.~Y. Hannun, P.~Rajpurkar, M.~Haghpanahi, G.~H. Tison, C.~Bourn, M.~P.
 A.~H. Ribeiro, M.~H. Ribeiro, G.~M.~M. Paixao, D.~M. Oliveira, P.~R. Gomes,
   J.~A. Canazart, M.~P.~S. Ferreira, C.~R. Andersson, P.~W. Macfarlane,
   W.~Meira, T.~B. Sch{\"o}n, and A.~L.~P. Ribeiro, ``Automatic diagnosis of the
-  12-lead ecg using a deep neural network,'' {\em Nature Communications},
+  12-lead {ECG} using a deep neural network,'' {\em Nature Communications},
   vol.~11, p.~1760, 2020.
 
 \bibitem{hinton2006autoencoder}
@@ -90,7 +90,7 @@ V.~Chandola, A.~Banerjee, and V.~Kumar, ``Anomaly detection: A survey,'' {\em
 
 \bibitem{malhotra2016lstm}
 P.~Malhotra, A.~Ramakrishnan, G.~Anand, L.~Vig, P.~Agarwal, and G.~Shroff,
-  ``Lstm-based encoder--decoder for multi-sensor anomaly detection,'' in {\em
+  ``{LSTM}-based encoder--decoder for multi-sensor anomaly detection,'' in {\em
   ICML 2016 Workshop on Anomaly Detection}, 2016.
 
 \bibitem{thill2021tcnae}
@@ -104,12 +104,13 @@ J.-H. Jang, T.~Y. Kim, H.-S. Lim, and D.~Yoon, ``Unsupervised feature learning
   {\em PLOS ONE}, vol.~16, no.~12, p.~e0260612, 2021.
 
 \bibitem{zhou2022aae}
-L.~Shan {\em et~al.}, ``Abnormal ecg detection based on an adversarial
+L.~Shan, Y.~Li, H.~Jiang, P.~Zhou, J.~Niu, R.~Liu, Y.~Wei, J.~Peng, H.~Yu,
+  X.~Sha, and S.~Chang, ``Abnormal {ECG} detection based on an adversarial
   autoencoder,'' {\em Frontiers in Physiology}, vol.~13, p.~961724, 2022.
 
 \bibitem{saito2015pr}
 T.~Saito and M.~Rehmsmeier, ``The precision--recall plot is more informative
-  than the roc plot when evaluating binary classifiers on imbalanced
+  than the {ROC} plot when evaluating binary classifiers on imbalanced
   datasets,'' {\em PLOS ONE}, vol.~10, no.~3, p.~e0118432, 2015.
 
 \bibitem{cui2019classbalanced}
@@ -134,7 +135,7 @@ G.~S. Collins, K.~G.~M. Moons, P.~Dhiman, R.~D. Riley, A.~L. Beam,
   BMJ}, vol.~385, p.~e078378, 2024.
 
 \bibitem{physionetLeadFAQ}
-{PhysioNet}, ``Frequently asked questions: What do the signal names mlii, v2,
+{PhysioNet}, ``Frequently asked questions: What do the signal names {MLII}, v2,
   ... mean?.'' \url{https://archive.physionet.org/faq.shtml}.
 \newblock Accessed September 23, 2026.
 
@@ -143,15 +144,44 @@ S.~Butterworth, ``On the theory of filter amplifiers,'' {\em Experimental
   Wireless and the Wireless Engineer}, vol.~7, pp.~536--541, 1930.
 
 \bibitem{virtanen2020scipy}
-P.~Virtanen {\em et~al.}, ``Scipy 1.0: Fundamental algorithms for scientific
+P.~Virtanen {\em et~al.}, ``{SciPy} 1.0: Fundamental algorithms for scientific
   computing in python,'' {\em Nature Methods}, vol.~17, pp.~261--272, 2020.
+
+\bibitem{he2016resnet}
+K.~He, X.~Zhang, S.~Ren, and J.~Sun, ``Deep residual learning for image
+  recognition,'' in {\em Proceedings of the IEEE Conference on Computer Vision
+  and Pattern Recognition}, pp.~770--778, 2016.
+
+\bibitem{ronneberger2015unet}
+O.~Ronneberger, P.~Fischer, and T.~Brox, ``{U-Net}: Convolutional networks for
+  biomedical image segmentation,'' in {\em Medical Image Computing and
+  Computer-Assisted Intervention}, pp.~234--241, 2015.
+
+\bibitem{srivastava2014dropout}
+N.~Srivastava, G.~Hinton, A.~Krizhevsky, I.~Sutskever, and R.~Salakhutdinov,
+  ``Dropout: A simple way to prevent neural networks from overfitting,'' {\em
+  Journal of Machine Learning Research}, vol.~15, pp.~1929--1958, 2014.
+
+\bibitem{kingma2015adam}
+D.~P. Kingma and J.~Ba, ``Adam: A method for stochastic optimization,'' in {\em
+  International Conference on Learning Representations}, 2015.
 
 \bibitem{geurts2006extratrees}
 P.~Geurts, D.~Ernst, and L.~Wehenkel, ``Extremely randomized trees,'' {\em
   Machine Learning}, vol.~63, pp.~3--42, 2006.
 
+\bibitem{ad8232}
+{Analog Devices}, {\em {AD8232}: Single-Lead, Heart Rate Monitor Front End Data
+  Sheet}.
+\newblock Analog Devices, Inc., 2020.
+
+\bibitem{paszke2019pytorch}
+A.~Paszke {\em et~al.}, ``{PyTorch}: An imperative style, high-performance deep
+  learning library,'' in {\em Advances in Neural Information Processing
+  Systems}, vol.~32, 2019.
+
 \bibitem{incartdb}
-E.~Yakushenko, ``St petersburg incart 12-lead arrhythmia database.''
+E.~Yakushenko, ``St petersburg {INCART} 12-lead arrhythmia database.''
   \url{https://physionet.org/content/incartdb/1.0.0/}, 2008.
 
 \end{thebibliography}

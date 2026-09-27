@@ -1,9 +1,10 @@
 \chapter{Experimental Method}\label{ch:method}
 
-The final experiment measures one specific use case: the system has already
-seen earlier MLII ECG from a patient, and it must classify later ECG from that
-same patient. This is a known-patient temporal holdout. It is not a
-new-patient external validation and it is not a shuffled random beat split.
+The main experiment evaluated later MLII beats from patients whose earlier
+labelled ECG was available during development. Beats were split in
+chronological order within each record. This design measures performance on
+known patients. The final segment had been viewed during earlier development,
+so the reported results form a retrospective evaluation.
 
 \section{Method overview}
 
@@ -35,19 +36,20 @@ does it classify that patient's later ECG?
 The primary outcome is whole-system six-class accuracy on the final 20\%
 temporal holdout. The planned success conditions were:
 \begin{enumerate}
-    \item pooled whole-system accuracy at least 90\%;
+    \item pooled whole-system accuracy above 90\%;
     \item lower bound of the equal-subject 95\% confidence interval above
     90\%; and
     \item total confidence-interval width no greater than three percentage
     points.
 \end{enumerate}
-Per-class recall and macro F1 were also checked so that a high overall score
-could not hide failure on a smaller arrhythmia class.
+The secondary target was recall above 90\% for each supported abnormal
+group. Macro F1 and per-class results were also examined because overall
+accuracy can hide poor performance on a smaller class.
 
 \section{Input data and feature construction}
 
 The method uses one ECG channel at every stage, but the two data sources have
-different roles. NSRDB supplies healthy windows for the frozen normal
+different roles. NSRDB supplies normal-reference windows for the frozen normal
 autoencoder. MITDB supplies MLII beat windows, binary labels, six-class labels,
 and the final temporal test. No NSRDB beat is scored in the final test.
 
@@ -81,6 +83,36 @@ This feature construction matches the saved final model bundle:
 \texttt{rr\_feature\_count} is 15, and \texttt{ae\_feature\_count} is four.
 The method therefore does not use a second MITDB lead during training,
 validation, temporal testing, or deployment.
+
+\section{Normal-reference autoencoder training procedure}
+
+The autoencoder was trained \emph{before} either supervised model. All 18
+NSRDB records supplied first-channel ECG1 data. After filtering,
+four-second windowing, per-window standardisation, and quality checks,
+15 entire subjects contributed 288,673 fitting windows and three separate
+subjects contributed 57,177 validation windows. The split is by subject, so
+adjacent windows from the same recording cannot appear on opposite sides of
+this validation boundary.
+
+One training step takes a shuffled batch of 256 clean windows, adds fresh
+Gaussian noise with standard deviation 0.03 to the inputs, reconstructs them,
+and computes mean squared error against the original clean windows. PyTorch
+backpropagates this error through the convolutional encoder and decoder;
+Adam updates their weights with learning rate 0.001. The training code repeats
+these steps for two complete epochs. After each epoch it disables dropout and
+measures clean-input MSE on the three subjects excluded from fitting. It saves
+the checkpoint with the lowest validation MSE. The precise objective and
+gradient logic are in Equations~\ref{eq:theory-denoising-loss} and
+\ref{eq:theory-adam}; Figure~\ref{fig:theory-training-mechanisms} contrasts
+this loop with tree fitting. The measured loss curve appears in
+Figure~\ref{fig:lead-ii-ae-learning}.
+
+After checkpoint selection, the model is frozen. For every MITDB MLII window,
+its reconstruction is compared with the input to create four residual
+measurements. No MITDB class label updates the autoencoder. The saved
+normal-residual threshold is descriptive for the normal-reference model;
+the final classifier uses residual measurements as features and uses the
+separately validated binary-tree threshold for its final gate.
 
 \section{Temporal split}
 
@@ -129,6 +161,34 @@ Extra Trees candidates were fitted only on supported abnormal candidate beats
 and ranked by validation macro F1, then by accuracy. Figure~\ref{fig:method-model-selection}
 shows the validation scores that selected the final pair.
 
+The fitting sequence for each candidate is explicit:
+\begin{enumerate}
+    \item Build one 242-value row per accepted MLII beat, keeping the label and
+    subject identifier outside the row. The autoencoder is already frozen.
+    \item Select candidate-training rows from the first 64\% of each record,
+    subject to the 16-beat gap before validation. For the binary stage, use
+    every normal/abnormal target. For the subtype stage, keep only supported
+    abnormal targets.
+    \item Compute class-and-record sample weights within these selected rows.
+    At each tree node, propose random feature thresholds and choose the one
+    giving the largest weighted entropy decrease in
+    Equation~\ref{eq:theory-information-gain}. Continue until that candidate's
+    depth and leaf-size rules stop growth, then average all tree outputs.
+    \item Score the candidate on the 64--80\% validation region. For each
+    binary candidate, choose an abnormal-score threshold using validation
+    balanced accuracy and tie-breaks; compare candidates by balanced accuracy
+    then F1. Compare subtype candidates by macro F1 then accuracy.
+    \item Fix the winning structures and threshold. Refit the binary model on
+    all 83,050 eligible development beats and the subtype model on 28,758
+    supported abnormal development beats. Apply the frozen pair once to the
+    final temporal segment.
+\end{enumerate}
+Tree fitting is a recursive partitioning procedure, so the supervised models
+have no epoch-by-epoch training-loss curve. Their training criterion is node
+entropy; the evidence used for model selection is held-out validation
+performance. Node entropy and validation error therefore measure different aspects of
+model fitting.
+
 \begin{figure}[H]
 \centering
 \includegraphics[width=.98\textwidth]{pic/generated/method_model_selection.pdf}
@@ -142,7 +202,7 @@ The selected binary detector was the fully grown 240-tree candidate with
 square-root feature sampling, minimum leaf size one, and record-weighting
 power 0.35. Its validation-selected abnormal threshold was 0.5708333. The
 selected subtype classifier was the fully grown 260-tree candidate with
-one-third feature sampling, minimum leaf size one, and record-weighting power
+a feature-sampling fraction of 0.33, minimum leaf size one, and record-weighting power
 0.25. After selection, the binary model was refitted on all development beats,
 whereas the subtype model was refitted only on supported abnormal development
 beats.
@@ -165,7 +225,7 @@ abnormal labels enter only the binary evaluation.}
 \label{fig:method-evaluation-order}
 \end{figure}
 
-The temporal evaluation reports three supports:
+The temporal evaluation uses three sets of beats:
 \begin{enumerate}
     \item binary abnormality detection on all 20,969 held-out beats, including
     unsupported abnormal MITDB symbols;
@@ -180,14 +240,17 @@ confusion matrix.
 
 \section{Metrics}
 
-For a binary outcome,
+For binary detection, an abnormal beat is the positive class. $TP$ and $TN$
+are correctly classified abnormal and N beats; $FP$ is an N beat predicted
+as abnormal, and $FN$ is an abnormal beat predicted as N. The metrics are
 \begin{align}
  \mathrm{Accuracy}&=\frac{TP+TN}{TP+TN+FP+FN},\\
  \mathrm{Sensitivity}&=\frac{TP}{TP+FN},\\
  \mathrm{Specificity}&=\frac{TN}{TN+FP},\\
  \mathrm{Balanced\ accuracy}&=\frac{\mathrm{Sensitivity}+\mathrm{Specificity}}{2}.
 \end{align}
-For class $c$,
+For each output class $c$, the remaining classes are treated as negative
+when calculating
 \begin{align}
  \mathrm{Precision}_c&=\frac{TP_c}{TP_c+FP_c},\\
  \mathrm{Recall}_c&=\frac{TP_c}{TP_c+FN_c},\\
@@ -198,14 +261,16 @@ Macro F1 is the unweighted mean of class F1 values. It gives PAC the same
 weight as N even though N contains many more beats.
 
 Two accuracy summaries are reported. Pooled beat accuracy gives every beat
-equal weight. Subject-macro accuracy first calculates accuracy inside each of
+equal weight. Equal-subject accuracy first calculates accuracy within each of
 the 45 eligible subject clusters and then gives every subject equal weight:
 \begin{equation}
  A_{macro}=\frac{1}{45}\sum_{s=1}^{45}A_s.
  \label{eq:subject-macro}
 \end{equation}
-The subject-macro value is primary for uncertainty because a long record should
-not behave like many independent patients.
+The equal-subject mean is used for uncertainty analysis so that subjects
+with more beats do not receive more weight. For conditional subtype accuracy,
+only subjects with supported abnormal test beats have a defined score; the
+mean uses that smaller set of subjects.
 
 \section{Subject-clustered confidence interval}
 
@@ -222,14 +287,14 @@ bootstrap:
 These intervals describe variation across the evaluated subject clusters with
 the fitted model held fixed. They do not include retraining variability,
 uncertainty from earlier test exposure, or a new population shift.
-Resampling individual beats would create an artificially narrow interval
+Resampling individual beats can create an artificially narrow interval
 because adjacent beats from the same recording are correlated. The clustered
 bootstrap keeps that dependence \cite{rutter2000clustered}.
 
-\section{Tests against the 90\% target}
+\section{Exploratory tests against the 90\% target}
 
 The confidence interval is the primary statistical evidence. Two
-non-parametric tests provide sensitivity analyses. The exact one-sided sign
+non-parametric tests provide supplementary, exploratory analyses. The exact one-sided sign
 test asks whether more than half of subjects exceed 90\%. The one-sided
 Wilcoxon signed-rank test asks whether subject accuracies are shifted above
 90\%, under the additional symmetry assumption of a signed-rank location
@@ -254,3 +319,6 @@ first-use test, and the bootstrap does not correct development-selection bias. P
 also intentional: the test is later ECG from known patients. Therefore, the
 method supports a patient-adapted temporal-performance claim, not a
 patient-independent generalisation claim.
+
+The next chapter reports each evaluation population separately and examines
+errors at both stages of the hierarchy.

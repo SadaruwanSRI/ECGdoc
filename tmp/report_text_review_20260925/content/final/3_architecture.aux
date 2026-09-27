@@ -1,0 +1,132 @@
+\relax 
+\providecommand\hyper@newdestlabel[2]{}
+\@writefile{toc}{\contentsline {chapter}{\numberline {5}Methodology}{35}{chapter.5}\protected@file@percent }
+\@writefile{lof}{\addvspace {10\p@ }}
+\@writefile{lot}{\addvspace {10\p@ }}
+\@writefile{lol}{\addvspace {10\p@ }}
+\newlabel{ch:architecture}{{5}{35}{Methodology}{chapter.5}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {5.1}Architecture in one sentence}{35}{section.5.1}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {5.1}{\ignorespaces Exact runtime order of the final ECG system. The autoencoder supplies features; the supervised tree models make the final class decision.}}{35}{figure.caption.29}\protected@file@percent }
+\newlabel{fig:architecture-current-flow}{{5.1}{35}{Exact runtime order of the final ECG system. The autoencoder supplies features; the supervised tree models make the final class decision}{figure.caption.29}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {5.2}Input signal and beat window}{35}{section.5.2}\protected@file@percent }
+\newlabel{countitems@3}{{3}{36}{Input signal and beat window}{section.5.2}{}}
+\newlabel{eq:method-beat-window}{{5.1}{36}{Input signal and beat window}{equation.5.1}{}}
+\newlabel{eq:method-window-scaling}{{5.2}{36}{Input signal and beat window}{equation.5.2}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {5.2}{\ignorespaces R-peak-aligned beat window used by the final model. The R peak is at sample index 200, giving the model pre-QRS context and post-QRS recovery information.}}{36}{figure.caption.30}\protected@file@percent }
+\newlabel{fig:architecture-streaming-window}{{5.2}{36}{R-peak-aligned beat window used by the final model. The R peak is at sample index 200, giving the model pre-QRS context and post-QRS recovery information}{figure.caption.30}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {5.3}Three trained components}{37}{section.5.3}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {5.1}{\ignorespaces Architecture, training target, and output of each fitted component.}}{37}{table.caption.31}\protected@file@percent }
+\newlabel{tab:method-three-models}{{5.1}{37}{Architecture, training target, and output of each fitted component}{table.caption.31}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {5.3}{\ignorespaces Training and use of the saved three-component model.}}{38}{figure.caption.32}\protected@file@percent }
+\newlabel{fig:architecture-training-live}{{5.3}{38}{Training and use of the saved three-component model}{figure.caption.32}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {5.4}Normal-only autoencoder}{38}{section.5.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.4.1}Purpose}{38}{subsection.5.4.1}\protected@file@percent }
+\citation{vincent2008denoising}
+\newlabel{eq:ae-loss-final}{{5.5}{39}{Purpose}{equation.5.5}{}}
+\@writefile{brf}{\backcite{vincent2008denoising}{{39}{5.4.1}{equation.5.5}}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.4.2}Network structure}{40}{subsection.5.4.2}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {5.4}{\ignorespaces Autoencoder architecture with verified tensor dimensions.}}{40}{figure.caption.33}\protected@file@percent }
+\newlabel{fig:final-ae-layers}{{5.4}{40}{Autoencoder architecture with verified tensor dimensions}{figure.caption.33}{}}
+\citation{he2016resnet,srivastava2014dropout}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.4.3}Mathematics inside an encoder block}{41}{subsection.5.4.3}\protected@file@percent }
+\newlabel{eq:method-convolution}{{5.6}{41}{Mathematics inside an encoder block}{equation.5.6}{}}
+\newlabel{eq:method-conv-length}{{5.7}{41}{Mathematics inside an encoder block}{equation.5.7}{}}
+\newlabel{eq:method-residual-block}{{5.9}{41}{Mathematics inside an encoder block}{equation.5.9}{}}
+\@writefile{brf}{\backcite{he2016resnet}{{41}{5.4.3}{equation.5.9}}}
+\@writefile{brf}{\backcite{srivastava2014dropout}{{41}{5.4.3}{equation.5.9}}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.4.4}Bottleneck and decoder mathematics}{41}{subsection.5.4.4}\protected@file@percent }
+\newlabel{eq:method-decoder-skip}{{5.10}{41}{Bottleneck and decoder mathematics}{equation.5.10}{}}
+\citation{nsrdb}
+\citation{kingma2015adam}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.4.5}Normal-reference data and checkpoint}{42}{subsection.5.4.5}\protected@file@percent }
+\@writefile{brf}{\backcite{nsrdb}{{42}{5.4.5}{subsection.5.4.5}}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.4.6}How the training update changes network weights}{42}{subsection.5.4.6}\protected@file@percent }
+\newlabel{eq:method-ae-output-gradient}{{5.11}{42}{How the training update changes network weights}{equation.5.11}{}}
+\newlabel{eq:method-ae-adam}{{5.12}{42}{How the training update changes network weights}{equation.5.12}{}}
+\@writefile{brf}{\backcite{kingma2015adam}{{42}{5.4.6}{equation.5.12}}}
+\@writefile{lof}{\contentsline {figure}{\numberline {5.5}{\ignorespaces Autoencoder fitting and validation loss.}}{43}{figure.caption.34}\protected@file@percent }
+\newlabel{fig:lead-ii-ae-learning}{{5.5}{43}{Autoencoder fitting and validation loss}{figure.caption.34}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.4.7}Four autoencoder residual features}{43}{subsection.5.4.7}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {5.6}{\ignorespaces Real healthy and abnormal ECG examples through the frozen autoencoder. The residual between input and reconstruction is converted into four numerical features for the supervised detector.}}{44}{figure.caption.35}\protected@file@percent }
+\newlabel{fig:final-real-ae}{{5.6}{44}{Real healthy and abnormal ECG examples through the frozen autoencoder. The residual between input and reconstruction is converted into four numerical features for the supervised detector}{figure.caption.35}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {5.5}Final 242-value feature vector}{44}{section.5.5}\protected@file@percent }
+\citation{geurts2006extratrees}
+\@writefile{lof}{\contentsline {figure}{\numberline {5.7}{\ignorespaces Feature-vector layout used by both supervised models. The same 242-value vector is passed first to the abnormality detector and, if required, to the subtype classifier.}}{45}{figure.caption.36}\protected@file@percent }
+\newlabel{fig:architecture-feature-vector}{{5.7}{45}{Feature-vector layout used by both supervised models. The same 242-value vector is passed first to the abnormality detector and, if required, to the subtype classifier}{figure.caption.36}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {5.2}{\ignorespaces Organised feature groups in the final architecture.}}{45}{table.caption.37}\protected@file@percent }
+\newlabel{tab:final-feature-vector}{{5.2}{45}{Organised feature groups in the final architecture}{table.caption.37}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {5.6}How an Extra Trees model learns}{45}{section.5.6}\protected@file@percent }
+\@writefile{brf}{\backcite{geurts2006extratrees}{{45}{5.6}{section.5.6}}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.6.1}Why some training rows have more weight}{46}{subsection.5.6.1}\protected@file@percent }
+\newlabel{eq:method-record-weight}{{5.18}{46}{Why some training rows have more weight}{equation.5.18}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.6.2}The mathematical question at each tree node}{46}{subsection.5.6.2}\protected@file@percent }
+\newlabel{eq:method-node-class-share}{{5.19}{46}{The mathematical question at each tree node}{equation.5.19}{}}
+\newlabel{eq:method-node-entropy}{{5.20}{46}{The mathematical question at each tree node}{equation.5.20}{}}
+\newlabel{eq:method-tree-gain}{{5.21}{46}{The mathematical question at each tree node}{equation.5.21}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {5.8}{\ignorespaces Worked example of entropy reduction in a tree.}}{47}{figure.caption.38}\protected@file@percent }
+\newlabel{fig:method-tree-entropy-example}{{5.8}{47}{Worked example of entropy reduction in a tree}{figure.caption.38}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.6.3}From a tree leaf to an ensemble score}{47}{subsection.5.6.3}\protected@file@percent }
+\newlabel{eq:method-forest-score}{{5.22}{47}{From a tree leaf to an ensemble score}{equation.5.22}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {5.7}Binary abnormality detector}{47}{section.5.7}\protected@file@percent }
+\newlabel{countitems@4}{{6}{47}{Binary abnormality detector}{section.5.7}{}}
+\newlabel{eq:method-binary-score}{{5.23}{48}{Binary abnormality detector}{equation.5.23}{}}
+\newlabel{eq:method-threshold-ba}{{5.24}{48}{Binary abnormality detector}{equation.5.24}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {5.8}Abnormal-subtype classifier}{48}{section.5.8}\protected@file@percent }
+\newlabel{countitems@5}{{6}{48}{Abnormal-subtype classifier}{section.5.8}{}}
+\newlabel{eq:final-decision}{{5.26}{49}{Abnormal-subtype classifier}{equation.5.26}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {5.9}Final decision logic}{49}{section.5.9}\protected@file@percent }
+\newlabel{eq:method-complete-decision}{{5.27}{50}{Final decision logic}{equation.5.27}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {5.10}Why this architecture was selected}{50}{section.5.10}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {5.3}{\ignorespaces Reason for each major final-architecture decision.}}{50}{table.caption.39}\protected@file@percent }
+\newlabel{tab:final-design-rationale}{{5.3}{50}{Reason for each major final-architecture decision}{table.caption.39}{}}
+\@setckpt{content/final/3_architecture}{
+\setcounter{page}{52}
+\setcounter{equation}{27}
+\setcounter{enumi}{6}
+\setcounter{enumii}{0}
+\setcounter{enumiii}{0}
+\setcounter{enumiv}{0}
+\setcounter{footnote}{0}
+\setcounter{mpfootnote}{0}
+\setcounter{part}{0}
+\setcounter{chapter}{5}
+\setcounter{section}{10}
+\setcounter{subsection}{0}
+\setcounter{subsubsection}{0}
+\setcounter{paragraph}{0}
+\setcounter{subparagraph}{0}
+\setcounter{figure}{8}
+\setcounter{table}{3}
+\setcounter{NAT@ctr}{0}
+\setcounter{parentequation}{0}
+\setcounter{ALC@unique}{0}
+\setcounter{ALC@line}{0}
+\setcounter{ALC@rem}{0}
+\setcounter{ALC@depth}{0}
+\setcounter{AM@survey}{0}
+\setcounter{lstnumber}{1}
+\setcounter{FancyVerbLine}{0}
+\setcounter{caption@flags}{2}
+\setcounter{continuedfloat}{0}
+\setcounter{subfigure}{0}
+\setcounter{subtable}{0}
+\setcounter{section@level}{0}
+\setcounter{Item}{24}
+\setcounter{Hfootnote}{0}
+\setcounter{bookmark@seq@number}{0}
+\setcounter{nlinenum}{0}
+\setcounter{LT@tables}{1}
+\setcounter{LT@chunks}{3}
+\setcounter{float@type}{16}
+\setcounter{countitems}{6}
+\setcounter{nextitemizecount}{6}
+\setcounter{tcbbreakpart}{1}
+\setcounter{tcblayer}{0}
+\setcounter{tcolorbox@number}{1}
+\setcounter{tcbrastercolumn}{1}
+\setcounter{tcbrasterrow}{1}
+\setcounter{tcbrasternum}{1}
+\setcounter{tcbraster}{0}
+\setcounter{tcblisting}{0}
+\setcounter{lstlisting}{0}
+}

@@ -1,0 +1,76 @@
+\chapter{Reproducibility Record}
+
+\section{Final experiment artifacts}
+
+The fixed temporal-holdout experiment is stored in:
+\begin{itemize}
+    \item \nolinkurl{experiments/corrected_temporal_holdout.json};
+    \item \nolinkurl{experiments/corrected_temporal_holdout.joblib}; and
+    \item \nolinkurl{tools/final_temporal_holdout.py}.
+\end{itemize}
+The normal model is documented by
+\nolinkurl{experiments/nsrdb_autoencoder_training.json}, produced by
+\nolinkurl{tools/train_nsrdb_autoencoder.py}. Its deployable checkpoint is
+\nolinkurl{backend/app/storage/models/model_nsrdb_primary_healthy.pt}.
+The deployable copy is registered by the backend model registry and stored in
+the backend model directory.
+
+\section{Frozen constants}
+
+\begin{table}[htbp]
+\centering
+\caption{Settings used for the final experiment.}
+\begin{tabular}{ll}
+\toprule
+Setting & Value\\
+\midrule
+Experiment seed & 20260801\\
+Healthy-autoencoder seed & 20260802\\
+Healthy fitting/validation subjects & 15 / 3 NSRDB records\\
+Healthy fitting/validation windows & 288,673 / 57,177\\
+Bootstrap seed and replicates & 20260801; 10,000\\
+Development/test boundary & 80\% / 20\% per record\\
+Candidate training/validation & approximately 64\% / 16\% per record\\
+Boundary gap & 16 beats before test\\
+Binary threshold & 0.5708333333\\
+Binary ensemble & 240 fully grown Extra Trees\\
+Subtype ensemble & 260 fully grown Extra Trees\\
+Binary/subtype input sizes & 242 / 242\\
+Independent uncertainty units & 45 subject clusters\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Saved success checks}
+
+The JSON artifact records three Boolean checks. Pooled whole-system accuracy
+above 90\% is true. A whole-system subject-cluster lower 95\% bound above 90\%
+is true. Interval width at most three percentage points is true for the corrected rerun.
+
+\section{Safety statement}
+
+The installed artifact is a research model. The final experiment uses patient
+overlap, one MITDB lead, and annotated R-peak locations during evaluation. It
+is not a certified medical device and must not be used to diagnose or treat a
+patient.
+
+\section{Verification and historical record}
+The original August results remain in
+\nolinkurl{experiments/final_temporal_holdout.json}.
+The corrected run saves all test predictions in
+\nolinkurl{experiments/corrected_test_predictions.npz}, and independent checks
+are recorded in \nolinkurl{experiments/final_verification.json}.
+The INCART result and predictions are
+\nolinkurl{experiments/corrected_external_incart.json} and
+\nolinkurl{experiments/corrected_external_predictions.npz}.
+Model SHA-256 digests link the evaluated bundle to its deployed copy.
+
+From the repository root, use the backend Python environment to run
+\nolinkurl{Final_Report_Research/tools/verify_final_results.py}.
+The corrected training entry point is
+\nolinkurl{Final_Report_Research/tools/final_temporal_holdout.py};
+it uses \nolinkurl{tools/corrected_dataset.py} and the shared
+\nolinkurl{backend/app/ml/beat_preparation.py}.
+The NSRDB checkpoint is frozen and is not retrained by this entry point.
+Running training again replaces the corrected artifacts, so preserve the
+current experiment directory before any future research change.

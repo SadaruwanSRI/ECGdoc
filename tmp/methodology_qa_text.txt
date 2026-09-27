@@ -1,0 +1,715 @@
+5 Methodology
+
+This chapter explains the final system saved and used by the application. The installed model
+is a one-lead MLII beat classifier. It does not use two ECG leads, does not retrain during live
+use, and does not make an arrhythmia decision directly from the autoencoder threshold. The
+final decision is made by two supervised Extra Trees models. Both receive the same 242-value
+feature vector.
+
+
+5.1 Architecture in one sentence
+  For each detected MLII heartbeat, the system takes a 512-sample window aligned to the R
+peak, builds waveform, rhythm, and normal-reconstruction features, sends those features to a
+binary abnormality gate, and sends only gated abnormal beats to a five-class subtype classifier.
+
+ Final ECG system: from one MLII beat to one decision
+ A. R-aligned                                             B. Reused 242-feature                                          C. Binary gate,
+ input                                                    vector                                                         then subtype
+               R peak
+             index 200                                                                               AE 4
+
+                                                                                           RR 15                                       N             subtype
+
+
+                                                                          waveform
+                                                                            223
+
+
+
+
+                                                        shape + rhythm + normal-reconstruction evidence                                      0.6208333
+
+
+  0      1          2    3            4                  0        50        100      150       200                      0.0      0.2   0.4     0.6       0.8   1.0
+         4.0 s MLII window                                             242 feature positions                                           P(abnormal)
+
+                             The autoencoder supplies four residual features. It does not make the final class decision alone.
+
+Figure 5.1: Exact runtime order of the final ECG system. The autoencoder supplies features; the
+                 supervised tree models make the final class decision.
+
+
+
+5.2 Input signal and beat window
+  The deployed system accepts one ECG channel. For database replay and final testing
+that channel is MIT–BIH MLII, selected by signal name. Records 102 and 104 are excluded
+because they do not contain MLII. For sensor sessions, the API requires the user to declare
+5 Methodology                                                                                                                              36
+
+
+lead_name=’MLII’ and rejects other declared leads. This rule prevents the model from
+silently scoring a lead that does not match the supervised training signal.
+   The classifier is beat based, not arbitrary-window based. The live backend collects MLII
+samples, detects R peaks, and waits until enough rhythm context is available. For a scorable
+beat, it extracts a fixed 512-sample window at 128 Hz:
+    • 200 samples before the R peak;
+    • 312 samples after the R peak;
+    • total duration of 4.0 seconds.
+This same window geometry is used in the final temporal-holdout experiment and in the
+installed session pipeline.
+  Let 𝑠𝑖 be the sample index of the current R peak in the 128 Hz signal. The extracted beat is
+the ordered vector
+
+      𝑢 (𝑖) = (𝑣𝑠𝑖 −200, 𝑣𝑠𝑖 −199, . . . , 𝑣𝑠𝑖 +311 ) ∈ R512 .                                                                           (5.1)
+
+Filtering and per-window standardisation produce the model input 𝑥 (𝑖) . For a filtered window
+𝑢, this scaling is
+                                                   v
+                                                   u
+                                   512             t     512
+              𝑢𝑡 − 𝜇𝑢          1  ∑︁                  1 ∑︁
+       𝑥𝑡 =            , 𝜇𝑢 =          𝑢𝑡 ,  𝜎𝑢 =            (𝑢𝑡 − 𝜇𝑢 ) 2 .                (5.2)
+             𝜎𝑢 + 10−8        512 𝑡=1                512 𝑡=1
+
+The subtraction removes a local voltage offset and the division reduces recording-gain differ-
+ences. The model still sees relative wave shape. Each training and live beat is prepared from its
+own window, so preparing an earlier beat does not require statistics from a later test segment.
+
+                                             R peak index 200
+
+
+
+
+                                            512 samples at 128 Hz = 4.0 seconds
+                 previous 200 samples                                                following 312 samples
+
+          Streaming classification waits until the beat has previous and next RR information, then scores this fixed R-aligned window.
+
+Figure 5.2: R-peak-aligned beat window used by the final model. The R peak is at sample index 200,
+             giving the model pre-QRS context and post-QRS recovery information.
+5 Methodology                                                                                      37
+
+
+5.3 Three trained components
+   The final system uses three trained components, stored as an autoencoder checkpoint and
+a separate hierarchy bundle:
+   1. a frozen normal-only autoencoder;
+   2. a binary Extra Trees abnormality detector;
+   3. a five-class Extra Trees abnormal-subtype classifier.
+The autoencoder is trained first and then frozen. The two supervised tree models are then fitted
+on MLII features from the temporal development portion of MIT–BIH Arrhythmia Database
+records.
+
+
+   A Offline training produces three fixed components
+
+     Normal autoencoder                              Two Extra Trees models
+     Train on NSRDB ECG1.                            Use the same 242 MLII features.
+     Select the checkpoint on other subjects.        Select on earlier validation beats.
+     Freeze its weights before MLII modelling.       Refit the binary gate and subtype model.
+
+
+
+
+                Saved models and decision threshold
+                Frozen autoencoder + binary gate + subtype classifier
+                Validation-selected abnormality threshold: 0.570833
+
+
+
+   B Frozen model use
+
+
+
+     Retrospective temporal test                     Session prediction
+     Later MITDB beats from known patients           Incoming MLII signal or database replay
+     Compare predictions with expert labels.         Return N or one of five arrhythmia groups.
+
+
+
+
+Figure 5.3: Training and use of the saved three-component model. Offline development produces the
+           frozen autoencoder, binary gate, subtype classifier, and validation-selected threshold. The
+           same fixed components support retrospective temporal evaluation and session prediction;
+           session use does not update its parameters.
+5 Methodology                                                                                38
+
+
+5.4 Normal-only autoencoder
+5.4.1 Purpose
+  The autoencoder is a normal-reconstruction branch. It learns how normal ECG windows
+can be reconstructed. The final system then uses reconstruction error as extra evidence. The
+autoencoder does not decide “normal” or “arrhythmia” by itself in the final classifier.
+  For an input window 𝑥 ∈ R512 , the autoencoder output is
+
+      𝑥b = 𝑔𝜙 (𝑓𝜃 (𝑥)),                                                                    (5.3)
+
+where 𝑓𝜃 is the encoder and 𝑔𝜙 is the decoder. Training uses a denoising objective: Gaussian
+noise with standard deviation 0.03 is added to the input, but the target remains the clean
+standardised window. For a mini-batch B, write
+
+      𝑥e(𝑖) = 𝑥 (𝑖) + 𝜖 (𝑖) ,     𝜖𝑡(𝑖) ∼ N (0, 0.032 ),                    𝑥 (𝑖) )).
+                                                            𝑥b(𝑖) = 𝑔𝜙 (𝑓𝜃 (e              (5.4)
+
+The exact training objective is the mean squared difference from the clean target across samples
+and windows:
+                                     512
+                          1 ∑︁ ∑︁ (𝑖)
+      L𝐴𝐸 (𝜃, 𝜙) =                     (𝑥𝑡 − 𝑥b𝑡(𝑖) ) 2 .                                  (5.5)
+                        512|B| 𝑖∈B 𝑡=1
+
+The network receives noisy input while the loss compares against clean input. It must recover
+repeatable ECG structure rather than copy the added noise [15]. At prediction time no artificial
+noise is added: the same network reconstructs the prepared MLII beat 𝑥 directly.
+   As a small illustration, if a clean three-sample target is (0, 1, 0) and a reconstruction is
+(0.1, 0.8, −0.1), the three squared errors are 0.01, 0.04, 0.01 and their mean is 0.02. The real
+loss applies the same arithmetic to every one of the 512 samples in every batch window.
+5 Methodology                                                                                        39
+
+
+5.4.2 Network structure
+
+
+    Encoder: shorten the sequence                                   Decoder: reconstruct the ECG
+
+              Input window                                                  Linear output: 1 x 256
+                 1 x 512                                                       Resize to 1 x 512
+
+
+
+       Encoder 1: residual conv                                              Decoder 4: up block
+                                                  skip x 0.5
+              32 x 256                                                           32 x 256
+
+
+
+       Encoder 2: residual conv                                              Decoder 3: up block
+                                                  skip x 0.5
+              64 x 128                                                           32 x 128
+
+
+
+       Encoder 3: residual conv                                              Decoder 2: up block
+                                                  skip x 0.5
+              128 x 64                                                            64 x 64
+
+
+
+       Encoder 4: residual conv                                              Decoder 1: up block
+                                                  skip x 0.5
+              256 x 32                                                           128 x 32
+
+
+
+
+                                       Dilated bottleneck: 256 x 32
+                                          Dilation rates: 1, 2, 4, 8
+
+
+
+    Dimensions are channels x time samples; the batch dimension is omitted.
+    Dashed arrows carry encoder features to matching decoder lengths.
+    Each up block resizes to its skip length; final interpolation restores 512 samples.
+
+Figure 5.4: Autoencoder architecture with tensor dimensions verified by a forward pass through the
+            2,680,641-parameter implementation. Read down the encoder, through the bottleneck, and
+            up the decoder. Dashed connections concatenate encoder features scaled by 0.5; decoder
+            outputs match their skip lengths before the final interpolation restores the 512-sample
+            waveform.
+
+
+   Each residual encoder block contains two kernel-seven convolutions, Group Normalisation,
+LeakyReLU, dropout, and a residual projection. Four kernel-three bottleneck blocks use
+dilation 1, 2, 4, and 8. Dilation increases the receptive field without deleting time samples.
+The decoder uses transposed convolutions and skip connections scaled by 0.5. Each up block
+resizes its output to match the corresponding encoder skip. The first up block therefore returns
+length 32, the fourth returns length 256, and final linear interpolation restores length 512. The
+figure reports these actual tensor dimensions. The final layer is linear because the standardised
+ECG signal contains positive and negative values.
+5 Methodology                                                                                   40
+
+
+5.4.3 Mathematics inside an encoder block
+  A one-dimensional convolution applies learned filters along time. For input channels 𝑐,
+output channel 𝑗, kernel offset 𝑚, and time 𝑡, a simplified layer operation is
+
+                      ∑︁ 𝐾−1
+                         ∑︁
+      ℎ 𝑗,𝑡 = 𝑏 𝑗 +            𝑊 𝑗,𝑐,𝑚 𝑥𝑐,𝑡+𝑚 .                                               (5.6)
+                       𝑐 𝑚=0
+
+The learned coefficients 𝑊 detect local patterns such as slopes and peaks. Each encoder block
+uses a kernel width 𝐾 = 7 and stride two in its first convolution. With input length 𝐿, padding
+𝑝, dilation 𝑑, and stride 𝑠, the output length is
+                                          
+                𝐿 + 2𝑝 − 𝑑 (𝐾 − 1) − 1
+       𝐿out =                          +1 .                                                (5.7)
+                           𝑠
+Here 𝑝 = 3, 𝑑 = 1, and 𝑠 = 2, giving 512 → 256 → 128 → 64 → 32 time positions. The
+corresponding channel counts are 1 → 32 → 64 → 128 → 256. The tensor at the deepest
+encoder stage is [𝐵, 256, 32], where 𝐵 is the batch size. This is a 16-fold reduction in the time
+axis; 256 channels and the skip connections mean it should not be interpreted as a 16-fold
+reduction in total stored information.
+  Within a block, Group Normalisation standardises activations within eight channel groups.
+LeakyReLU then applies
+                         (
+                          𝑎,     𝑎 ≥ 0,
+      LeakyReLU(𝑎) =                                                                         (5.8)
+                           0.1𝑎, 𝑎 < 0.
+
+Negative internal activations therefore retain a small gradient. A learned 1 × 1 projection
+makes the input shape match the block output before they are added. In abbreviated form the
+residual computation is
+
+      ℎ out = Dropout0.2 [LeakyReLU(𝐹 (ℎ in ) + 𝑃 (ℎ in ))] ,                                 (5.9)
+
+where 𝐹 is the two-convolution path and 𝑃 is the identity or projection path. Adding 𝑃 (ℎ in ) lets
+information and gradients travel through a shorter route. Dropout randomly masks internal
+activations during fitting; it is disabled during validation and prediction [28, 30].
+
+5.4.4 Bottleneck and decoder mathematics
+   Four bottleneck convolutions use kernel width three and dilation 𝑑 ∈ {1, 2, 4, 8}. A dilated
+convolution reads positions 𝑡 − 𝑑, 𝑡, 𝑡 + 𝑑 instead of only 𝑡 − 1, 𝑡, 𝑡 + 1. It therefore combines
+progressively wider temporal context without further shrinking the 32-position axis. Each
+bottleneck operation adds its input back to its output.
+   The decoder uses transposed convolutions to increase temporal resolution. At each stage it
+also concatenates the corresponding encoder output 𝑒 𝑗 with a scale factor of 0.5:
+                                                        
+      𝑑 𝑗 = 𝑈 𝑗 concat resize(up(𝑑 𝑗−1 ), |𝑒 𝑗 |), 0.5𝑒 𝑗 .                                  (5.10)
+5 Methodology                                                                                        41
+
+
+𝑈 𝑗 denotes the following convolution, normalisation, activation, and dropout operations. The
+resize matches the skip tensor’s actual time length. In this implementation the four decoder
+stages end at lengths 32, 64, 128, and 256; linear interpolation restores length 512 before
+returning the waveform. The final 1 × 1 convolution produces one output channel and has
+no sigmoid or other output activation. These details explain how local normal structure can
+be reconstructed while preserving the input shape.
+
+5.4.5 Normal-reference data and checkpoint
+   The autoencoder checkpoint was developed from complete recordings of all 18 subjects in
+the MIT–BIH Normal Sinus Rhythm Database. Fifteen subjects supply 288,673 fitting windows
+and three different subjects supply 57,177 validation windows. The selected NSRDB header
+channel is ECG1. The database does not document this channel as anatomical Lead II, so the
+report treats it as a normal ECG reference channel rather than renaming it MLII [6].
+   The final checkpoint uses Adam, learning rate 0.001, batch size 256, and two epochs.
+Validation MSE changed from 0.061195 after epoch 1 to the best saved value, 0.061193, after
+epoch 2. The autoencoder artifact also stores a normal-residual threshold of 0.158893, but the
+final hierarchy does not use that threshold as the final arrhythmia rule.
+
+5.4.6 How the training update changes network weights
+  For one predicted sample, the derivative of Equation 5.5 is
+
+      𝜕L𝐴𝐸          𝑥𝑡(𝑖) − 𝑥𝑡(𝑖) )
+                  2(b
+              =                     .                                                             (5.11)
+        𝑥𝑡(𝑖)
+       𝜕b            512|B|
+
+An output greater than its clean target has a positive derivative; an output below the target has
+a negative derivative. Backpropagation applies the chain rule through the decoder, bottleneck,
+and encoder to obtain derivatives for all learnable filters and biases. If 𝜓 collects those
+parameters and 𝑔𝑘 = ∇𝜓 L𝐴𝐸 is the gradient at training step 𝑘, Adam uses running estimates
+of the gradient and its squared magnitude:
+
+                                                                                          𝑚
+                                        𝑣𝑘 = 𝛽 2𝑣𝑘−1 + (1 − 𝛽 2 )𝑔𝑘2 ,
+                                                                                          b𝑘
+    𝑚𝑘 = 𝛽 1𝑚𝑘−1 + (1 − 𝛽 1 )𝑔𝑘 ,                                        𝜓𝑘+1 = 𝜓𝑘 − 𝜂 √︁       . (5.12)
+                                                                                         𝑣𝑘 + 𝜀
+                                                                                         b
+
+Here 𝜂 = 0.001, the hats are bias-corrected running estimates, and the division is elementwise.
+This is how fitting loss can decrease across mini-batches. Validation windows receive no
+weight update; their MSE is used only to select the saved epoch [31].
+  The recorded fitting MSE fell from 0.057639 to 0.041976, but the clean-input subject-disjoint
+validation MSE changed only from 0.061195 to 0.061193. Because training uses noisy inputs
+and validation uses clean inputs, their levels are not directly comparable as an overfitting
+measure. The second epoch is retained because it has the lowest measured validation loss, not
+because the much larger fitting-loss decrease proves improved generalisation.
+5 Methodology                                                                                                                          42
+
+
+                                                                              MIT-BIH normal-sinus autoencoder learning curve
+                                                           best validation MSE = 0.06119
+                                            0.0600
+        mean squared reconstruction error
+
+                                            0.0575
+                                            0.0550
+                                            0.0525
+                                            0.0500
+                                            0.0475
+                                            0.0450
+                                                               fitting loss
+                                            0.0425             subject-disjoint validation loss
+                                                           1                                                                    2
+                                                                                                   epoch
+
+Figure 5.5: Autoencoder fitting and subject-disjoint validation loss. The checkpoint with the lowest
+                                            validation loss is retained before the supervised MLII stages are trained.
+
+
+5.4.7 Four autoencoder residual features
+  Let 𝑒𝑡 = 𝑥𝑡 − 𝑥b𝑡 be the reconstruction residual. The final feature system uses four scalar
+residual summaries:
+            1 ∑︁
+      𝑓1 =         |𝑒𝑡 |                        whole-window MAE,                       (5.13)
+           512 𝑡
+            1 ∑︁ 2
+      𝑓2 =         𝑒                            whole-window MSE,                       (5.14)
+           512 𝑡 𝑡
+                                                     343
+            1 ∑︁
+      𝑓3 =           |𝑒𝑡 |                                                                        central morphology MAE,           (5.15)
+           240 𝑡=104
+                                                 512
+            1 ∑︁
+      𝑓4 =         |𝑒𝑡 − 𝑒𝑡−1 |                                                                   residual-change MAE.              (5.16)
+           511 𝑡=2
+
+The central feature focuses on the QRS and nearby morphology. The residual-change feature
+becomes large when the reconstruction misses sharp slopes. These four values are appended
+to the transparent MLII and RR features.
+5 Methodology                                                                                                                                                                    43
+
+
+                                              Real one-channel examples through the frozen normal autoencoder
+                               Healthy MIT-BIH NSRDB first ECG channel                                                    absolute residual; mean = 0.060
+                           6                                                                                        0.8
+ standardised amplitude
+
+
+
+
+                           4                                                                                        0.6
+
+
+
+
+                                                                                                   absolute error
+                           2         input     reconstruction                                                       0.4
+
+                           0                                                                                        0.2
+
+                          −2                                                                                        0.0
+                               Abnormal MITDB MLII example: PVC                                                           absolute residual; mean = 0.091
+                                                                    input         reconstruction
+                                                                                                                    0.8
+                           4
+ standardised amplitude
+
+
+
+
+                                                                                                                    0.6
+
+                                                                                                   absolute error
+                           2
+                                                                                                                    0.4
+                           0                                                                                        0.2
+
+                          −2                                                                                        0.0
+                               0.0      0.5   1.0     1.5 2.0 2.5           3.0   3.5       4.0                           0.0    0.5   1.0   1.5 2.0 2.5       3.0   3.5   4.0
+                                                       time (seconds)                                                                         time (seconds)
+
+Figure 5.6: Real healthy and abnormal ECG examples through the frozen autoencoder. The residual
+                                     between input and reconstruction is converted into four numerical features for the
+                                     supervised detector.
+
+
+
+5.5 Final 242-value feature vector
+   The saved final bundle declares 242 total features, 15 RR features, required autoencoder
+features, and four autoencoder residual values. Therefore every supervised prediction uses:
+
+                           223 waveform/spectrum/statistics values
+                                 + 15 RR timing values                                                                                                                     (5.17)
+                                 + 4 autoencoder residual values = 242.
+5 Methodology                                                                                                            44
+
+
+
+
+                    242 values used by the binary detector and subtype classifier
+
+
+              64                              80                                60            8 11          15 4
+
+
+          whole-window                      central                           central             signal RR AE
+                                                                                          frequency
+           mean bins                       morphology                        derivative         statistics timingresiduals
+                                                                                            powers
+
+                             223 waveform, spectrum, and statistics values                              timing + AE
+
+
+Figure 5.7: Feature-vector layout used by both supervised models. The same 242-value vector is passed
+            first to the abnormality detector and, if required, to the subtype classifier.
+
+
+Table 5.1: Organised feature groups in the final architecture.
+
+    Group                             Values       What it tells the model
+    Whole-window mean bins                  64 broad four-second MLII waveform shape
+    Central morphology bins                 80 P–QRS–T shape around the R peak
+    Central derivative bins                 60 sharp slopes and rapid QRS changes
+    Frequency-band powers                    8 relative energy from 0.5 to 50 Hz
+    Signal statistics                       11 scale, range, energy, skewness, and kurtosis
+    RR timing context                       15 previous/next interval, local rate, variability, me-
+                                               dian, interquartile range, MAD, RMSSD, pNN50,
+                                               range ratio, trend, and latest RR change
+    Autoencoder residuals                    4 how strongly the beat disagrees with the learned
+                                               normal-reconstruction pattern
+
+
+   The final experiment constructs the same 242 values in two steps: first 230 values are
+built from 223 MLII waveform/statistical values plus seven base RR values; then eight causal
+RR-history values and four autoencoder residual values are appended. During live/session pre-
+diction, the backend builds the same final vector directly from 223 MLII waveform/statistical
+values, 15 RR values, and four autoencoder residual values.
+
+
+5.6 How an Extra Trees model learns
+   Both supervised stages use the same type of architecture: an ensemble of extremely ran-
+domised decision trees. A tree asks a sequence of questions of the form “is feature 𝑧 𝑗 ≤ 𝜏?” The
+answer sends a beat to a left or right child node. Randomly chosen candidate features and split
+values make different trees learn different partitions; among the candidate splits at a node, the
+algorithm chooses the one that best separates the weighted training labels [32].
+5 Methodology                                                                                       45
+
+
+5.6.1 Why some training rows have more weight
+   Rare arrhythmia classes and short patient records would otherwise contribute little to split
+decisions. For class 𝑐 in subject cluster 𝑟 , the final fitting code starts with a weight proportional
+to
+                       𝛼
+             1     𝑛𝑐
+      𝑤𝑐𝑟 =                ,                                                                     (5.18)
+             𝑛𝑐 𝑅𝑐 𝑛𝑐𝑟
+
+where 𝑛𝑐 is the total number of training beats of class 𝑐, 𝑅𝑐 is the number of subject clusters
+containing 𝑐, and 𝑛𝑐𝑟 is the number of class-𝑐 beats in cluster 𝑟 . Weights are divided by their
+overall mean and clipped to [0.05, 20]. The first factor increases the influence of rare classes.
+The second limits dominance by a subject that contributes many examples of the same class.
+The chosen exponent is 𝛼 = 0.35 for the binary model and 𝛼 = 0.25 for the subtype model.
+This weighting changes the tree’s splitting calculation; it does not replicate beats or create
+new patient data.
+
+5.6.2 The mathematical question at each tree node
+   Let 𝑆 be the training beats that have reached a node, 𝑤𝑖 the weight of beat 𝑖, and 𝑦𝑖 its
+training label. The weighted share of class 𝑐 is
+                Í
+                    𝑤𝑖 1[𝑦𝑖 = 𝑐]
+      𝑃𝑐 (𝑆) = 𝑖∈𝑆 Í             .                                                    (5.19)
+                     𝑖∈𝑆 𝑤 𝑖
+
+The node’s entropy measures how mixed its labels are:
+               ∑︁
+     𝐻 (𝑆) = −    𝑃𝑐 (𝑆) log2 𝑃𝑐 (𝑆), 0 log2 0 := 0.                                             (5.20)
+                  𝑐
+
+A pure node has entropy zero. If a proposed feature threshold divides 𝑆 into left and right
+subsets 𝑆𝐿 , 𝑆𝑅 , its weighted entropy reduction is
+                      𝑊𝐿           𝑊𝑅                      ∑︁
+      Δ𝐻 = 𝐻 (𝑆) −       𝐻 (𝑆𝐿 ) −    𝐻 (𝑆𝑅 ),      𝑊𝐴 =         𝑤𝑖 .                            (5.21)
+                      𝑊𝑆           𝑊𝑆                      𝑖∈𝐴
+
+The selected random candidate has the largest available reduction. A tree repeats this at its
+child nodes until its stopping conditions are reached. The selected final models have no fixed
+maximum depth and permit a leaf with one training beat; this makes them flexible, while
+ensemble averaging and the separate validation region help control the resulting instability.
+5 Methodology                                                                                         46
+
+
+                                               Parent node
+                                       4 N, 4 abnormal; 𝐻 = 1 bit
+
+
+
+                            Left child                            Right child
+                   3 N, 1 abnormal; 𝐻 = 0.811             1 N, 3 abnormal; 𝐻 = 0.811
+
+Figure 5.8: Illustrative unweighted binary split, separate from the actual experiment. Each child
+            contains four beats, so Equation 5.21 gives Δ𝐻 = 1 − 12 (0.811) − 12 (0.811) = 0.189 bit. A
+            candidate placing two N and two abnormal beats in each child would give zero gain. Real
+            fitting uses the sample weights above.
+
+
+5.6.3 From a tree leaf to an ensemble score
+  Once a tree is fitted, a new feature row follows its learned questions to a leaf 𝐿𝑏 (𝑧). The
+score for class 𝑐 in tree 𝑏 is the weighted share of training labels of class 𝑐 in that leaf, 𝑃𝑐 (𝐿𝑏 (𝑧)).
+With 𝐵 trees, the forest output is
+                    𝐵
+               1 ∑︁
+      𝑄𝑐 (𝑧) =      𝑃𝑐 (𝐿𝑏 (𝑧)).                                                                   (5.22)
+               𝐵
+                   𝑏=1
+
+This is an average of leaf scores, not a neural-network softmax. It can rank classes, but the final
+bundle contains no probability-calibration model; a score such as 0.8 should not be interpreted
+as an independently validated 80% clinical disease probability. Trees lower node impurity
+while they are grown. They do not have epochs, backpropagation, or a neural loss curve.
+
+
+5.7 Binary abnormality detector
+   The first supervised model is the abnormality detector. It receives all 242 features and
+estimates 𝑝𝑖 = 𝑃 (abnormal | 𝑥𝑖 ) for beat 𝑖. The selected detector is an Extra Trees classifier
+with:
+    • 240 trees;
+    • entropy split criterion;
+    • fully grown trees;
+    • minimum leaf size of one sample;
+    • square-root feature sampling at each split;
+    • record/class weighting with record-power 𝛼 = 0.35.
+Its target is 𝑦𝑖(𝐵) ∈ {0, 1}, with zero for project-normal N and one for abnormal. This stage uses
+every eligible binary-labelled beat, including abnormal symbols for which the project has no
+supported subtype. Three candidate forest settings were trained on 66,285 earlier beats and
+5 Methodology                                                                                    47
+
+
+compared on 16,029 later validation beats. The selected structure was then refitted  √ on 83,050
+development beats. At each node the square-root feature rule considers about 242 ≈ 15.6 of
+the 242 feature positions before selecting a random candidate threshold with the best available
+weighted entropy decrease. Different nodes and trees can therefore use different combinations
+of morphology, timing, and reconstruction evidence.
+    For tree 𝑏, let 𝑝𝑏 (𝑧𝑖 ) be the abnormal weighted class share in the leaf reached by feature row
+𝑧𝑖 . The ensemble abnormal score is
+                 240
+              1 ∑︁
+      𝑝𝑖 =         𝑝𝑏 (𝑧𝑖 ).                                                                  (5.23)
+             240
+                 𝑏=1
+
+For example, if 180 trees returned an abnormal leaf score of one and 60 returned zero, the
+ensemble score would be 180/240 = 0.75. Real leaves can also contain both classes, giving
+values between zero and one.
+   The decision threshold was selected on the 64–80% validation region of each development
+record. For each candidate threshold 𝜏, sensitivity and specificity are calculated from valida-
+tion labels, and their mean is the balanced accuracy:
+                                                     
+                1       𝑇 𝑃 (𝜏)           𝑇 𝑁 (𝜏)
+       BA(𝜏) =                      +                   .                                (5.24)
+                2 𝑇 𝑃 (𝜏) + 𝐹 𝑁 (𝜏) 𝑇 𝑁 (𝜏) + 𝐹 𝑃 (𝜏)
+The code ranks thresholds by balanced accuracy, followed by F1 and further tie-breaks. The
+selected fixed threshold is 𝜏 = 0.5708333:
+
+      𝑎𝑖 = ⊮[𝑝𝑖 > 𝜏],          𝜏 = 0.5708333.                                                 (5.25)
+
+If 𝑎𝑖 = 0, the final output is normal class N. No subtype classifier is used for that beat. The
+threshold controls the balance between missed abnormal beats and false alarms; it is selected
+after tree fitting, not learned by a gradient update.
+
+
+5.8 Abnormal-subtype classifier
+   The second supervised model is used only after the binary gate marks a beat as abnormal. It
+is fitted only on supported abnormal classes 1–5, not on N and not on unsupported MIT–BIH
+symbols. The selected subtype model is an Extra Trees classifier with:
+    • 260 trees;
+    • entropy split criterion;
+    • fully grown trees;
+    • minimum leaf size of one sample;
+    • one-third feature sampling at each split;
+    • record/class weighting with record-power 𝛼 = 0.25.
+5 Methodology                                                                               48
+
+
+   This model’s target is one of five supported abnormal labels. It has no normal output.
+Its three candidate structures were fitted on 22,844 supported abnormal candidate beats and
+compared on 5,651 supported abnormal validation beats. The chosen structure was refitted
+on 28,758 supported abnormal development beats. The feature-sampling fraction 0.33 means
+roughly 80 of the 242 feature positions are proposed at a node. Entropy now sums over five
+classes, so a node with an exactly even five-class mixture would have 𝐻 = log2 5 ≈ 2.322
+bits. A split lowers this entropy when its children become more concentrated in particular
+arrhythmia groups.
+   For an abnormal beat, the subtype classifier returns scores over the five supported abnormal
+outputs: PVC, PAC, LBBB, RBBB, and AFib. The final class score 𝑞𝑖𝑐 is Equation 5.22 with
+𝐵 = 260 and only these five training classes. The final subtype is
+     𝑦b𝑖 = arg max 𝑞𝑖𝑐 .                                                                 (5.26)
+                𝑐∈{1,...,5}
+
+Thus the subtype forest does not learn a second normal-versus-abnormal decision. It re-
+solves the abnormal branch by taking the largest of its five scores. Candidate subtype
+forests were selected by validation macro F1, which gives each of the five classes equal
+influence in the selection score, then by validation accuracy. The final saved bundle sets
+reject_low_confidence=False. Therefore the evaluated and installed final pipeline
+do not add a post-hoc “Unclassified abnormal” rejection step; every gated abnormal beat
+receives the subtype with the largest subtype probability.
+   The displayed subtype confidence is conditional on the abnormal branch. It is an ensemble
+score, not a calibrated probability of disease. Unsupported abnormalities can receive an
+incorrect supported subtype.
+
+
+5.9 Final decision logic
+  The complete prediction rule is:
+   1. Validate that the input is a 512-sample MLII beat window and that 15 RR features are
+      available.
+   2. Reconstruct the same window with the frozen autoencoder.
+   3. Build the 242-value vector from MLII shape, RR timing, and four autoencoder residual
+      summaries.
+   4. Estimate 𝑝𝑖 = 𝑃 (abnormal | 𝑥𝑖 ) using the 240-tree binary detector.
+   5. If 𝑝𝑖 ≤ 0.5708333, output N with confidence 1 − 𝑝𝑖 .
+   6. If 𝑝𝑖 > 0.5708333, run the 260-tree subtype model and output the highest-probability
+      supported subtype.
+  This is the same hierarchy used in the final temporal-holdout evaluation. The model does
+not use test labels while predicting. The labels are used only after prediction to compute
+accuracy, F1, confusion matrices, and subject-clustered uncertainty.
+5 Methodology                                                                                   49
+
+
+  The full architecture can be written as one piecewise mathematical rule. Let 𝑧𝑖 be the
+prepared 242-value row, 𝑝𝑖 the binary ensemble score, and 𝑞𝑖𝑐 the subtype ensemble score.
+Then
+
+             N,
+            
+            
+                                                  𝑝𝑖 ≤ 0.5708333,
+      𝑦b𝑖 =                                                                                  (5.27)
+                            max
+             arg 𝑐∈{PVC,PAC,LBBB,RBBB,AFib}
+                                            𝑞𝑖𝑐 , 𝑝𝑖 > 0.5708333.
+            
+For example, a beat with 𝑝𝑖 = 0.40 is reported as N even if the subtype forest would have
+preferred PVC; that forest is not used for this beat. If 𝑝𝑖 = 0.70 and its five subtype scores are
+(0.05, 0.10, 0.70, 0.10, 0.05) in the order above, the result is LBBB. These numbers illustrate the
+rule and are not measured results. The second stage’s score is conditional on the first stage
+being passed, so the two stages must be evaluated both separately and together.
+
+
+5.10 Why this architecture was selected
+
+Table 5.2: Reason for each major final-architecture decision.
+
+       Decision                  Reason
+       MLII-only                 matches the signal available in 46 eligible MIT–BIH
+       supervised input          records and avoids hidden two-lead assumptions
+       R-peak alignment          puts comparable cardiac events in comparable positions
+                                 inside every 512-sample window
+       Waveform and              preserve beat morphology, including sharp QRS
+       derivative bins           changes
+       Frequency powers          add compact information about signal energy, scale,
+       and statistics            and distribution
+       Fifteen RR features       represent local rate, premature beats, rhythm
+                                 irregularity, and recent interval trend using
+                                 information reproducible during streaming
+       Normal-only               supplies a learned measure of disagreement with
+       autoencoder               normal ECG structure without requiring arrhythmia
+                                 labels
+       Two-stage hierarchy       allows unsupported abnormal beats to count in binary
+                                 testing without forcing them into one of the five
+                                 supported subtype labels
+       Extra Trees models        handle mixed feature scales and non-linear interactions
+                                 with reproducible tabular-model training
+       Temporal split with       evaluates later signal from each record while removing
+       gap                       direct boundary overlap between development and test
+                                 beats
+5 Methodology                                                                            50
+
+
+  The architecture is therefore best described as a known-patient temporal continuation
+system. Its final performance numbers describe later MLII signal from patients whose earlier
+MLII signal was available during model development. They should not be presented as
+unseen-patient generalisation without a separate patient-disjoint evaluation.
+

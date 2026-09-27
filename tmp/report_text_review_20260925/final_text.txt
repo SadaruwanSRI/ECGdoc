@@ -1,0 +1,4616 @@
+ECG Anomaly Detection and
+Arrhythmia Classification
+AUTHOR
+A.K.S.S. Wimalasena
+SUPERVISOR
+Ms. Sachini Karunarathne
+Department of Mathematics
+University of Ruhuna
+University of Ruhuna
+Department of Mathematics
+
+
+Acknowledgements
+I sincerely thank my supervisor, Ms. Sachini Karunarathne, for her guidance, constructive
+comments, and encouragement throughout this research. I also thank the staff of the Depart-
+ment of Mathematics, University of Ruhuna, for providing the academic environment needed
+to complete this work.
+I am grateful to the researchers and organisations that maintain PhysioNet and the MIT–BIH
+databases. Their carefully annotated physiological data made the experimental part of this
+study possible. Finally, I thank my family and friends for their patience and support during
+the design, implementation, testing, and writing of this report.
+Matara, September 2026
+A.K.S.S. Wimalasena
+
+
+Abstract
+Long ECG recordings contain many beats, making manual review difficult. This study devel-
+oped a single-lead electrocardiogram (ECG) system to detect abnormal beats and classify them
+into five supported groups. A binary Extra Trees model first separates normal and abnormal
+beats. A second Extra Trees model assigns an abnormal subtype. The six output codes are N,
+PVC, PAC, LBBB, RBBB, and AFib. These are study-specific annotation groups; in particular,
+AFib includes atrial flutter, and some groups include escape beats.
+A convolutional autoencoder was trained on the first stored ECG channel of the MIT–BIH
+Normal Sinus Rhythm Database, using 15 subjects for fitting and three for validation. Its
+weights were then fixed. The supervised models used modified Lead II (MLII) data from
+46 MIT–BIH Arrhythmia Database records, representing 45 subject clusters. Each beat was
+described by 223 waveform, spectral, and statistical features, 15 RR-interval features, and four
+autoencoder residual features. Supervised windows were filtered and standardised separately.
+The final 20% of accepted beats in each record formed the temporal test. Earlier beats were
+used for model selection and fitting, with a 16-beat gap before each evaluation boundary.
+Because the test segment had been viewed during earlier development, this was a retrospective
+evaluation of known patients, with a risk of optimistic performance estimates.
+Binary accuracy was 98.81% on 20,969 beats, and conditional subtype accuracy was 97.63%
+on 7,958 supported abnormal beats. Whole-system accuracy was 98.07% and macro F1 was
+0.9524 on 20,043 supported beats. Mean accuracy across subjects was 98.03%, with a subject-
+clustered 95% confidence interval of 96.29–99.25%. However, PAC recall was only 70.63%. A
+limited external check used 5,416 beats from two INCART records belonging to one patient.
+Whole-system accuracy was 92.85%, while binary precision fell to 64.22%.
+The system met the aggregate accuracy and interval-width targets in the retrospective test.
+It did not meet the recall target for every class. Independent patient evaluation and real-sensor
+testing are still needed.
+
+
+Contents
+List of Figures
+viii
+List of Tables
+ix
+1
+Introduction
+1
+1.1
+Background
+. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+1
+1.2
+Research Problem . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+4
+1.3
+Objectives and expected outcomes . . . . . . . . . . . . . . . . . . . . . . . . .
+4
+1.4
+Research questions
+. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+5
+1.5
+Organisation of the report
+. . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+5
+2
+Literature Review
+6
+2.1
+ECG datasets and evaluation protocols
+. . . . . . . . . . . . . . . . . . . . . .
+6
+2.2
+Supervised heartbeat classification . . . . . . . . . . . . . . . . . . . . . . . . .
+7
+2.3
+Normal-reference reconstruction . . . . . . . . . . . . . . . . . . . . . . . . . .
+7
+2.4
+Class imbalance and statistical validation . . . . . . . . . . . . . . . . . . . . .
+8
+2.5
+Research gap and contribution . . . . . . . . . . . . . . . . . . . . . . . . . . .
+8
+3
+Data and Preparation
+11
+3.1
+Data Sources and Roles . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+11
+3.2
+Data Cleaning . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+14
+3.2.1
+Cleaning Checklist . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+14
+3.2.2
+Window Construction . . . . . . . . . . . . . . . . . . . . . . . . . . .
+15
+3.2.3
+Cleaning Yield
+. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+16
+3.2.4
+Preparation during prediction . . . . . . . . . . . . . . . . . . . . . . .
+16
+3.3
+Data Preparation . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+17
+3.3.1
+Prepared Objects . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+17
+3.3.2
+Splits . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+18
+3.3.3
+Exact Model Allocation
+. . . . . . . . . . . . . . . . . . . . . . . . . .
+19
+3.3.4
+Feeding the Frozen System . . . . . . . . . . . . . . . . . . . . . . . . .
+20
+4
+Theoretical Foundations
+21
+4.1
+Why ECG evidence has more than one form . . . . . . . . . . . . . . . . . . .
+21
+4.2
+From voltage to a comparable four-second window
+. . . . . . . . . . . . . . .
+22
+4.3
+Feature extraction theory . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+23
+4.4
+RR timing theory
+. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+25
+
+
+Contents
+v
+4.5
+Normal-only reconstruction theory . . . . . . . . . . . . . . . . . . . . . . . .
+26
+4.5.1
+What the encoder and decoder actually compute . . . . . . . . . . . .
+27
+4.5.2
+How the autoencoder lowers reconstruction loss . . . . . . . . . . . .
+27
+4.6
+Hierarchical classification theory
+. . . . . . . . . . . . . . . . . . . . . . . . .
+29
+4.7
+Why Extra Trees fits this feature design . . . . . . . . . . . . . . . . . . . . . .
+30
+4.7.1
+How the two supervised models are fitted . . . . . . . . . . . . . . . .
+31
+4.8
+Class and patient imbalance theory . . . . . . . . . . . . . . . . . . . . . . . .
+31
+4.9
+Temporal patient adaptation theory . . . . . . . . . . . . . . . . . . . . . . . .
+32
+4.9.1
+Why training, validation, and testing have different jobs . . . . . . . .
+32
+4.10 From saved models to a live ECG decision
+. . . . . . . . . . . . . . . . . . . .
+32
+4.11 Validation theory
+. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+33
+4.12 Summary of the theoretical framework . . . . . . . . . . . . . . . . . . . . . .
+35
+5
+System Architecture and Implementation
+36
+5.1
+System overview . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+36
+5.2
+Input signal and beat window
+. . . . . . . . . . . . . . . . . . . . . . . . . . .
+37
+5.3
+Three trained components . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+38
+5.4
+Normal-only autoencoder . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+39
+5.4.1
+Purpose . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+39
+5.4.2
+Network structure
+. . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+41
+5.4.3
+Encoder block . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+42
+5.4.4
+Bottleneck and decoder mathematics . . . . . . . . . . . . . . . . . . .
+42
+5.4.5
+Normal-reference data and checkpoint . . . . . . . . . . . . . . . . . .
+43
+5.4.6
+How the training update changes network weights . . . . . . . . . . .
+43
+5.4.7
+Four autoencoder residual features . . . . . . . . . . . . . . . . . . . .
+44
+5.5
+Final 242-value feature vector
+. . . . . . . . . . . . . . . . . . . . . . . . . . .
+45
+5.6
+How an Extra Trees model learns
+. . . . . . . . . . . . . . . . . . . . . . . . .
+46
+5.6.1
+Why some training rows have more weight . . . . . . . . . . . . . . .
+47
+5.6.2
+The mathematical question at each tree node
+. . . . . . . . . . . . . .
+47
+5.6.3
+From a tree leaf to an ensemble score . . . . . . . . . . . . . . . . . . .
+48
+5.7
+Binary abnormality detector . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+48
+5.8
+Abnormal-subtype classifier . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+49
+5.9
+Final decision logic
+. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+50
+5.10 Why this architecture was selected
+. . . . . . . . . . . . . . . . . . . . . . . .
+51
+6
+Experimental Method
+52
+6.1
+Method overview . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+52
+6.2
+Research objective and success conditions
+. . . . . . . . . . . . . . . . . . . .
+53
+6.3
+Input data and feature construction . . . . . . . . . . . . . . . . . . . . . . . .
+53
+6.4
+Normal-reference autoencoder training procedure . . . . . . . . . . . . . . . .
+54
+6.5
+Temporal split . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+54
+6.6
+Model selection and final fitting . . . . . . . . . . . . . . . . . . . . . . . . . .
+55
+6.7
+Evaluation order . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+57
+
+
+Contents
+vi
+6.8
+Metrics . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+58
+6.9
+Subject-clustered confidence interval . . . . . . . . . . . . . . . . . . . . . . .
+58
+6.10 Exploratory tests against the 90% target . . . . . . . . . . . . . . . . . . . . . .
+59
+6.11 Reproducibility and leakage controls
+. . . . . . . . . . . . . . . . . . . . . . .
+59
+7
+Results and Statistical Validation
+60
+7.1
+Evaluation populations and sample sizes
+. . . . . . . . . . . . . . . . . . . . .
+60
+7.2
+Model selection
+. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+61
+7.3
+Main temporal results . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+62
+7.4
+Uncertainty and subject variation . . . . . . . . . . . . . . . . . . . . . . . . .
+63
+7.5
+Errors by stage and class . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+64
+7.6
+Limited external INCART check . . . . . . . . . . . . . . . . . . . . . . . . . .
+66
+7.7
+Answers to the research questions . . . . . . . . . . . . . . . . . . . . . . . . .
+67
+8
+Discussion and Conclusion
+68
+8.1
+Main findings
+. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+68
+8.2
+Interpretation of the findings . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+68
+8.3
+Achievement of the objectives . . . . . . . . . . . . . . . . . . . . . . . . . . .
+69
+8.4
+Effect of the preprocessing revision . . . . . . . . . . . . . . . . . . . . . . . .
+69
+8.5
+Limitations . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+69
+8.6
+Further research . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+70
+8.7
+Conclusion . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+70
+Bibliography
+71
+A
+Reproducibility Record
+75
+A.1
+Experiment files . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+75
+A.2
+Frozen constants . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+75
+A.3
+Recorded evaluation targets
+. . . . . . . . . . . . . . . . . . . . . . . . . . . .
+76
+A.4
+Safety statement . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+76
+A.5
+Verification and historical record . . . . . . . . . . . . . . . . . . . . . . . . . .
+76
+
+
+List of Figures
+1.1
+Main components of a simplified ECG beat. Shape features describe the P–
+QRS–T pattern, while RR features describe timing between beats. This is an
+educational drawing, not a diagnostic template.
+. . . . . . . . . . . . . . . . .
+1
+1.2
+Real four-second ECG examples from the MIT–BIH Arrhythmia Database:
+normal record 100, PVC record 208, PAC record 232, LBBB record 109, RBBB
+record 118, and AFib record 203. The dashed line marks the annotated central
+R peak. The examples are used for explanation and are not clinical diagnostic
+templates.
+. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+3
+3.1
+Dataset roles and evaluation boundaries. The healthy NSRDB channel creates
+the frozen normal model. MITDB MLII creates the supervised feature table
+and is split chronologically into development and temporal-test regions.
+. . .
+12
+3.2
+MLII polarity and the channel used by each model.
+. . . . . . . . . . . . . . .
+13
+3.3
+Cleaning real ECG for the two roles. The healthy example is the first channel
+of NSRDB record 16265. The supervised-input example is MLII from MITDB
+record 100. Both become one 512-sample input, but their documented channel
+identities remain different. . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+17
+3.4
+Preparation of normal-reference windows and labelled MLII beats. . . . . . . .
+20
+4.1
+Two evidence scales used by the final model. Morphology describes the local
+shape of a beat; RR timing describes rhythm context around the beat. . . . . .
+21
+4.2
+Learning map for the final ECG system. . . . . . . . . . . . . . . . . . . . . . .
+22
+4.3
+Feature-extraction operations behind the final 242-value vector.
+The tree
+models learn from compact numerical evidence, not from raw ECG samples
+directly. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+24
+4.4
+Normal-only reconstruction principle. A larger residual can indicate novelty,
+but it is evidence only; the final arrhythmia decision is made by the supervised
+hierarchy. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+26
+4.5
+Autoencoder and Extra Trees training mechanisms. . . . . . . . . . . . . . . .
+28
+4.6
+Probability logic of the final hierarchy. The subtype model is conditional: it is
+used only after the abnormality gate is passed. . . . . . . . . . . . . . . . . . .
+29
+4.7
+Theoretical reason for subject-clustered validation. Clustered resampling pre-
+vents one long record from being treated as many independent people. . . . .
+34
+5.1
+Exact runtime order of the final ECG system.
+The autoencoder supplies
+features; the supervised tree models make the final class decision. . . . . . . .
+36
+
+
+List of Figures
+viii
+5.2
+R-peak-aligned beat window used by the final model. The R peak is at sample
+index 200, giving the model pre-QRS context and post-QRS recovery information. 38
+5.3
+Training and use of the saved three-component model. . . . . . . . . . . . . .
+39
+5.4
+Autoencoder architecture with verified tensor dimensions. . . . . . . . . . . .
+41
+5.5
+Autoencoder fitting and validation loss. . . . . . . . . . . . . . . . . . . . . . .
+44
+5.6
+Real healthy and abnormal ECG examples through the frozen autoencoder.
+The residual between input and reconstruction is converted into four numer-
+ical features for the supervised detector. . . . . . . . . . . . . . . . . . . . . . .
+45
+5.7
+Feature-vector layout used by both supervised models. The same 242-value
+vector is passed first to the abnormality detector and, if required, to the subtype
+classifier. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+46
+5.8
+Worked example of entropy reduction in a tree.
+. . . . . . . . . . . . . . . . .
+48
+6.1
+Chronological model selection, refitting, and final testing. . . . . . . . . . . . .
+52
+6.2
+Temporal split audit for every eligible MITDB MLII record. Blue beats are
+available for final fitting, yellow beats are the boundary gap before the test,
+and red beats are the held-out final 20% temporal test. . . . . . . . . . . . . . .
+55
+6.3
+Model selection on the 64–80% validation region.
+The binary detector is
+selected by balanced accuracy and F1; the subtype classifier is selected by
+macro F1 and accuracy. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+56
+6.4
+Populations used for the three evaluation questions. . . . . . . . . . . . . . . .
+57
+7.1
+Three evaluation questions and their test populations. . . . . . . . . . . . . . .
+60
+7.2
+Reference-class composition of the corrected temporal test. . . . . . . . . . . .
+61
+7.3
+Pooled temporal scores after the preprocessing correction. . . . . . . . . . . .
+62
+7.4
+Subject-clustered confidence intervals.
+. . . . . . . . . . . . . . . . . . . . . .
+63
+7.5
+Corrected whole-system accuracy across 45 known-patient clusters. . . . . . .
+64
+7.6
+True and correctly classified supported abnormal beats. PAC remains below
+the 90% recall target.
+. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+65
+7.7
+Whole-system confusion matrix for 20,043 supported temporal beats. . . . . .
+66
+
+
+List of Tables
+1.1
+ECG patterns underlying the six output groups considered in this study.
+. . .
+2
+2.1
+Main papers referenced in this study and their contribution. . . . . . . . . . .
+9
+3.1
+Data sources and their strictly separated roles. . . . . . . . . . . . . . . . . . .
+11
+3.2
+Mapping from MITDB expert annotations to project outputs. . . . . . . . . . .
+14
+3.3
+Cleaning checklist applied before a signal can become a model input. . . . . .
+15
+3.4
+Training, validation, and temporal-test data supplied to each model. . . . . . .
+19
+4.1
+Technologies in the final evidence path and the mathematical task performed
+by each. The web interface displays results and does not train the models.
+. .
+33
+4.2
+How the theory maps to the implemented final system. . . . . . . . . . . . . .
+35
+5.1
+Architecture, training target, and output of each fitted component. . . . . . . .
+38
+5.2
+Organised feature groups in the final architecture. . . . . . . . . . . . . . . . .
+46
+5.3
+Reason for each major final-architecture decision. . . . . . . . . . . . . . . . .
+51
+6.1
+Exact evidence supplied to the final supervised models. . . . . . . . . . . . . .
+53
+7.1
+Distinct denominators for the three evaluation questions. . . . . . . . . . . . .
+61
+7.2
+Corrected temporal results. Confidence intervals estimate equal-subject accu-
+racy, not pooled beat accuracy. . . . . . . . . . . . . . . . . . . . . . . . . . . .
+62
+7.3
+Whole-system performance by supported abnormal output group. . . . . . . .
+64
+7.4
+Corrected model on complete INCART I01 and I02 recordings. . . . . . . . . .
+67
+A.1
+Settings used for the final experiment. . . . . . . . . . . . . . . . . . . . . . . .
+75
+
+
+1 Introduction
+1.1 Background
+An electrocardiogram (ECG) records the small voltage changes that occur when electrical
+activity moves through the heart. Electrodes on the body record this activity from different
+directions. In an ECG trace, the horizontal axis shows time and the vertical axis shows voltage.
+ECG analysis is useful because the pattern changes when a heartbeat starts in a different place,
+happens at a different time, or travels through the heart in a different way.
+Components of one ECG beat. A normal heartbeat starts when the sinoatrial node creates
+an impulse. The P wave shows atrial depolarisation. The short, sharp QRS complex mainly
+shows ventricular depolarisation. The T wave shows ventricular repolarisation. The time
+between two neighbouring R peaks is called the RR interval. It gives information about heart
+rate and rhythm regularity [1]. Figure 1.1 shows these parts in a simple way. In real recordings,
+the same beat can look inverted, stretched, or noisy because of the lead, the patient, the
+electrodes, and the recording conditions.
+time
+ECG
+voltage
+P
+Q
+R
+S
+T
+RR interval
+QRS complex
+Figure 1.1: Main components of a simplified ECG beat. Shape features describe the P–QRS–T pattern,
+while RR features describe timing between beats. This is an educational drawing, not a
+diagnostic template.
+Arrhythmia and the classes considered. Arrhythmias affect the timing or sequence
+of the heart’s electrical activity. Conduction disorders can also change the ECG waveform.
+This study uses one normal-like output group and five abnormal output groups. Table 1.1
+summarises the main physiological cause and visible ECG behaviour for each one. These
+descriptions explain the underlying ECG patterns. The study’s annotation groups are broader
+than these clinical descriptions and are defined in Chapter 3. A clinical diagnosis requires the
+full ECG and patient context [2, 3].
+
+
+1 Introduction
+2
+Table 1.1: ECG patterns underlying the six output groups considered in this study.
+Pattern
+Main cause
+Typical ECG features
+Normal sinus
+rhythm
+The impulse begins in the
+sinoatrial node and follows the
+normal conduction path.
+Repeated P–QRS–T patterns and
+generally regular RR intervals. It
+supplies the reference against
+which unusual beats are
+compared.
+Premature
+ventricular
+contraction
+(PVC)
+A premature impulse begins in
+a ventricle instead of following
+the normal path from the atria.
+The beat occurs early and often
+has a wide, unusual QRS, followed
+by a pause. Detection is important
+because it is a clear ventricular
+abnormality and can occur
+repeatedly.
+Premature
+atrial
+contraction
+(PAC)
+A premature impulse begins in
+an atrial location outside the
+sinoatrial node.
+The beat occurs early; the P wave
+may change, while the QRS can
+remain narrow and similar to
+normal. Its subtle shape makes
+PAC difficult to separate from
+normal beats.
+Left bundle
+branch block
+(LBBB)
+Electrical conduction through
+the left bundle branch is
+delayed or blocked.
+The ventricles activate in an
+altered sequence, producing a
+broad, changed QRS. Recognition
+is important because the pattern
+can be associated with underlying
+cardiac disease.
+Right bundle
+branch block
+(RBBB)
+Electrical conduction through
+the right bundle branch is
+delayed or blocked.
+The later part of the QRS changes
+and can show a second peak in
+some leads. It must be separated
+from LBBB because the delayed
+side is different.
+Atrial
+fibrillation
+(AFib)
+Atrial electrical activity
+becomes rapid and disorganised
+rather than following one
+regular atrial impulse.
+Consistent P waves disappear and
+RR intervals become irregular.
+Identification is important
+because AFib is linked with
+clinically important complications
+and requires rhythm-level
+evidence.
+Figure 1.2 shows real labelled ECG segments from the MIT–BIH Arrhythmia Database
+instead of drawings. Each panel comes from the final temporal-test portion of its record. For
+each stated record and class, the displayed window is the one closest to that record-and-class
+group’s mean waveform by squared distance. This rule selects an example close to the group
+mean. The signals were resampled to 128 Hz, standardised, and aligned so the labelled R peak
+is at 1.5625 seconds.
+
+
+1 Introduction
+3
+0
+2
+4
+6
+standardised
+voltage
+RR = 0.781 s
+Normal - MIT-BIH record 100
+−2
+0
+2
+4
+standardised
+voltage
+RR = 0.547 s
+PVC - MIT-BIH record 208
+−2
+0
+2
+4
+standardised
+voltage
+RR = 0.758 s
+PAC - MIT-BIH record 232
+−1
+0
+1
+2
+3
+standardised
+voltage
+RR = 0.719 s
+LBBB - MIT-BIH record 109
+0.0
+0.5
+1.0
+1.5
+2.0
+2.5
+3.0
+3.5
+4.0
+time from window start (seconds)
+−2
+0
+2
+standardised
+voltage
+RR = 0.852 s
+RBBB - MIT-BIH record 118
+0.0
+0.5
+1.0
+1.5
+2.0
+2.5
+3.0
+3.5
+4.0
+time from window start (seconds)
+−1
+0
+1
+2
+3
+standardised
+voltage
+RR = 0.430 s
+AFib - MIT-BIH record 203
+Real labeled ECG segments from the locked final 20%
+Dashed line: annotated R peak used to align the four-second window.
+Figure 1.2: Real four-second ECG examples from the MIT–BIH Arrhythmia Database: normal record
+100, PVC record 208, PAC record 232, LBBB record 109, RBBB record 118, and AFib record
+203. The dashed line marks the annotated central R peak. The examples are used for
+explanation and are not clinical diagnostic templates.
+These examples show why one simple threshold is not enough. PVC, LBBB, and RBBB
+mainly change beat shape. PAC can occur early while still looking close to a normal beat.
+AFib is often clearer from changing intervals and rhythm context. For this reason, the final
+system combines modified Lead II (MLII) waveform shape, frequency information, RR history,
+and disagreement with a learned normal reconstruction.
+Finding these patterns matters because long ECG recordings can contain too many beats
+for continuous manual review. An automated research system can mark suspicious regions,
+count events, and help a reviewer focus attention. At the same time, an error can miss an
+abnormality or create an unnecessary alarm. Therefore, accuracy, per-class recall, confidence
+intervals, and clear limits are all needed. The system developed here is for research evaluation
+only. It is not a replacement for a clinician.
+
+
+1 Introduction
+4
+1.2 Research Problem
+Main research problem: How accurately can a two-stage ECG system combine normal-
+reference reconstruction, beat shape, and heartbeat timing to detect abnormal beats and
+classify five supported abnormal groups in later recordings from known patients? Can
+it exceed 90% whole-system accuracy while meeting the study’s confidence-interval and
+per-class recall targets?
+The main problem contains four connected sub-problems:
+1. ECG shape varies between patients and leads, so harmless personal morphology can
+resemble an abnormality.
+2. A two-stage system can fail at the abnormality gate or at subtype classification; a missed
+abnormal beat never reaches the second stage.
+3. Normal and arrhythmia classes have unequal numbers of beats and patients, so ordinary
+accuracy can hide failure on a rare class.
+4. Thousands of neighbouring beats from one patient are correlated. Evaluation must
+separate model fitting from testing and estimate uncertainty using complete patient
+clusters. Any earlier exposure to the test data must also be reported.
+The final experiment handles these problems with a chronological split. The first 64% of
+each MIT–BIH Arrhythmia Database (MITDB) record trains candidate models, the next 16%
+selects the models and threshold, and the final 20% is used for temporal testing. The present
+model fitting excludes test rows, but the segment was observed during earlier development.
+Percentages count accepted beats in chronological order, rather than exact recording duration.
+The result is therefore a retrospective patient-adapted temporal evaluation, with possible
+selection optimism and no confirmatory claim about completely new patients.
+1.3 Objectives and expected outcomes
+Main objective. The main objective is to develop and statistically evaluate an ECG system
+that first detects abnormal beats and then classifies five supported abnormal groups in later
+ECG from known patients.
+Specific objectives.
+1. Train a normal-only autoencoder using the first ECG channel from all 18 MIT–BIH
+Normal Sinus Rhythm Database subjects, with separate fitting and validation subjects,
+and use reconstruction errors as features.
+2. Use the earlier 80% of every MITDB record containing MLII for supervised development
+and exclude the final 20% from fitting and selection in the rerun.
+3. Build a binary abnormality detector using ECG morphology, spectrum, RR timing, and
+autoencoder-residual features.
+
+
+1 Introduction
+5
+4. Build a second classifier for PVC, PAC, LBBB, RBBB, and AFib using the same MLII signal
+and RR context with a delay until the required signal and next R peak are available.
+5. Measure abnormality-detection accuracy, conditional subtype accuracy, and complete
+six-class system accuracy separately.
+6. Report the true and correctly classified count for every supported abnormal group.
+7. Estimate uncertainty with equal-subject accuracy, a complete-subject bootstrap confi-
+dence interval, and subject-level statistical tests.
+Expected outcomes. The planned outcomes are:
+• a reproducible, deployable two-stage research prototype;
+• abnormality-detection, subtype, and whole-system point accuracies above 90% on the
+fixed temporal test;
+• a whole-system 95% confidence interval whose lower bound exceeds 90% and whose
+total width is no more than three percentage points;
+• per-arrhythmia results that reveal whether every supported abnormal class exceeds 90%
+recall; and
+• a clear account of the data, statistical, hardware, and clinical limits of the model.
+1.4 Research questions
+RQ1 How does the frozen NSRDB reconstruction branch contribute evidence to the super-
+vised hierarchy, and what evidence supports its independent benefit?
+RQ2 What are binary, conditional-subtype, and complete six-class performance on the retro-
+spective temporal evaluation?
+RQ3 What do equal-subject accuracy and subject-clustered uncertainty show about variation
+across known patients?
+RQ4 Do the measured accuracy, interval precision, and class recalls meet the study targets,
+and what does the external check show?
+1.5 Organisation of the report
+Chapters 2 and 3 review related work and define the data and labels. Chapters 4 and 5
+explain the theory and system design. Chapter 6 describes the experiment, Chapter 7 presents
+the results, and Chapter 8 discusses the findings and future work.
+
+
+2 Literature Review
+This chapter reviews research on ECG abnormality detection, heartbeat classification, and
+evaluation when earlier ECG from the same patient is available. The review focuses on four
+areas: ECG datasets and evaluation protocols, supervised heartbeat classification, normal-only
+anomaly detection, and statistical validation. It is a focused narrative review, not a systematic
+review or meta-analysis. Papers were selected because they explain a design choice, show an
+important alternative, or reveal a risk in patient-independent evaluation.
+Headline accuracy is not used to rank the papers. ECG studies often use different leads,
+labels, record lengths, patient splits, and output units. For example, a patient-specific beat
+classifier, a 12-lead diagnostic model, and the six-class system in this report answer different
+questions. Their accuracy values cannot be compared directly without accounting for these
+differences. This matters because a high score may come from an easier class mapping, or
+from placing beats from the same person in both training and test data.
+2.1 ECG datasets and evaluation protocols
+PhysioNet provides open physiological databases and common software tools [4]. The MIT–
+BIH Arrhythmia Database (MITDB) became a widely used benchmark because it contains
+expert beat annotations and two ECG channels [2, 5]. The MIT–BIH Normal Sinus Rhythm
+Database provides 18 real long-term recordings from subjects without significant arrhythmias
+[6]. It is suitable for normal-only learning, but its headers identify the channels only as ECG1
+and ECG2. The present study therefore uses one fixed first channel and reports this uncertainty
+instead of assigning an unsupported anatomical lead name.
+The evaluation protocol is as important as the database. A beat-wise random split can place
+very similar beats from one patient in both training and test sets. An inter-patient split instead
+tests whether the learned boundary transfers to a different person. De Chazal et al. established
+an influential inter-patient heartbeat study using ECG morphology and heartbeat-interval
+features [3]. Later research continued to treat patient variation as a central problem rather
+than assuming that all beats are independent [7, 8].
+This evidence supports a clearly defined evaluation protocol instead of a single ambiguous
+score. The final experiment keeps chronological order, uses the earlier 80% of each record
+for development and the final 20% for testing. Boundary gaps separate the regions, and per-
+centages count accepted beats. Although the rerun preserves chronology, earlier development
+already exposed the final segment. Its results are retrospective temporal evidence with possible
+selection optimism. The separate NSRDB cohort is used only for the normal autoencoder; no
+healthy record trains either supervised tree model.
+
+
+2 Literature Review
+7
+2.2 Supervised heartbeat classification
+Early automatic ECG systems used measured morphology and timing. De Chazal et al.
+combined waveform information with RR intervals, showing why beat shape and beat timing
+should be treated as complementary evidence [3]. This idea remains useful even when the
+classifier changes: morphology helps describe PVC and bundle-branch beats, while RR history
+helps describe premature beats and irregular rhythms.
+Huang et al.
+studied inter-patient separation of normal, LBBB, and RBBB beats with
+ensemble classifiers [9].
+That study is particularly relevant because bundle-branch mor-
+phology can persist through a record. However, its three-class task is narrower than the
+present N/PVC/PAC/LBBB/RBBB/AFib task. Its findings support considering morphology and
+ensemble learning, but its accuracy does not provide a direct benchmark for the broader task
+in this study.
+Feature-based models have two practical advantages for this dataset.
+They make the
+evidence easier to inspect, and their settings can be adjusted when few patients represent
+a class. Their weakness is that hand-designed summaries may miss useful waveform detail.
+This trade-off led to the combined design used here: pooled waveform and RR features are
+kept, while an autoencoder adds learned normal-reconstruction evidence.
+One-dimensional convolutional neural networks can learn ECG morphology directly. Ki-
+ranyaz et al. developed a patient-specific real-time classifier [10]. Its patient adaptation is
+useful when labelled beats from the target person exist. It is therefore directly relevant to
+the final patient-adapted setting, but it does not answer performance before seeing a new
+patient. Acharya et al. classified arrhythmias from ECG segments with a convolutional
+network [11]. Segment- level work demonstrates the value of learned temporal features, but
+its label definition and split must match the target study before accuracy can be compared.
+Large deep-learning studies have also reported strong performance on ambulatory single-
+lead recordings and 12-lead diagnostic ECGs [12, 13]. These works show the potential of
+deep networks when many patients and labels are available. They also show why dataset
+scale matters. Their databases, lead systems, and diagnostic outputs are different from the
+small six-class MITDB experiment, so they are evidence for a method family rather than a
+performance baseline for this report.
+Sequence models use neighbouring beats to add rhythm context. Mousavi et al. compared
+intra-patient and inter-patient heartbeat classification with a sequence-to-sequence approach
+[7]. Zhang et al. added an adversarial subject classifier so that the learned representation
+would contain less patient identity [8]. These approaches address generalisation directly, but
+they also need enough independent patients. The present study has only 45 eligible subject
+clusters, so the final system uses a simpler tree hierarchy. This is a data-availability decision,
+not a claim that deep learning is generally inferior.
+2.3 Normal-reference reconstruction
+Autoencoders learn an internal representation by reconstructing their input [14]. Denoising
+training corrupts the input but retains a clean target, encouraging the network to learn stable
+
+
+2 Literature Review
+8
+structure rather than an exact copy [15]. In anomaly detection, the model is often trained on
+normal sequences and reconstruction error is used as evidence that a new sequence differs
+from the learned normal pattern [16, 17].
+Temporal convolutional autoencoders use convolution and dilation to cover longer time
+patterns efficiently. Thill et al. evaluated this idea on time-series anomaly tasks that included
+ECG [18]. ECG-specific studies have also investigated convolutional variational and adversar-
+ial autoencoders [19, 20]. Together, these studies support using a convolutional autoencoder
+for normal ECG representation.
+Reconstruction error alone does not establish a diagnosis. A high-capacity model may
+reconstruct an abnormal input well, while noise or a different electrode position may increase
+the error of a normal input. For that reason, this report does not use a single reconstruction
+threshold for its final classification. It uses four residual summaries as features in a supervised
+abnormal detector. The normal-only idea is kept, but the final decision can combine residual,
+morphology, spectral, and RR evidence.
+2.4 Class imbalance and statistical validation
+ECG datasets contain unequal class counts and unequal numbers of patients per class. A
+high overall accuracy can therefore hide failure on a rare arrhythmia. Precision–recall analysis
+is more informative than ROC analysis in strongly imbalanced binary problems [21], while
+class-balanced learning can increase the influence of rare classes [22]. This thesis therefore
+reports sensitivity, specificity, balanced accuracy, macro F1, and per-class recall in addition to
+accuracy.
+Thousands of beats from a small number of subjects do not become thousands of indepen-
+dent patients. Resampling individual beats can underestimate uncertainty and produce con-
+fidence intervals that are too narrow. Patient-cluster bootstrap methods keep within-patient
+dependence [23]. The final experiment gives each of 45 subject clusters equal weight and
+resamples complete subjects. This also follows modern guidance to report the data split, model
+development, and validation population clearly [24].
+2.5 Research gap and contribution
+The reviewed studies cover normal-reference reconstruction, waveform and RR features,
+and methods that reduce dependence on patient identity. They also address bundle-branch
+classification and statistical analysis of clustered data. However, they study different tasks.
+Some use different labels or more leads; others adapt to a known patient or detect an anomaly
+without assigning a subtype.
+This study brings these methods together in a two-stage system and evaluates both its
+component models and its complete output. Its contribution is the integration and evaluation
+of the following elements:
+1. learn normal reconstruction from one fixed channel of all 18 real MIT–BIH normal-sinus
+recordings;
+
+
+2 Literature Review
+9
+2. use a chronological 80/20 experiment for patient-adapted temporal evidence;
+3. exclude the final test portion from selection in the rerun and report its earlier use during
+development; and
+4. report separate abnormal, subtype, whole-system, patient-level, and uncertainty results.
+Table 2.1 summarises the papers that contributed most directly to the data protocol, model
+architecture, and evaluation method used in this research.
+Table 2.1: Main papers referenced in this study and their contribution.
+Paper title
+Author(s)
+Main contribution used in this
+research
+MIT–BIH Normal Sinus Rhythm
+Database [6]
+George B. Moody
+Provides the 18 real long-term
+recordings without significant
+arrhythmias used for normal-only
+autoencoder development; its
+generic channel names also motivate
+explicit reporting of lead
+uncertainty.
+Automatic Classification of
+Heartbeats Using ECG
+Morphology and Heartbeat
+Interval Features [3]
+Philip de Chazal, Maria
+O’Dwyer, and Richard
+B. Reilly
+Established the value of combining
+ECG morphology with RR intervals
+and carefully defining the evaluation
+population. This supports the
+morphology, timing, and reporting
+choices of the present system.
+Reducing the Dimensionality of
+Data with Neural Networks [14]
+Geoffrey E. Hinton and
+Ruslan R.
+Salakhutdinov
+Provides the representation-learning
+basis of the autoencoder used to
+learn normal ECG structure.
+Extracting and Composing Robust
+Features with Denoising
+Autoencoders [15]
+Pascal Vincent, Hugo
+Larochelle, Yoshua
+Bengio, and
+Pierre-Antoine
+Manzagol
+Supports adding noise to the input
+while keeping a clean reconstruction
+target, so the autoencoder learns
+stable normal patterns.
+Temporal Convolutional
+Autoencoder for Unsupervised
+Anomaly Detection in Time Series
+[18]
+Markus Thill, Wolfgang
+Konen, Hao Wang, and
+Thomas Baeck
+Supports temporal convolution,
+dilation, and reconstruction error for
+detecting unusual time-series
+patterns, including ECG signals.
+Inter- and Intra-patient ECG
+Heartbeat Classification for
+Arrhythmia Detection: A
+Sequence to Sequence Deep
+Learning Approach [7]
+Sajad Mousavi and
+Fatemeh Afghah
+Shows the importance of
+neighbouring-beat rhythm context
+and clearly separates intra-patient
+from inter-patient evaluation.
+Interpatient ECG Heartbeat
+Classification with an Adversarial
+Convolutional Neural Network [8]
+Jing Zhang, Aiping Liu,
+Deng Liang, Xun Chen,
+and Min Gao
+Explains patient-identity leakage
+and why results from known-patient
+temporal tests must not be presented
+as new-patient performance.
+
+
+2 Literature Review
+10
+Paper title
+Author(s)
+Main contribution used in this
+research
+Detection of Inter-Patient Left and
+Right Bundle Branch Block
+Heartbeats in ECG Using
+Ensemble Classifiers [9]
+Huifang Huang, Jie Liu,
+Qiang Zhu, Ruiping
+Wang, and Guangshu
+Hu
+Supports morphology and ensemble
+classifiers for LBBB and RBBB, while
+showing that this specialised
+three-class task is narrower than the
+task in this report.
+The Precision–Recall Plot Is More
+Informative than the ROC Plot
+When Evaluating Binary
+Classifiers on Imbalanced Datasets
+[21]
+Takaya Saito and Marc
+Rehmsmeier
+Justifies reporting precision, recall,
+and F1 because the ECG classes are
+imbalanced and accuracy alone can
+hide failure.
+Bootstrap Estimation of
+Diagnostic Accuracy with
+Patient-Clustered Data [23]
+Carolyn M. Rutter
+Provides the reason for resampling
+complete patient records instead of
+treating correlated beats as
+independent observations.
+TRIPOD+AI Statement: Updated
+Guidance for Reporting Clinical
+Prediction Models That Use
+Regression or Machine Learning
+Methods [24]
+Gary S. Collins et al.
+Supports transparent reporting of
+the patient split, model-development
+process, temporal evaluation,
+limitations, and intended use.
+The next chapter defines the data sources and annotation groups used to put these design
+choices into practice. The study evaluates their combination; it does not establish that any
+single component improves performance on its own.
+
+
+3 Data and Preparation
+This chapter identifies the ECG sources, explains how the signals are prepared, and shows how
+examples enter model fitting, validation, and the temporal test. Keeping these roles separate
+prevents healthy data or test labels from being used in the wrong part of the study.
+3.1 Data Sources and Roles
+Two public PhysioNet databases supply model development data.
+A separate, limited
+external INCART check is reported in the results chapter.
+The MIT–BIH Normal Sinus
+Rhythm Database (NSRDB) supplies normal-reference ECG for the autoencoder. The MIT–BIH
+Arrhythmia Database (MITDB) supplies labelled normal and abnormal beats for the detector,
+subtype classifier, and final temporal evaluation [4, 6, 5].
+Table 3.1: Data sources and their strictly separated roles.
+Source
+Available data
+Use in this study
+MIT–BIH
+Normal Sinus
+Rhythm DB
+(NSRDB)
+18 real long-term ECG
+recordings from five
+men aged 26–45 and 13
+women aged 20–50,
+with no significant
+arrhythmias; two stored
+channels named ECG1
+and ECG2; 128 Hz;
+approximately 23–26
+hours per record [6].
+The complete first stored ECG
+channel from every record is
+processed. Fifteen subjects fit
+the normal-only autoencoder
+and three different subjects
+validate it and determine the
+normal residual threshold.
+MIT–BIH
+Arrhythmia DB
+(MITDB)
+48 approximately
+30-minute, two-channel
+ambulatory ECG
+records from 47 subjects
+(25 men aged 32–89 and
+22 women aged 23–89),
+sampled at 360 Hz, with
+expert beat and rhythm
+annotations [5, 2].
+Only the 46 records
+containing MLII are eligible.
+Their earlier 80% supplies
+supervised development and
+their final 20% supplies the
+temporal test. These records
+represent 45 subject clusters
+because records 201 and 202
+belong to one person.
+
+
+3 Data and Preparation
+12
+Figure 3.1 summarises these roles. NSRDB supplies normal-reference windows for the
+autoencoder, while MITDB supplies labelled MLII beats for supervised development and
+temporal testing.
+NSRDB healthy source
+18 long-duration records
+first stored ECG channel only
+15 subjects fit AE
+3 subjects validate AE
+MITDB labeled source
+46 MLII-containing records
+records 102/104 excluded
+45 subject clusters
+expert beat/rhythm labels
+Frozen normal model
+Denoising U-Net AE
+512-sample windows
+four residual features
+MLII feature table
+R-aligned MLII windows
+morphology + spectrum
+RR context + AE residuals
+Development
+first 64%: fit candidates
+next 16%: choose models
+16-beat gaps at boundaries
+Temporal test
+final 20% of accepted beats
+20,969 binary beats
+20,043 six-class beats
+healthy only
+MLII labels
+residuals
+80%
+20%
+The temporal test uses later signal from the same MITDB patients; it is not an unseen-patient test.
+Dataset roles and evaluation boundaries
+Figure 3.1: Dataset roles and evaluation boundaries. The healthy NSRDB channel creates the frozen
+normal model. MITDB MLII creates the supervised feature table and is split chronologically
+into development and temporal-test regions.
+Why NSRDB is used for healthy training. NSRDB contains real long-duration ECG
+from subjects reported to have no significant arrhythmias. This matches the autoencoder idea:
+the network sees normal structure without supervised arrhythmia labels. This is a nominally
+normal source cohort, not an annotation-verified guarantee that every window is normal. The
+preparation code does not exclude windows using NSRDB beat annotations. All 18 subjects
+and their complete recordings enter the cleaning process, giving 437.49 hours of source ECG.
+Complete recordings also expose the model to normal within-day variation instead of a short
+selected excerpt.
+Exactly one channel is used. NSRDB headers call the two waveforms ECG1 and ECG2;
+they do not identify either as a standard anatomical lead. This study therefore selects the first
+stored channel consistently and describes it as the first NSRDB ECG channel. It is not renamed
+Lead II. The second channel never enters autoencoder fitting, validation, threshold estimation,
+or residual calculation.
+The supervised branch uses MLII only.
+Modified Lead II is a bipolar torso lead with
+a negative RA-equivalent electrode on the right upper torso and a positive LL-equivalent
+electrode on the left lower torso. Figure 3.2 shows this polarity schematically; the separate
+
+
+3 Data and Preparation
+13
+reference electrode is shown for the project’s sensor connection. It does not represent a second
+ECG channel. PhysioNet describes the modified torso lead and its generally prominent normal
+QRS complexes [25, 5]. The loader selects MLII by its header name rather than assuming a
+channel number. MLII is stored first in 45 eligible records; record 114 stores V5 first and MLII
+second. Records 102 and 104 contain V5 and V2 but no MLII and are excluded. Consequently,
+the detector, classifier, temporal test, and installed replay all receive one MLII waveform.
+Both data streams contain one channel, but their lead identities differ: the autoencoder
+learns healthy structure from the first NSRDB channel, while the supervised hierarchy oper-
+ates on MLII. This source difference is a limitation because the electrode placement for the
+NSRDB channel is not documented.
+A  MLII polarity and torso placement
+MLII
+axis
+Negative (-)
+RA-equivalent location
+Right upper torso
+Positive (+)
+LL-equivalent location
+Left lower torso
+Reference (RL)
+Sensor reference
+Front view: patient's right is on the left of the drawing.
+B  One channel per input; channel identities differ
+Normal autoencoder: NSRDB
+First stored channel: ECG1
+Anatomical placement is unspecified.
+Used to learn a normal ECG reference.
+Supervised models: MITDB
+Select MLII by its header name.
+Record 114: MLII is the second channel.
+Exclude 102 and 104: neither has MLII.
+Figure 3.2: MLII polarity and the channel used by each model. Panel A is an anterior-view schematic
+of the modified Lead-II axis, with the project’s reference connection shown separately; it
+is not an exact map of the database electrode coordinates [25]. Panel B distinguishes the
+NSRDB ECG1 normal reference from the MLII input used by the supervised models.
+Reference labels. MITDB expert annotations are mapped to the six project outputs as
+shown in Table 3.2. AFib is determined from the rhythm annotation around a beat; the other
+targets mainly use beat symbols.
+
+
+3 Data and Preparation
+14
+Table 3.2: Mapping from MITDB expert annotations to project outputs.
+Output
+MITDB evidence
+Interpretation
+N
+N, e, j outside AFib/AFL
+normal-like/escape group
+PVC
+V, E
+ventricular premature or escape beat
+PAC
+A, a, J, S
+supraventricular premature beat
+LBBB
+L
+left bundle branch block beat
+RBBB
+R
+right bundle branch block beat
+AFib
+normal-like beat inside AFIB/AFL rhythm
+atrial fibrillation/flutter context
+The class codes are project groupings, not exact clinical diagnoses or the standard AAMI
+five-class scheme. N includes atrial and junctional escape beats; PVC includes ventricular
+escape beats; PAC includes nodal and supraventricular premature beats.
+AFib combines
+fibrillation and flutter rhythm annotations only when the beat symbol maps to N. Other
+supported beat types retain their morphology label during AFIB/AFL. Consequently, AFib
+recall here is neither pure AF sensitivity nor episode-level AF detection.
+Unsupported symbols remain abnormal in binary evaluation and are excluded from six-class
+scoring. At runtime, a gated unsupported abnormality still receives one of the five available
+subtype labels. The prepared MLII dataset contains 104,755 accepted beats: 63,073 in group N
+and 41,682 abnormal. Of these, 100,072 have a supported six-class label.
+3.2 Data Cleaning
+Data preparation converts the two ECG sources into a common input shape: one four-
+second signal with 512 samples. The supervised preparation rules were fixed for the rerun
+and are also used during session prediction. NSRDB retains its original preparation procedure.
+Figure 3.3 shows the full transformation for one healthy NSRDB segment and one MITDB
+MLII beat.
+3.2.1 Cleaning Checklist
+Table 3.3 lists the preparation steps and their purpose. Rejected windows do not enter model
+fitting or evaluation.
+
+
+3 Data and Preparation
+15
+Table 3.3: Cleaning checklist applied before a signal can become a model input.
+Step
+What is done
+Why it matters
+Required
+channel
+NSRDB must provide ECG1;
+MITDB must provide MLII.
+Missing required signals stop
+processing.
+Prevents accidental use of
+ECG2, V5, V2, or another
+non-matching lead.
+Sampling rate
+NSRDB remains at 128 Hz.
+MITDB MLII is resampled from
+360 Hz to 128 Hz with
+polyphase anti-aliasing.
+Makes every four-second
+model window exactly 512
+samples.
+Band-pass filter
+A Butterworth band-pass with
+prototype order four and
+cutoffs 0.5–50 Hz uses
+forward–backward filtering.
+For supervised inputs this is
+applied within the four-second
+window [26, 27].
+Reduces baseline drift and
+high-frequency noise while
+avoiding filter-induced
+phase delay.
+Amplitude
+standardisation
+Each window is converted to
+approximately zero mean and
+unit standard deviation.
+Reduces gain differences
+while preserving the
+relative P–QRS–T shape.
+Window quality
+check
+Corrected supervised windows
+must be finite and non-flat.
+Both neighbouring R peaks
+must be observed.
+Rejects unusable inputs.
+These checks do not
+establish clinical signal
+quality or remove all
+motion artifacts.
+3.2.2 Window Construction
+The autoencoder and supervised hierarchy build windows in different ways, but the final
+array shape is the same. The autoencoder receives consecutive, non-overlapping four-second
+windows from the first stored NSRDB channel. The supervised MLII windows are aligned to a
+beat: 200 samples before the R peak and 312 samples starting at the R peak. During offline
+experiments, expert annotations give the R-peak location for alignment and later scoring.
+During live use, detected R peaks replace those annotations.
+For samples 𝑥1, . . . ,𝑥𝑛inside one prepared model window, amplitude standardisation is
+𝑧𝑖=
+𝑥𝑖−𝜇
+𝜎+ 10−8,
+𝜇= 1
+𝑛
+𝑛
+∑︁
+𝑖=1
+𝑥𝑖.
+(3.1)
+The corrected supervised pipeline filters each extracted window and applies this operation
+locally. The original experiment instead standardised each complete MITDB record before
+extracting windows. That used test-region signal statistics during preparation and differed
+
+
+3 Data and Preparation
+16
+from sensor chunks. The results reported here use the local preparation procedure. NSRDB
+remains the frozen reference checkpoint, with block filtering followed by per-window scaling.
+3.2.3 Cleaning Yield
+The healthy NSRDB recordings produce many candidate windows because complete records
+are used instead of short excerpts. Across the 18 complete NSRDB records, 393,744 candidate
+windows were formed. The quality checks kept 345,850 windows and rejected 47,894. These
+accepted windows were then split into 288,673 autoencoder fitting windows and 57,177 vali-
+dation windows.
+MITDB cleaning produces beat-aligned MLII examples. The prepared MLII dataset contains
+104,755 beats: 63,073 in group N and 41,682 abnormal. Unsupported abnormal symbols are still
+used for binary abnormality evaluation, but they are excluded from six-class subtype scoring.
+3.2.4 Preparation during prediction
+The corrected hierarchy applies the same local window filtering, standardisation and feature
+order during fitting, offline scoring and installed use. Database replay first resamples the signal.
+Sensor acquisition supplies 128 Hz samples. Labels never enter a prediction. The live backend
+waits until there is enough signal around a detected R peak and enough RR context. It then
+feeds one prepared MLII window to the frozen system. Neither supervised model is retrained
+during prediction.
+
+
+3 Data and Preparation
+17
+0
+1
+2
+3
+4
+5
+6
+7
+8
+source time (s)
+−1
+0
+1
+2
+3
+mV
+A. Autoencoder: NSRDB record 16265, first channel (ECG1)
+1. Raw source signal
+0
+1
+2
+3
+4
+5
+6
+7
+8
+source time (s)
+−0.5
+0.0
+0.5
+1.0
+mV
+B. Detector/classifier: MITDB record 100, MLII
+1. Raw source signal
+0
+1
+2
+3
+4
+5
+6
+7
+8
+time after resampling (s)
+−1
+0
+1
+2
+3
+mV
+2. Resample to 128 Hz + 0.5--50 Hz band-pass
+0
+1
+2
+3
+4
+5
+6
+7
+8
+time after resampling (s)
+0.0
+0.5
+1.0
+mV
+2. Resample to 128 Hz + 0.5--50 Hz band-pass
+0.0
+0.5
+1.0
+1.5
+2.0
+2.5
+3.0
+3.5
+4.0
+model-window time (s)
+−2
+0
+2
+4
+6
+z score
+3. Standardise each non-overlapping 4 s window
+0.0
+0.5
+1.0
+1.5
+2.0
+2.5
+3.0
+3.5
+4.0
+model-window time (s)
+0
+2
+4
+6
+z score
+3. Standardise each R-aligned 4 s beat window
+R peak at sample 200
+Real ECG cleaning for the two one-channel model inputs
+Figure 3.3: Cleaning real ECG for the two roles. The healthy example is the first channel of NSRDB
+record 16265. The supervised-input example is MLII from MITDB record 100. Both become
+one 512-sample input, but their documented channel identities remain different.
+3.3 Data Preparation
+Data preparation decides which cleaned examples are allowed to fit a model, which exam-
+ples choose model settings, and which examples are held back for the final temporal result.
+Figure 3.4 shows this flow from raw source to frozen prediction.
+3.3.1 Prepared Objects
+After cleaning, the study keeps two kinds of prepared object:
+• NSRDB window: a normal-reference [1, 512] window from the first stored ECG chan-
+nel. It has no arrhythmia label and is used only by the normal autoencoder.
+• MITDB beat: an R-aligned MLII [1, 512] window with record identity, binary nor-
+mal/abnormal truth, supported subtype truth when available, and RR timing context.
+The autoencoder input tensor has shape [𝐵, 1, 512]. The supervised detector and subtype
+
+
+3 Data and Preparation
+18
+classifier do not receive raw samples alone. Each MITDB beat is converted into the same
+242-value MLII feature vector:
+242 values = 230 morphology, spectrum, statistics, and base-RR values
++ 8 causal RR-history values
++ 4 autoencoder residual values.
+The subtype model is fitted only on the five supported abnormal classes: PVC, PAC, LBBB,
+RBBB, and AFib.
+3.3.2 Splits
+The autoencoder split is subject-disjoint. A seeded split assigns 15 complete NSRDB records
+to fitting and three different records (16420, 16483, and 16795) to validation. This produces
+288,673 fitting windows and 57,177 validation windows. Validation selects the checkpoint
+and estimates the normal residual threshold. There is no separate healthy test because the
+autoencoder is frozen before it contributes residual features to MITDB evaluation.
+The MITDB split is chronological inside every eligible record:
+• the first 64% fits candidate supervised models;
+• the next 16% selects the model structures and abnormal-score threshold;
+• a 16-beat gap is removed before both the validation and test boundaries during selection;
+and
+• the final 20% evaluates the completed frozen hierarchy.
+Percentages count accepted beats in chronological order, not exact elapsed time. Final refitting
+uses the earlier 80% while retaining the gap before the test. The procedure checks that signal
+windows do not overlap across each boundary. The test had been observed during earlier
+development, making this a retrospective known-patient evaluation with possible optimism.
+
+
+3 Data and Preparation
+19
+3.3.3 Exact Model Allocation
+Table 3.4: Training, validation, and temporal-test data supplied to each model.
+Model
+Candidate training
+Validation
+Final fitting and
+testing
+Autoencoder
+288,673
+first-channel
+windows from 15
+complete NSRDB
+records
+57,177 windows
+from 3 different
+complete NSRDB
+records
+Frozen while every
+MLII test beat
+produces four
+residual features
+Abnormality
+detector
+66,285 MLII beats:
+40,469 normal and
+25,816 abnormal
+16,029 beats: 9,664
+normal and 6,365
+abnormal
+Fitted on 83,050
+development beats;
+tested on 20,969
+temporal-test beats
+Subtype
+classifier
+22,844 supported
+abnormal MLII
+beats
+5,651 supported
+abnormal beats
+Fitted on 28,758
+supported abnormal
+beats; conditionally
+tested on 7,958
+supported abnormal
+beats
+The supported six-output test contains 20,043 beats: 12,085 N, 1,527 PVC, 589 PAC, 1,481
+LBBB, 1,383 RBBB, and 2,978 AFib. Another 926 unsupported abnormal beats remain in binary
+testing but not six-class scoring.
+
+
+3 Data and Preparation
+20
+A  Normal-reference data
+B  Labelled MLII beat data
+NSRDB: ECG1
+18 complete recordings
+Use the first stored channel only.
+MITDB: MLII
+46 eligible records
+Resample to 128 Hz; locate R peaks.
+Clean waveform windows
+Non-overlapping 4-second windows
+512 samples per window
+288,673 fitting windows
+57,177 validation windows
+Prepare one accepted beat
+Extract 512 samples around the R peak.
+Filter and z-score within that window.
+Measure previous and next RR intervals
+and earlier rhythm history.
+Train, validate, then freeze
+15 subjects fit the autoencoder.
+3 other subjects select its checkpoint.
+Apply it to each MLII beat to obtain
+4 reconstruction-error features.
+One feature vector per beat
+223 waveform measurements
++ 15 RR timing measurements
++ 4 autoencoder error measurements
+= 242 values for both tree models
+Expert labels are stored separately from the 242 input features.
+Earlier MITDB beats develop the models; later beats evaluate their predictions.
+The first and last eligible beat are excluded when a neighbouring RR is unavailable.
+Figure 3.4: Preparation of normal-reference windows and labelled MLII beats. Panel A develops the
+frozen autoencoder from subject-disjoint NSRDB fitting and validation data. Panel B uses
+local filtering and standardisation for each MITDB beat, then combines waveform, RR
+timing, and frozen-autoencoder residual features. Expert labels remain separate from the
+model input.
+3.3.4 Feeding the Frozen System
+During autoencoder fitting, Gaussian noise with standard deviation 0.03 is added to each
+input while the clean NSRDB window remains the target. During supervised fitting, record-
+and-class weights reduce domination by long records and common classes. During prediction,
+one MLII window, its observed previous and next RR intervals, and its recent RR history are
+converted into the same 242-value vector used in the temporal experiment. A decision of N
+ends classification for that beat. An abnormal decision passes the same vector to the subtype
+model. The next chapter explains the theory behind these features and the two-stage decision.
+
+
+4 Theoretical Foundations
+This chapter explains the theory behind the final ECG system. The system combines MLII
+waveform shape, RR timing, and autoencoder residuals in two supervised Extra Trees ensem-
+bles. These components provide complementary information about beat shape and rhythm.
+The explanation follows one beat from measured voltage to the final label. The equa-
+tions define the main operations and explain how they contribute to classification.
+The
+three trained components are a normal-reference autoencoder, a normal-versus-abnormal
+tree ensemble, and an abnormal-subtype tree ensemble. The autoencoder learns by changing
+neural weights to lower reconstruction error; the tree ensembles learn by choosing weighted,
+entropy-reducing splits. These are different forms of training.
+4.1 Why ECG evidence has more than one form
+An ECG is a voltage signal over time. For arrhythmia classification, useful evidence appears
+at two related scales. The first is beat-scale morphology: what the P–QRS–T shape looks
+like around one R peak. The second is rhythm timing: when the beat occurs relative to
+neighbouring beats. The final model uses both because they answer different questions.
+Two ECG evidence scales used by the final model
+0.0
+0.2
+0.4
+0.6
+0.8
+1.0
+time within one beat
+standardised voltage
+P
+Q
+R
+S
+T
+shape, width, polarity and slopes
+A. Beat-scale morphology
+0.5
+1.0
+1.5
+2.0
+2.5
+3.0
+3.5
+4.0
+4.5
+time across several beats
+0.80s
+0.85s
+0.56s
+0.96s
+0.81s
+short interval
+The final feature vector joins these scales with four normal-reconstruction residuals.
+B. Rhythm-scale RR timing
+Figure 4.1: Two evidence scales used by the final model. Morphology describes the local shape of a
+beat; RR timing describes rhythm context around the beat.
+PVC, LBBB, and RBBB can strongly affect QRS shape, width, slopes, and polarity. PAC and
+AFib may be easier to detect when timing evidence is also present: premature beats create short
+
+
+4 Theoretical Foundations
+22
+RR intervals, pauses create long RR intervals, and AFib creates repeated irregularity. Published
+heartbeat-classification work also shows the value of combining waveform morphology with
+heartbeat-interval features [3, 7].
+How one ECG beat becomes a supported output
+MLII waveform
+one channel, 128 Hz
+Prepared beat
+512 samples; filter + scale
+Shape + timing
+223 waveform + 15 RR
+Frozen autoencoder
+normal ECG reference
+Residual features
+four mismatch values
+Feature row
+242 values per beat
+Binary model
+240 trees: normal/abnormal
+Subtype model
+260 trees: five groups
+Normal branch gives N
+Figure 4.2: Reading map for the final system.
+ECG signal preparation produces one 512-sample
+window.
+Three complementary feature groups make one 242-value row.
+The frozen
+autoencoder creates residual features; the two fitted tree ensembles make the final decision.
+Labels are used during supervised fitting, never as input features at prediction time.
+4.2 From voltage to a comparable four-second window
+An electrode channel measures a sequence of voltage differences. Sampling at 128 samples
+per second turns four seconds into 𝑇= 4(128) = 512 numbers. The MITDB waveform is
+originally sampled at 360 Hz and is resampled to 128 Hz before beat extraction. Anti-aliasing
+in the resampling step prevents high-frequency content from appearing falsely at lower
+frequencies. The normal-reference NSRDB channel is already sampled at 128 Hz. Its header
+calls the first channel ECG1; the supervised and installed beat input is MLII. These channel
+names should not be treated as interchangeable anatomical lead names [5, 6].
+For supervised examples, an observed R peak is placed at sample 200. Thus a window
+contains 200 samples before and 312 samples from that point onward. The R peak is a useful
+alignment anchor because many important morphological changes occur in or near the QRS
+
+
+4 Theoretical Foundations
+23
+complex. The normal-reference autoencoder instead receives consecutive, non-overlapping
+four-second windows; it does not need beat labels or R-peak annotations. Figure 4.2 shows
+where the two streams meet.
+The corrected supervised path applies a Butterworth band-pass filter with prototype order
+four and 0.5–50 Hz cutoffs to each 512-sample window. Forward–backward filtering removes
+the phase shift that a one-directional filter would introduce at an R peak. The lower cutoff at-
+tenuates slowly changing baseline, and the upper cutoff attenuates faster interference. It does
+not imply that all noise or motion artifact has disappeared [26, 27]. The NSRDB preparation
+filters longer recording blocks before making windows; both streams then standardise each
+accepted window separately.
+If 𝑢𝑡is the filtered voltage in one window, the model receives
+𝑥𝑡=
+𝑢𝑡−¯𝑢
+𝑠𝑢+ 10−8,
+¯𝑢= 1
+𝑇
+𝑇∑︁
+𝑡=1
+𝑢𝑡,
+𝑠𝑢=
+v
+u
+t
+1
+𝑇
+𝑇∑︁
+𝑡=1
+(𝑢𝑡−¯𝑢)2.
+(4.1)
+Subtracting the window mean removes a local offset. Dividing by its standard deviation
+reduces gain differences between recordings. The waveform keeps its relative shape and
+timing, but absolute millivolt amplitude is no longer directly available to the model. Flat or
+non-finite windows are rejected. Because scaling is calculated inside the current window, later
+test signal statistics are not needed when preparing an earlier training beat.
+4.3 Feature extraction theory
+The raw 512-sample MLII window contains more detail than the final tree models need.
+Small changes in R-peak alignment or noise can change many raw sample values. The system
+therefore converts the window into compact measurements that keep useful ECG evidence
+while reducing unnecessary sample-level detail.
+
+
+4 Theoretical Foundations
+24
+Transparent operations that create the final feature vector
+0.0
+0.2
+0.4
+0.6
+0.8
+1.0
+zk = |Bk|
+1
+t
+Bk
+xt
+A. Pooling keeps shape and reduces small shifts
+pooled shape
+0.0
+0.2
+0.4
+0.6
+0.8
+1.0
+xt = xt
+xt
+1
+B. Derivatives describe QRS sharpness
+0
+10
+20
+30
+40
+50
+log(1 + Pband/P0.5
+50Hz)
+relative power
+C. Spectral bands summarise frequency content
+0.0
+0.2
+0.4
+0.6
+0.8
+1.0
+et = xt
+xt
+D. Autoencoder residuals add normal-structure evidence
+input
+reconstruction
+residual
+Figure 4.3: Feature-extraction operations behind the final 242-value vector. The tree models learn from
+compact numerical evidence, not from raw ECG samples directly.
+For a pooled region 𝐵𝑘, the pooled value is
+𝑧𝑘=
+1
+|𝐵𝑘|
+∑︁
+𝑡∈𝐵𝑘
+𝑥𝑡.
+(4.2)
+Pooling keeps the average shape in a small region and makes the representation less sensitive
+to a one- or two-sample shift. The final system uses 64 whole-window pooled values and 80
+central morphology pooled values.
+The derivative
+Δ𝑥𝑡= 𝑥𝑡−𝑥𝑡−1
+(4.3)
+describes how quickly voltage changes. This matters because QRS abnormalities often change
+slopes and sharpness. The system keeps 60 pooled derivative values from the central beat
+region.
+Frequency features describe how signal energy is spread from 0.5 to 50 Hz. For a frequency
+band 𝑏, the relative band feature is
+𝑠𝑏= log
+
+1 +
+𝑃𝑏
+𝑃0.5−50
+
+,
+(4.4)
+where 𝑃𝑏is the power inside the band and 𝑃0.5−50 is total power in the ECG band used
+by the feature extractor. This band-limited view follows the general ECG idea of keeping
+physiological content while reducing drift and high-frequency interference [1, 26].
+Eleven summary statistics add scale, range, energy, skewness, and kurtosis.
+Together,
+the waveform, derivative, spectral, and statistical values form 223 non-RR, non-autoencoder
+features.
+
+
+4 Theoretical Foundations
+25
+The spectrum is computed with a discrete Fourier transform. For a 512-sample window, the
+transform coefficient at frequency index 𝑘is
+𝑋𝑘=
+𝑇−1
+∑︁
+𝑡=0
+𝑥𝑡exp
+
+−2𝜋i𝑘𝑡
+𝑇
+
+,
+𝑃𝑘= |𝑋𝑘|2.
+(4.5)
+The implementation sums 𝑃𝑘in eight frequency bands between 0.5 and 50 Hz and divides each
+sum by total power in that range before applying log(1+·). The logarithm reduces differences
+between the relative-power values. These values describe the distribution of variation by
+frequency; they are not separate clinical diagnoses.
+The eleven statistics include mean,
+standard deviation, minimum, maximum, range, mean absolute value, root-mean-square
+amplitude, derivative spread and maximum slope, skewness, and excess kurtosis. Skewness
+describes asymmetry and kurtosis describes unusually large deviations. The exact count is
+64 + 80 + 60 + 8 + 11 = 223. This count matches the implemented feature vector.
+4.4 RR timing theory
+Let 𝑟𝑖be the time of the R peak of beat 𝑖. The RR interval is
+𝑅𝑅𝑖= 𝑟𝑖−𝑟𝑖−1.
+(4.6)
+RR values describe rhythm. A short interval can suggest a premature beat. A long interval can
+suggest a pause. Repeated interval changes support rhythm irregularity.
+The final live system classifies a beat only after it has enough context to compute the same
+RR information used in the final experiment. It uses seven base RR values, including previous
+RR, next RR, local mean RR, interval ratios, local coefficient of variation, and heart rate. It then
+appends eight history-based values from already completed intervals: median, interquartile
+range, median absolute deviation, RMSSD, pNN50, relative range, trend, and latest interval
+change.
+RMSSD is one example:
+RMSSD =
+v
+u
+t
+1
+𝐾−1
+𝐾
+∑︁
+𝑗=2
+(𝑅𝑅𝑗−𝑅𝑅𝑗−1)2.
+(4.7)
+The next-RR requirement is important. It delays the streaming decision until the following
+peak is observed and allows the same RR features to be used in offline and live processing.
+For clarity, the seven base values are previous RR, next RR, mean of up to ten earlier intervals,
+previous/mean, next/mean, interval coefficient of variation, and heart rate 60/𝑅𝑅previous. The
+eight additional values summarise up to twenty already completed intervals. The interquartile
+range is the 75th minus the 25th percentile; median absolute deviation is the median distance
+from the median; and pNN50 is the fraction of successive interval differences exceeding 0.05
+seconds. A trend and latest relative change capture direction. These quantities provide rhythm
+context without giving a class label to the model. “Next RR” is available only after the following
+R peak is observed, so this system makes a delayed beat decision rather than an instantaneous
+R-peak decision.
+
+
+4 Theoretical Foundations
+26
+4.5 Normal-only reconstruction theory
+An autoencoder contains an encoder 𝑓𝜃and decoder 𝑔𝜙. It is trained to reconstruct a normal
+ECG window 𝑥:
+ˆ𝑥= 𝑔𝜙(𝑓𝜃(𝑥)),
+min
+𝜃,𝜙
+1
+𝑇
+𝑇∑︁
+𝑡=1
+(𝑥𝑡−ˆ𝑥𝑡)2.
+(4.8)
+This follows the representation-learning idea of autoencoders [14]. The final autoencoder is
+trained with a denoising objective: small Gaussian noise is added to the input while the target
+remains the clean normal window. Denoising encourages stable structure instead of exact
+noise copying [15].
+time
+A. Familiar normal morphology
+input
+reconstruction
+time
+B. Small residual
+0.0
+0.2
+0.4
+0.6
+0.8
+1.0
+time
+C. Unfamiliar morphology
+input
+reconstruction
+0.0
+0.2
+0.4
+0.6
+0.8
+1.0
+time
+The supervised detector receives four residual summaries and decides together with morphology and RR evidence.
+D. Larger residual feature
+Normal-only reconstruction: residual is evidence, not diagnosis
+Figure 4.4: Normal-only reconstruction principle. A larger residual can indicate novelty, but it is
+evidence only; the final arrhythmia decision is made by the supervised hierarchy.
+If the autoencoder has learned common normal structure, an unfamiliar or abnormal beat
+may be reconstructed less accurately. This is the one-class anomaly detection idea [16]. It is not
+a guarantee. A flexible decoder may reconstruct an abnormal waveform well, and noise may
+create a large residual for a normal waveform. Therefore, the final system uses autoencoder
+mismatch as four supervised input features, not as the final diagnosis rule.
+Let 𝑒𝑡= 𝑥𝑡−ˆ𝑥𝑡be the residual. The four residual features are:
+𝑒MAE = 1
+𝑇
+∑︁
+𝑡
+|𝑒𝑡|,
+(4.9)
+𝑒MSE = 1
+𝑇
+∑︁
+𝑡
+𝑒2
+𝑡,
+(4.10)
+𝑒local = 1
+|𝑄|
+∑︁
+𝑡∈𝑄
+|𝑒𝑡|,
+(4.11)
+𝑒Δ =
+1
+𝑇−1
+𝑇∑︁
+𝑡=2
+|𝑒𝑡−𝑒𝑡−1|.
+(4.12)
+
+
+4 Theoretical Foundations
+27
+Here 𝑄is the central 240-sample region used by the feature extractor, defined in Chapter 5.
+The four features measure whole-window mismatch, squared mismatch, central morphology
+mismatch, and residual sharpness. The final architecture appends these four values to the MLII
+waveform and RR features.
+4.5.1 What the encoder and decoder actually compute
+The implemented autoencoder is a one-dimensional convolutional network. A convolution
+learns a small template and slides it across time. For output channel 𝑗at time 𝑡, a simplified
+convolution is
+ℎ𝑗,𝑡= 𝑏𝑗+
+∑︁
+𝑐
+𝐾−1
+∑︁
+𝑚=0
+𝑊𝑗,𝑐,𝑚𝑥𝑐,𝑡+𝑚.
+(4.13)
+The learnable numbers 𝑊𝑗,𝑐,𝑚and 𝑏𝑗determine which short patterns activate the channel. A
+first layer may respond to a steep QRS slope; later layers can combine such responses over
+longer time spans. The actual network uses four encoder blocks to reduce time resolution from
+512 to 32 positions while increasing the channel count to 256. Four decoder blocks restore the
+waveform. Figure 5.4 gives the verified tensor sizes.
+Several architectural functions have distinct purposes.
+Group normalisation stabilises
+intermediate activations. LeakyReLU keeps a non-zero slope for negative activations, which
+helps gradients propagate. Residual connections add a block’s input to its transformed output,
+providing a shorter route for both signal and gradient flow. Dilation rates 1, 2, 4, and 8 widen
+the bottleneck’s temporal view without proportionally increasing parameters. Decoder skip
+connections pass selected encoder detail forward, scaled by 0.5 in this checkpoint; this helps
+restore ECG shape but also limits direct copying. Dropout randomly suppresses activations
+during fitting to discourage over-reliance on individual pathways. The last layer is linear so it
+can produce both positive and negative standardised voltages [28, 29, 30].
+4.5.2 How the autoencoder lowers reconstruction loss
+Let 𝑥(𝑖) be a clean normal window and let 𝜖(𝑖)
+𝑡
+∼N (0, 0.032) be freshly drawn Gaussian
+noise. The training input is e𝑥(𝑖) = 𝑥(𝑖) + 𝜖(𝑖), while the target is still 𝑥(𝑖). For a mini-batch 𝐵
+the actual fitting objective is
+L𝐵(𝜃,𝜙) =
+1
+|𝐵|𝑇
+∑︁
+𝑖∈𝐵
+𝑇∑︁
+𝑡=1
+h
+𝑥(𝑖)
+𝑡
+−𝑔𝜙(𝑓𝜃(e𝑥(𝑖)))𝑡
+i2
+.
+(4.14)
+Squaring makes large reconstruction errors count more strongly. The network must predict
+clean structure from a slightly perturbed signal, so simply copying the input noise is a poor
+solution. For one output sample, the derivative of squared error with respect to reconstruction
+is proportional to 2( ˆ𝑥𝑡−𝑥𝑡): an output above the target is pushed downward and one below
+the target is pushed upward. Backpropagation applies the chain rule through the decoder and
+encoder to find the effect of every learned weight [15].
+
+
+4 Theoretical Foundations
+28
+The fitting loop repeatedly performs four operations: clear old gradients, compute recon-
+structed windows, backpropagate L𝐵, and take one Adam step. Adam tracks moving averages
+of gradients and squared gradients; schematically, the update is
+𝑚𝑘= 𝛽1𝑚𝑘−1 + (1 −𝛽1)𝑔𝑘,
+𝑣𝑘= 𝛽2𝑣𝑘−1 + (1 −𝛽2)𝑔2
+𝑘,
+𝜃𝑘+1 = 𝜃𝑘−𝜂
+b
+𝑚𝑘
+√︁
+b𝑣𝑘+ 𝜀
+.
+(4.15)
+Here 𝑔𝑘is the mini-batch gradient, 𝜂is the learning rate, and hats indicate bias correction. The
+same operation updates decoder parameters 𝜙. Thus “reducing loss” means changing millions
+of network weights in a direction estimated to reduce expected reconstruction error; it does
+not mean manually adjusting a threshold [31].
+A. Autoencoder: repeated weight updates
+Clean batch
+256 windows
+Add noise
+Gaussian SD 0.03
+Reconstruct
+encoder + decoder
+MSE + Adam
+gradient update
+Repeat for each batch; validate on held-out clean windows after each epoch.
+B. Extra Trees: recursive node splits
+Labelled rows
+242 values + weight
+Random tests
+feature + threshold
+Entropy drop
+select best split
+Tree ensemble
+average leaf scores
+Repeat splitting within each tree; compare finished models on validation data.
+Figure 4.5: Two distinct learning mechanisms. The autoencoder repeatedly changes weights from
+mini-batch reconstruction gradients; an Extra Trees model fixes each node by comparing
+randomly proposed splits using weighted entropy. Only the autoencoder has an epoch-by-
+epoch reconstruction-loss curve.
+The concrete run used 288,673 fitting windows from 15 NSRDB subjects and 57,177 windows
+from three different validation subjects. It used batches of 256, Adam with 𝜂= 0.001, and two
+epochs (two passes through fitting windows). Validation uses the clean window as both input
+and target, with dropout disabled. The checkpoint with the smaller validation mean squared
+error is kept. The saved measurements are:
+
+
+4 Theoretical Foundations
+29
+Epoch
+Noisy-input fitting MSE
+Clean-input validation MSE
+1
+0.057639
+0.061195
+2
+0.041976
+0.061193
+Training MSE fell substantially, while validation MSE changed by only about 0.0000023. The
+two curves are measured with different input conditions, so their gap is not a direct estimate
+of overfitting. The near-flat validation result supports selecting epoch 2 by the stated rule, but
+it is weak evidence of improved reconstruction on new normal subjects. The measured curves
+are in Figure 5.5. The frozen network is then applied to MLII windows; its residuals are four
+features, not a clinical diagnosis.
+4.6 Hierarchical classification theory
+The hierarchy divides classification into two stages. The first model assigns a normal or
+abnormal label. Beats assigned to the abnormal group then enter the subtype model.
+Hierarchical probability logic in the final model
+0.0
+0.2
+0.4
+0.6
+0.8
+1.0
+binary probability P(abnormal
+x)
+gate response
+Output N
+Run subtype model
+threshold 0.6208333
+A. Binary abnormal gate
+0.0
+0.1
+0.2
+0.3
+0.4
+0.5
+0.6
+subtype probability qc
+PVC
+PAC
+LBBB
+RBBB
+AFib
+0.19
+0.08
+0.11
+0.54
+0.08
+max
+B. Conditional subtype selection
+Figure 4.6: Probability logic of the final hierarchy. The subtype model is conditional: it is used only
+after the abnormality gate is passed.
+For beat 𝑖, the binary detector returns an abnormal score 𝑝𝑖from its 242-value feature vector.
+This score estimates abnormal-class membership but has not been independently calibrated
+as a clinical probability. The final threshold rule is
+𝑎𝑖= ⊮[𝑝𝑖> 0.5708333].
+(4.16)
+If 𝑎𝑖= 0, the output is N. If 𝑎𝑖= 1, the subtype model selects the highest probability among
+PVC, PAC, LBBB, RBBB, and AFib:
+b𝑦𝑖= arg max
+𝑐∈{1,...,5}𝑞𝑖𝑐.
+(4.17)
+
+
+4 Theoretical Foundations
+30
+Here the maximisation already returns an index 1–5. Unsupported abnormal symbols con-
+tribute to binary testing and are excluded from subtype training and six-class scoring. At
+inference, every gated beat receives a supported label. There is no validated unknown-class
+rejection mechanism.
+The tree output is an ensemble score obtained from training-label proportions in reached
+leaves. It should not be read as a clinically calibrated disease probability. In particular, the
+subtype score 𝑞𝑖𝑐is conditional on taking the abnormal branch; a large 𝑞𝑖𝑐does not repair
+a missed binary gate. This is why the report evaluates the binary detector, the conditional
+subtype model, and the complete six-class decision separately.
+4.7 Why Extra Trees fits this feature design
+The final 242-value vector mixes pooled waveform values, derivatives, spectral power, signal
+statistics, RR timing, and autoencoder residuals. Their relationship to class labels is non-linear.
+Extra Trees fits this setting by building many randomised decision trees and averaging their
+probability outputs [32].
+At a decision-tree node 𝑆, let 𝑤𝑖be the training weight of beat 𝑖. The weighted fraction of
+class 𝑐and its entropy are
+𝑝𝑐(𝑆) =
+Í
+𝑖∈𝑆𝑤𝑖⊮[𝑦𝑖= 𝑐]
+Í
+𝑖∈𝑆𝑤𝑖
+,
+𝐻(𝑆) = −
+∑︁
+𝑐
+𝑝𝑐(𝑆) log2 𝑝𝑐(𝑆),
+(4.18)
+with 0 log2 0 defined as zero. Entropy is high when weighted classes are mixed and zero when
+a node contains only one class. A proposed split sends rows to left and right child nodes. Its
+weighted impurity decrease is
+Δ𝐻= 𝐻(𝑆) −𝑊𝐿
+𝑊𝑆
+𝐻(𝑆𝐿) −𝑊𝑅
+𝑊𝑆
+𝐻(𝑆𝑅),
+𝑊𝐴=
+∑︁
+𝑖∈𝐴
+𝑤𝑖.
+(4.19)
+For an unweighted toy node with four normal and four abnormal beats, entropy is one bit. A
+split putting all normals left and all abnormals right reduces the two child entropies to zero,
+giving Δ𝐻= 1 bit. Real nodes usually give a smaller decrease. The tree does not take gradient
+steps: it selects a split, partitions the rows, and repeats recursively. Extra Trees randomly
+selects candidate features and thresholds at each node, then chooses the best candidate under
+this criterion [32].
+Each tree ends with leaf nodes. A beat follows feature-threshold questions from root to
+leaf, and the leaf’s class mixture supplies a score. The ensemble averages these scores over its
+trees. Random candidate splits make individual trees differ; averaging reduces the instability
+of any one tree. The binary model contains 240 trees and the subtype model contains 260 trees.
+Tree count describes ensemble size, whereas an epoch describes one complete pass through
+training data in neural-network fitting.
+This theory also explains why Extra Trees is suitable for the final data scale. MITDB
+contributes many beats but only 45 subject clusters. A very high-capacity end-to-end neural
+classifier could learn patient identity instead of robust ECG rules [8]. The Extra Trees hierarchy
+
+
+4 Theoretical Foundations
+31
+is still high-capacity, but it uses transparent tabular evidence and is easier to audit against the
+final temporal protocol. This does not mean that tree ensembles are always better than deep
+learning.
+4.7.1 How the two supervised models are fitted
+The binary model receives every eligible training beat, including abnormal beats whose
+detailed symbol is outside the five supported subtype groups. Its target is 𝑦(𝐵)
+𝑖
+∈{0, 1},
+meaning normal or abnormal. The subtype model receives only supported abnormal training
+beats and has target 𝑦(𝐶)
+𝑖
+∈{PVC, PAC, LBBB, RBBB, AFib}.
+Both models use the same
+242 measurements: 223 morphology, spectral, and statistical values, 15 RR values, and 4
+frozen-autoencoder residuals. The labels determine fitting targets and validation scores; they
+do not enter this input vector.
+The binary candidates vary tree count, maximum depth, leaf size, and record weighting
+power. The selected candidate has 240 fully grown trees, at least one sample per leaf, entropy
+splits, and approximately
+√
+242 candidate features at a split. The subtype candidates vary
+similar settings; the selected model has 260 fully grown trees and samples approximately one
+third of the 242 features at each split. These settings were chosen from the earlier validation
+region, then the selected structures were refitted using all eligible development beats. The
+subtype refit still excludes N and unsupported abnormal categories.
+The binary model averages its trees’ abnormal scores to obtain 𝑝𝑖. Validation tries the
+distinct output scores as thresholds (along with 0, 0.5, and 1). The primary ranking is balanced
+accuracy, followed by F1 and further tie-breaks. The selected threshold is 0.5708333. A
+threshold is an operating point: lowering it generally catches more abnormal beats but also
+increases false alarms. It is not a weight learned by backpropagation. The subtype candidates
+are ranked by validation macro F1, then accuracy. Figure 6.3 plots those measured validation
+comparisons.
+4.8 Class and patient imbalance theory
+ECG beat datasets are imbalanced in two ways. Some classes are rare, and some patients
+contribute many more beats than others.
+Without weighting, a model can mostly learn
+common normal beats or a few large records.
+The final training code uses record-aware class weights. For class 𝑐in subject cluster 𝑟, the
+weight is proportional to
+𝑤𝑐𝑟= 1
+𝑛𝑐
+ 𝑛𝑐
+𝑅𝑐𝑛𝑐𝑟
+𝛼
+,
+(4.20)
+where 𝑛𝑐is total support for class 𝑐, 𝑅𝑐is the number of subject clusters containing class 𝑐,
+and 𝑛𝑐𝑟is the number of class-𝑐beats in subject cluster 𝑟(records 201 and 202 are combined).
+Weights are normalised to mean one and clipped to [0.05, 20]. The first factor supports class
+balancing; the second factor reduces domination by a single record. The exponent 𝛼controls
+
+
+4 Theoretical Foundations
+32
+how strongly record balancing is applied and is selected in validation. Class-balanced learning
+is important when rare classes would otherwise have little influence [22].
+4.9 Temporal patient adaptation theory
+ECG morphology contains patient-specific information such as body geometry, electrode
+placement, baseline QRS shape, conduction pattern, and background rhythm. If earlier labelled
+ECG from a patient is available during development, the model can adapt to that patient’s
+baseline. This shared patient information can make classification easier than it would be for a
+patient whose ECG was absent from development.
+This is the theory behind the final temporal-holdout design. It is useful for monitoring after
+a labelled calibration period, but it changes the claim. The final result is a known-patient
+temporal-continuation result.
+It should not be reported as unseen-patient generalisation
+unless a patient-disjoint experiment is run. The 16-beat boundary gap reduces direct overlap
+at the split boundary, but it does not remove shared patient identity.
+4.9.1 Why training, validation, and testing have different jobs
+Training data changes model parameters: neural weights for the autoencoder, and split
+rules and leaf scores for each tree ensemble. Validation data chooses among checkpoints, tree
+settings, and the binary operating threshold. The temporal test then estimates performance
+after those choices are fixed. If test labels were used to choose the best threshold, its reported
+score would be optimistically biased. In this final rerun, the test did not select the threshold
+or candidate, but its labels had been seen during earlier development. The result is therefore
+a retrospective known-patient estimate, not a fresh confirmatory test. Figure 6.1 shows the
+chronological allocation and boundary gaps.
+4.10 From saved models to a live ECG decision
+The implemented workflow joins signal acquisition, digital processing, model inference,
+and reporting. An AD8232 front end senses a single ECG channel; the Arduino demonstration
+sketch samples its analog output at approximately 128 Hz and reports lead-off status [33]. The
+demonstration hardware does not itself certify that its electrode placement equals the MITDB
+MLII configuration. Database replay instead starts with labelled MITDB MLII data. Both paths
+must provide the expected sampling rate and one usable channel before the trained inference
+pipeline can run.
+The live analyser keeps a rolling signal buffer, searches for R peaks, and waits until the beat
+window and the following RR interval are observed. It then applies the local preparation in
+Equation 4.1, builds the 242-value vector, and loads the frozen model bundle. With detected
+peaks at sample indices 𝑠𝑖, the interval in seconds is
+𝑅𝑅𝑖= 𝑠𝑖−𝑠𝑖−1
+128
+.
+(4.21)
+
+
+4 Theoretical Foundations
+33
+Peak-detection mistakes change both alignment and RR evidence; the offline test used refer-
+ence annotations for alignment, so live results may differ. The delay follows from the required
+input: the window includes 312 samples starting at the R peak (about 2.44 seconds), and the
+next R peak must also be observed. The larger of those requirements determines when a beat
+is ready to score.
+Table 4.1: Technologies in the final evidence path and the mathematical task performed by each. The
+web interface displays results and does not train the models.
+Technology
+Role in the implemented system
+AD8232 and
+Arduino
+Analog acquisition, lead-off indication, and approximate
+128 Hz sample timing in the sensor demonstration
+WFDB and
+PhysioNet
+Read ECG samples, lead headers, beat symbols, and rhythm
+annotations for reproducible research datasets
+NumPy and SciPy
+Arrays, resampling, Butterworth filtering, peak detection,
+Fourier spectrum, and numerical feature calculations [27]
+PyTorch
+Convolutional autoencoder, automatic differentiation,
+mini-batch MSE, and Adam weight updates [34]
+scikit-learn
+Weighted Extra Trees fitting, ensemble scores, and validation
+metrics
+Backend and
+interface
+Load saved checkpoints, build live features, apply the fixed
+gate and subtype rule, and display beat results
+4.11 Validation theory
+Beat-level accuracy alone is not enough. If one patient contributes 2,000 beats, those beats
+are related. They are not equivalent to 2,000 independent patients. The final validation
+therefore reports beat metrics and also uses subject-clustered uncertainty.
+
+
+4 Theoretical Foundations
+34
+Why validation must respect subject clusters
+subject 1
+subject 2
+subject 3
+subject 4
+subject 5
+A. Many beats, but fewer independent subjects
+0.92
+0.93
+0.94
+0.95
+0.96
+0.97
+0.98
+0.99
+1.00
+subject-clustered accuracy
+2.5%
+97.5%
+This supports a known-patient temporal-continuation claim, not an unseen-patient claim.
+B. Bootstrap resamples subjects, not individual beats
+Figure 4.7: Theoretical reason for subject-clustered validation. Clustered resampling prevents one long
+record from being treated as many independent people.
+Balanced accuracy gives equal weight to class recalls, so normal beats cannot hide poor
+abnormal recall. Macro F1 gives each class equal importance, so a failure on a rare class is
+visible. Precision–recall style measures are also important under class imbalance [21]. For
+confidence intervals, the final experiment resamples complete subject clusters rather than
+individual beats, following the general diagnostic-statistics principle that clustered data need
+clustered analysis [23].
+For binary detection, 𝑇𝑃, 𝑇𝑁, 𝐹𝑃, and 𝐹𝑁denote true positives, true negatives, false
+positives, and false negatives. Sensitivity is 𝑇𝑃/(𝑇𝑃+ 𝐹𝑁) and specificity is 𝑇𝑁/(𝑇𝑁+ 𝐹𝑃).
+Balanced accuracy is their mean. This gives equal importance to recognising abnormal and
+normal beats even when one group is larger. For a class 𝑐, precision asks what fraction of
+predicted 𝑐is truly 𝑐; recall asks what fraction of true 𝑐is found. Their harmonic mean is
+𝐹1𝑐= 2 Precision𝑐Recall𝑐
+Precision𝑐+ Recall𝑐
+,
+MacroF1 = 1
+𝐶
+𝐶
+∑︁
+𝑐=1
+𝐹1𝑐.
+(4.22)
+A confusion matrix counts every true/predicted class pair, making a high overall accuracy
+easier to interpret. The final test also computes equal-subject uncertainty by resampling
+complete patient clusters and recalculating the statistic. This treats patients, rather than
+individual beats, as the independent units for the interval. It cannot correct for the earlier
+observation of the test set or demonstrate generalisation to new patients.
+
+
+4 Theoretical Foundations
+35
+4.12 Summary of the theoretical framework
+Table 4.2: How the theory maps to the implemented final system.
+Theory concept
+Implemented in the final system
+Beat-scale morphology
+512-sample MLII window with pooled full-window,
+central, and derivative features
+Rhythm timing
+15 RR features; live scoring waits until next-RR
+context is available
+Normal-only
+reconstruction
+frozen NSRDB autoencoder supplies four residual
+features
+Hierarchical probability
+240-tree binary gate first; 260-tree subtype model
+only for gated abnormal beats
+Class/patient imbalance
+record-aware class weighting with
+validation-selected record-power parameter
+Temporal adaptation
+earlier MLII timeline trains/selects the model; final
+20% of accepted beats is tested
+Subject-aware
+uncertainty
+subject-clustered bootstrap over 45 clusters, with
+records 201 and 202 treated as one cluster
+
+
+5 System Architecture and
+Implementation
+This chapter describes how the theoretical components are implemented in the ECG prototype.
+The system uses one MLII channel and three trained components: a normal-reference autoen-
+coder, a binary abnormality detector, and an abnormal subtype classifier. The two supervised
+models use the same 242-value feature vector. All model parameters remain fixed during
+prediction.
+5.1 System overview
+For each detected MLII heartbeat, the system takes a 512-sample window aligned to the R
+peak, builds waveform, rhythm, and normal-reconstruction features, sends those features to a
+binary abnormality gate, and sends only gated abnormal beats to a five-class subtype classifier.
+Final ECG system: from one MLII beat to one decision
+0
+1
+2
+3
+4
+4.0 s MLII window
+R peak
+index 200
+A. R-aligned
+input
+0
+50
+100
+150
+200
+242 feature positions
+waveform
+223
+RR 15
+AE 4
+shape + rhythm + normal-reconstruction evidence
+B. Reused 242-feature
+vector
+0.0
+0.2
+0.4
+0.6
+0.8
+1.0
+P(abnormal)
+N
+subtype
+0.6208333
+C. Binary gate,
+then subtype
+The autoencoder supplies four residual features. It does not make the final class decision alone.
+Figure 5.1: Exact runtime order of the final ECG system. The autoencoder supplies features; the
+supervised tree models make the final class decision.
+
+
+5 System Architecture and Implementation
+37
+5.2 Input signal and beat window
+The deployed system accepts one ECG channel.
+For database replay and final testing
+that channel is MIT–BIH MLII, selected by signal name. Records 102 and 104 are excluded
+because they do not contain MLII. For sensor sessions, the API requires the user to declare
+lead_name=’MLII’ and rejects other declared leads. This rule checks the declared lead
+against the supervised training signal. It cannot verify the physical electrode placement.
+The classifier assigns one output to each eligible beat. The live backend collects MLII
+samples, detects R peaks, and waits until enough rhythm context is available. For a scorable
+beat, it extracts a fixed 512-sample window at 128 Hz:
+• 200 samples before the R peak;
+• 312 samples starting at the R peak;
+• total duration of 4.0 seconds.
+This same window geometry is used in the final temporal-holdout experiment and in the
+installed session pipeline.
+Let 𝑠𝑖be the sample index of the current R peak in the 128 Hz signal. The extracted beat is
+the ordered vector
+𝑢(𝑖) = (𝑣𝑠𝑖−200, 𝑣𝑠𝑖−199, . . . , 𝑣𝑠𝑖+311) ∈R512.
+(5.1)
+Filtering and per-window standardisation produce the model input 𝑥(𝑖). For a filtered window
+𝑢, this scaling is
+𝑥𝑡= 𝑢𝑡−𝜇𝑢
+𝜎𝑢+ 10−8,
+𝜇𝑢= 1
+512
+512
+∑︁
+𝑡=1
+𝑢𝑡,
+𝜎𝑢=
+v
+u
+t
+1
+512
+512
+∑︁
+𝑡=1
+(𝑢𝑡−𝜇𝑢)2.
+(5.2)
+The subtraction removes a local voltage offset and the division reduces recording-gain differ-
+ences. The model still sees relative waveform shape. Each training and live beat is prepared
+from its own window, so preparing an earlier beat does not require statistics from a later test
+segment.
+
+
+5 System Architecture and Implementation
+38
+R peak index 200
+previous 200 samples
+following 312 samples
+512 samples at 128 Hz = 4.0 seconds
+Streaming classification waits until the beat has previous and next RR information, then scores this fixed R-aligned window.
+Figure 5.2: R-peak-aligned beat window used by the final model. The R peak is at sample index 200,
+giving the model pre-QRS context and post-QRS recovery information.
+5.3 Three trained components
+The final system uses three trained components, stored as an autoencoder checkpoint and
+a separate hierarchy bundle:
+1. a frozen normal-only autoencoder;
+2. a binary Extra Trees abnormality detector;
+3. a five-class Extra Trees abnormal-subtype classifier.
+Table 5.1: Architecture, training target, and output of each fitted component.
+Component
+Input and
+architecture
+What fitting learns
+Output used next
+Normal
+autoencoder
+One [1, 512] ECG
+window;
+convolutional
+encoder, dilated
+bottleneck, decoder
+Weights that
+reconstruct clean
+NSRDB windows
+from noisy inputs
+Reconstructed
+waveform; four
+residual features
+Binary detector
+One 242-value
+feature row; 240
+Extra Trees
+Weighted
+normal/abnormal
+split rules and leaf
+scores
+Abnormal score 𝑝𝑖
+compared with the
+fixed threshold
+Subtype
+classifier
+The same 242-value
+row; 260 Extra
+Trees
+Weighted split
+rules among five
+supported
+abnormal classes
+Five class scores;
+highest score
+becomes the subtype
+
+
+5 System Architecture and Implementation
+39
+The autoencoder is trained first and then frozen. The two supervised tree models are then fitted
+on MLII features from the temporal development portion of MIT–BIH Arrhythmia Database
+records.
+A  Offline training produces three fixed components
+Normal autoencoder
+Train on NSRDB ECG1.
+Select the checkpoint on other subjects.
+Freeze its weights before MLII modelling.
+Two Extra Trees models
+Use the same 242 MLII features.
+Select on earlier validation beats.
+Refit the binary gate and subtype model.
+Saved models and decision threshold
+Frozen autoencoder + binary gate + subtype classifier
+Validation-selected abnormality threshold: 0.570833
+B  Frozen model use
+Retrospective temporal test
+Later MITDB beats from known patients
+Compare predictions with expert labels.
+Session prediction
+Incoming MLII signal or database replay
+Return N or one of five arrhythmia groups.
+Figure 5.3: Training and use of the saved three-component model. Offline development produces the
+frozen autoencoder, binary gate, subtype classifier, and validation-selected threshold. The
+same fixed components support retrospective temporal evaluation and session prediction;
+session use does not update its parameters.
+5.4 Normal-only autoencoder
+5.4.1 Purpose
+The autoencoder learns to reconstruct normal-reference ECG windows. Its reconstruction
+errors provide four input features for the supervised models. The final classification depends
+on the combined feature vector.
+For an input window 𝑥∈R512, the autoencoder output is
+b𝑥= 𝑔𝜙(𝑓𝜃(𝑥)),
+(5.3)
+where 𝑓𝜃is the encoder and 𝑔𝜙is the decoder. Training uses a denoising objective: Gaussian
+noise with standard deviation 0.03 is added to the input, but the target remains the clean
+
+
+5 System Architecture and Implementation
+40
+standardised window. For a mini-batch B, write
+e𝑥(𝑖) = 𝑥(𝑖) + 𝜖(𝑖),
+𝜖(𝑖)
+𝑡
+∼N (0, 0.032),
+b𝑥(𝑖) = 𝑔𝜙(𝑓𝜃(e𝑥(𝑖))).
+(5.4)
+The exact training objective is the mean squared difference from the clean target across samples
+and windows:
+L𝐴𝐸(𝜃,𝜙) =
+1
+512|B|
+∑︁
+𝑖∈B
+512
+∑︁
+𝑡=1
+(𝑥(𝑖)
+𝑡
+−b𝑥(𝑖)
+𝑡)2.
+(5.5)
+The network receives noisy input while the loss compares against clean input. It must recover
+repeatable ECG structure rather than copy the added noise [15]. At prediction time no artificial
+noise is added: the same network reconstructs the prepared MLII beat 𝑥directly.
+As a small illustration, if a clean three-sample target is (0, 1, 0) and a reconstruction is
+(0.1, 0.8, −0.1), the three squared errors are 0.01, 0.04, 0.01 and their mean is 0.02. The real
+loss applies the same arithmetic to every one of the 512 samples in every batch window.
+
+
+5 System Architecture and Implementation
+41
+5.4.2 Network structure
+Encoder: shorten the sequence
+Decoder: reconstruct the ECG
+Input window
+1 x 512
+Linear output: 1 x 256
+Resize to 1 x 512
+Encoder 1: residual conv
+32 x 256
+Decoder 4: up block
+32 x 256
+skip x 0.5
+Encoder 2: residual conv
+64 x 128
+Decoder 3: up block
+32 x 128
+skip x 0.5
+Encoder 3: residual conv
+128 x 64
+Decoder 2: up block
+64 x 64
+skip x 0.5
+Encoder 4: residual conv
+256 x 32
+Decoder 1: up block
+128 x 32
+skip x 0.5
+Dilated bottleneck: 256 x 32
+Dilation rates: 1, 2, 4, 8
+Dimensions are channels x time samples; the batch dimension is omitted.
+Dashed arrows carry encoder features to matching decoder lengths.
+Each up block resizes to its skip length; final interpolation restores 512 samples.
+Figure 5.4: Autoencoder architecture with tensor dimensions verified by a forward pass through the
+2,680,641-parameter implementation. Read down the encoder, through the bottleneck, and
+up the decoder. Dashed connections concatenate encoder features scaled by 0.5; decoder
+outputs match their skip lengths before the final interpolation restores the 512-sample
+waveform.
+Each residual encoder block contains two kernel-seven convolutions, Group Normalisation,
+LeakyReLU, dropout, and a residual projection.
+Four kernel-three bottleneck blocks use
+dilation 1, 2, 4, and 8. Dilation increases the receptive field without deleting time samples.
+The decoder uses transposed convolutions and skip connections scaled by 0.5. Each up block
+resizes its output to match the corresponding encoder skip. The first up block therefore returns
+length 32, the fourth returns length 256, and final linear interpolation restores length 512. The
+figure reports these actual tensor dimensions. The final layer is linear because the standardised
+ECG signal contains positive and negative values.
+
+
+5 System Architecture and Implementation
+42
+5.4.3 Encoder block
+A one-dimensional convolution applies learned filters along time. For input channels 𝑐,
+output channel 𝑗, kernel offset 𝑚, and time 𝑡, a simplified layer operation is
+ℎ𝑗,𝑡= 𝑏𝑗+
+∑︁
+𝑐
+𝐾−1
+∑︁
+𝑚=0
+𝑊𝑗,𝑐,𝑚𝑥𝑐,𝑡+𝑚.
+(5.6)
+The learned coefficients𝑊detect local patterns such as slopes and peaks. Each encoder block
+uses a kernel width 𝐾= 7 and stride two in its first convolution. With input length 𝐿, padding
+𝑝, dilation 𝑑, and stride 𝑠, the output length is
+𝐿out =
+𝐿+ 2𝑝−𝑑(𝐾−1) −1
+𝑠
++ 1
+
+.
+(5.7)
+Here 𝑝= 3, 𝑑= 1, and 𝑠= 2, giving 512 →256 →128 →64 →32 time positions. The
+corresponding channel counts are 1 →32 →64 →128 →256. The tensor at the deepest
+encoder stage is [𝐵, 256, 32], where 𝐵is the batch size. This is a 16-fold reduction in the time
+axis; 256 channels and the skip connections mean it should not be interpreted as a 16-fold
+reduction in total stored information.
+Within a block, Group Normalisation standardises activations within eight channel groups.
+LeakyReLU then applies
+LeakyReLU(𝑎) =
+(
+𝑎,
+𝑎≥0,
+0.1𝑎,
+𝑎< 0.
+(5.8)
+Negative internal activations therefore retain a small gradient. A learned 1 × 1 projection
+makes the input shape match the block output before they are added. In abbreviated form the
+residual computation is
+ℎout = Dropout0.2[LeakyReLU(𝐹(ℎin) + 𝑃(ℎin))] ,
+(5.9)
+where 𝐹is the two-convolution path and 𝑃is the identity or projection path. Adding 𝑃(ℎin) lets
+information and gradients travel through a shorter route. Dropout randomly masks internal
+activations during fitting; it is disabled during validation and prediction [28, 30].
+5.4.4 Bottleneck and decoder mathematics
+Four bottleneck convolutions use kernel width three and dilation 𝑑∈{1, 2, 4, 8}. A dilated
+convolution reads positions 𝑡−𝑑,𝑡,𝑡+ 𝑑instead of only 𝑡−1,𝑡,𝑡+ 1. It therefore combines
+progressively wider temporal context without further shrinking the 32-position axis. Each
+bottleneck operation adds its input back to its output.
+The decoder uses transposed convolutions to increase temporal resolution. At each stage it
+also concatenates the corresponding encoder output 𝑒𝑗with a scale factor of 0.5:
+𝑑𝑗= 𝑈𝑗
+ concat
+
+resize(up(𝑑𝑗−1), |𝑒𝑗|), 0.5𝑒𝑗
+ .
+(5.10)
+
+
+5 System Architecture and Implementation
+43
+𝑈𝑗denotes the following convolution, normalisation, activation, and dropout operations. The
+resize matches the skip tensor’s actual time length. In this implementation the four decoder
+stages end at lengths 32, 64, 128, and 256; linear interpolation restores length 512 before
+returning the waveform. The final 1 × 1 convolution produces one output channel and has
+no sigmoid or other output activation. These details explain how local normal structure can
+be reconstructed while preserving the input shape.
+5.4.5 Normal-reference data and checkpoint
+The autoencoder checkpoint was developed from complete recordings of all 18 subjects in
+the MIT–BIH Normal Sinus Rhythm Database. Fifteen subjects supply 288,673 fitting windows
+and three different subjects supply 57,177 validation windows. The selected NSRDB header
+channel is ECG1. The database does not document this channel as anatomical Lead II, so the
+report treats it as a normal ECG reference channel rather than renaming it MLII [6].
+The final checkpoint uses Adam, learning rate 0.001, batch size 256, and two epochs.
+Validation MSE changed from 0.061195 after epoch 1 to the best saved value, 0.061193, after
+epoch 2. The autoencoder artifact also stores a normal-residual threshold of 0.158893, but the
+final hierarchy does not use that threshold as the final arrhythmia rule.
+5.4.6 How the training update changes network weights
+For one predicted sample, the derivative of Equation 5.5 is
+𝜕L𝐴𝐸
+𝜕b𝑥(𝑖)
+𝑡
+= 2(b𝑥(𝑖)
+𝑡
+−𝑥(𝑖)
+𝑡)
+512|B|
+.
+(5.11)
+An output greater than its clean target has a positive derivative; an output below the target has
+a negative derivative. Backpropagation applies the chain rule through the decoder, bottleneck,
+and encoder to obtain derivatives for all learnable filters and biases.
+If 𝜓collects those
+parameters and 𝑔𝑘= ∇𝜓L𝐴𝐸is the gradient at training step 𝑘, Adam uses running estimates
+of the gradient and its squared magnitude:
+𝑚𝑘= 𝛽1𝑚𝑘−1 + (1 −𝛽1)𝑔𝑘,
+𝑣𝑘= 𝛽2𝑣𝑘−1 + (1 −𝛽2)𝑔2
+𝑘,
+𝜓𝑘+1 = 𝜓𝑘−𝜂
+b
+𝑚𝑘
+√︁
+b𝑣𝑘+ 𝜀
+. (5.12)
+Here 𝜂= 0.001, the hats are bias-corrected running estimates, and the division is elementwise.
+This is how fitting loss can decrease across mini-batches. Validation windows receive no
+weight update; their MSE is used only to select the saved epoch [31].
+The recorded fitting MSE fell from 0.057639 to 0.041976, but the clean-input subject-disjoint
+validation MSE changed only from 0.061195 to 0.061193. Because training uses noisy inputs
+and validation uses clean inputs, their levels are not directly comparable as an overfitting
+measure. The second epoch is retained because it has the lowest measured validation loss, not
+because the much larger fitting-loss decrease proves improved generalisation.
+
+
+5 System Architecture and Implementation
+44
+1
+2
+epoch
+0.0425
+0.0450
+0.0475
+0.0500
+0.0525
+0.0550
+0.0575
+0.0600
+mean squared reconstruction error
+best validation MSE = 0.06119
+MIT-BIH normal-sinus autoencoder learning curve
+fitting loss
+subject-disjoint validation loss
+Figure 5.5: Autoencoder fitting and subject-disjoint validation loss. The checkpoint with the lowest
+validation loss is retained before the supervised MLII stages are trained.
+5.4.7 Four autoencoder residual features
+Let 𝑒𝑡= 𝑥𝑡−b𝑥𝑡be the reconstruction residual. The final feature system uses four scalar
+residual summaries:
+𝑓1 = 1
+512
+∑︁
+𝑡
+|𝑒𝑡|
+whole-window MAE,
+(5.13)
+𝑓2 = 1
+512
+∑︁
+𝑡
+𝑒2
+𝑡
+whole-window MSE,
+(5.14)
+𝑓3 = 1
+240
+344
+∑︁
+𝑡=105
+|𝑒𝑡|
+central morphology MAE,
+(5.15)
+𝑓4 = 1
+511
+512
+∑︁
+𝑡=2
+|𝑒𝑡−𝑒𝑡−1|
+residual-change MAE.
+(5.16)
+These equations use one-based sample indices. The central range corresponds to the zero-
+based code slice 104:344 and covers the QRS region and nearby waveform. The residual-
+change feature becomes large when the reconstruction misses sharp slopes. These four values
+are appended to the transparent MLII and RR features.
+
+
+5 System Architecture and Implementation
+45
+−2
+0
+2
+4
+6
+standardised amplitude
+Healthy MIT-BIH NSRDB first ECG channel
+input
+reconstruction
+0.0
+0.2
+0.4
+0.6
+0.8
+absolute error
+absolute residual; mean = 0.060
+0.0
+0.5
+1.0
+1.5
+2.0
+2.5
+3.0
+3.5
+4.0
+time (seconds)
+−2
+0
+2
+4
+standardised amplitude
+Abnormal MITDB MLII example: PVC
+input
+reconstruction
+0.0
+0.5
+1.0
+1.5
+2.0
+2.5
+3.0
+3.5
+4.0
+time (seconds)
+0.0
+0.2
+0.4
+0.6
+0.8
+absolute error
+absolute residual; mean = 0.091
+Real one-channel examples through the frozen normal autoencoder
+Figure 5.6: Real healthy and abnormal ECG examples through the frozen autoencoder. The residual
+between input and reconstruction is converted into four numerical features for the
+supervised detector.
+5.5 Final 242-value feature vector
+The saved final bundle declares 242 total features, 15 RR features, required autoencoder
+features, and four autoencoder residual values. Therefore every supervised prediction uses:
+223 waveform/spectrum/statistics values
++ 15 RR timing values
++ 4 autoencoder residual values = 242.
+(5.17)
+
+
+5 System Architecture and Implementation
+46
+64
+whole-window
+mean bins
+80
+central
+morphology
+60
+central
+derivative
+8
+frequency
+powers
+11
+signal
+statistics
+15
+RR
+timing
+4
+AE
+residuals
+242 values used by the binary detector and subtype classifier
+223 waveform, spectrum, and statistics values
+timing + AE
+Figure 5.7: Feature-vector layout used by both supervised models. The same 242-value vector is passed
+first to the abnormality detector and, if required, to the subtype classifier.
+Table 5.2: Organised feature groups in the final architecture.
+Group
+Values
+What it tells the model
+Whole-window mean bins
+64
+broad four-second MLII waveform shape
+Central morphology bins
+80
+P–QRS–T shape around the R peak
+Central derivative bins
+60
+sharp slopes and rapid QRS changes
+Frequency-band powers
+8
+relative energy from 0.5 to 50 Hz
+Signal statistics
+11
+scale, range, energy, skewness, and kurtosis
+RR timing context
+15
+previous/next interval, local rate, variability, me-
+dian, interquartile range, MAD, RMSSD, pNN50,
+range ratio, trend, and latest RR change
+Autoencoder residuals
+4
+how strongly the beat disagrees with the learned
+normal-reconstruction pattern
+The final experiment constructs the same 242 values in two steps: first 230 values are
+built from 223 MLII waveform/statistical values plus seven base RR values; then eight causal
+RR-history values and four autoencoder residual values are appended. During live/session pre-
+diction, the backend builds the same final vector directly from 223 MLII waveform/statistical
+values, 15 RR values, and four autoencoder residual values.
+5.6 How an Extra Trees model learns
+Both supervised stages use the same type of architecture: an ensemble of extremely ran-
+domised decision trees. A tree asks a sequence of questions of the form “is feature 𝑧𝑗≤𝜏?” The
+answer sends a beat to a left or right child node. Randomly chosen candidate features and split
+values make different trees learn different partitions; among the candidate splits at a node, the
+algorithm chooses the one that best separates the weighted training labels [32].
+
+
+5 System Architecture and Implementation
+47
+5.6.1 Why some training rows have more weight
+Rare arrhythmia classes and short patient records would otherwise contribute little to split
+decisions. For class𝑐in subject cluster𝑟, the final fitting code starts with a weight proportional
+to
+𝑤𝑐𝑟= 1
+𝑛𝑐
+ 𝑛𝑐
+𝑅𝑐𝑛𝑐𝑟
+𝛼
+,
+(5.18)
+where 𝑛𝑐is the total number of training beats of class 𝑐, 𝑅𝑐is the number of subject clusters
+containing 𝑐, and 𝑛𝑐𝑟is the number of class-𝑐beats in cluster 𝑟. Weights are divided by their
+overall mean and clipped to [0.05, 20]. The first factor increases the influence of rare classes.
+The second limits dominance by a subject that contributes many examples of the same class.
+The chosen exponent is 𝛼= 0.35 for the binary model and 𝛼= 0.25 for the subtype model.
+This weighting changes the tree’s splitting calculation; it does not replicate beats or create
+new patient data.
+5.6.2 The mathematical question at each tree node
+Let 𝑆be the training beats that have reached a node, 𝑤𝑖the weight of beat 𝑖, and 𝑦𝑖its
+training label. The weighted share of class 𝑐is
+𝑃𝑐(𝑆) =
+Í
+𝑖∈𝑆𝑤𝑖1[𝑦𝑖= 𝑐]
+Í
+𝑖∈𝑆𝑤𝑖
+.
+(5.19)
+The node’s entropy measures how mixed its labels are:
+𝐻(𝑆) = −
+∑︁
+𝑐
+𝑃𝑐(𝑆) log2 𝑃𝑐(𝑆),
+0 log2 0 := 0.
+(5.20)
+A pure node has entropy zero. If a proposed feature threshold divides 𝑆into left and right
+subsets 𝑆𝐿,𝑆𝑅, its weighted entropy reduction is
+Δ𝐻= 𝐻(𝑆) −𝑊𝐿
+𝑊𝑆
+𝐻(𝑆𝐿) −𝑊𝑅
+𝑊𝑆
+𝐻(𝑆𝑅),
+𝑊𝐴=
+∑︁
+𝑖∈𝐴
+𝑤𝑖.
+(5.21)
+The selected random candidate has the largest available reduction. A tree repeats this at its
+child nodes until its stopping conditions are reached. The selected final models have no fixed
+maximum depth and permit a leaf with one training beat; this makes them flexible, while
+ensemble averaging and the separate validation region help control the resulting instability.
+
+
+5 System Architecture and Implementation
+48
+Parent node
+4 N, 4 abnormal; 𝐻= 1 bit
+Left child
+3 N, 1 abnormal; 𝐻= 0.811
+Right child
+1 N, 3 abnormal; 𝐻= 0.811
+Figure 5.8: Illustrative unweighted binary split, separate from the actual experiment.
+Each child
+contains four beats, so Equation 5.21 gives Δ𝐻= 1 −1
+2 (0.811) −1
+2 (0.811) = 0.189 bit. A
+candidate placing two N and two abnormal beats in each child would give zero gain. Real
+fitting uses the sample weights above.
+5.6.3 From a tree leaf to an ensemble score
+Once a tree is fitted, a new feature row follows its learned questions to a leaf 𝐿𝑏(𝑧). The
+score for class𝑐in tree𝑏is the weighted share of training labels of class𝑐in that leaf, 𝑃𝑐(𝐿𝑏(𝑧)).
+With 𝐵trees, the forest output is
+𝑄𝑐(𝑧) = 1
+𝐵
+𝐵
+∑︁
+𝑏=1
+𝑃𝑐(𝐿𝑏(𝑧)).
+(5.22)
+This is an average of leaf scores, not a neural-network softmax. It can rank classes, but the final
+bundle contains no probability-calibration model; a score such as 0.8 should not be interpreted
+as an independently validated 80% clinical disease probability. Trees lower node impurity
+while they are grown. They do not have epochs, backpropagation, or a neural loss curve.
+5.7 Binary abnormality detector
+The first supervised model is the abnormality detector. It receives all 242 features and
+returns an abnormal-class score 𝑝𝑖for beat 𝑖. The selected detector is an Extra Trees classifier
+with:
+• 240 trees;
+• entropy split criterion;
+• fully grown trees;
+• minimum leaf size of one sample;
+• square-root feature sampling at each split;
+• record/class weighting with record-power 𝛼= 0.35.
+Its target is 𝑦(𝐵)
+𝑖
+∈{0, 1}, with zero for project-normal N and one for abnormal. This stage
+uses every eligible binary-labelled beat, including abnormal symbols for which the project
+has no supported subtype. Three candidate forest settings were trained on 66,285 earlier
+
+
+5 System Architecture and Implementation
+49
+beats and compared on 16,029 later validation beats. The selected structure was then refitted
+on 83,050 development beats. At each node the square-root feature rule uses ⌊
+√
+242⌋= 15
+candidate feature positions before selecting a random candidate threshold with the best
+available weighted entropy decrease. Different nodes and trees can therefore use different
+combinations of morphology, timing, and reconstruction evidence.
+For tree 𝑏, let 𝑝𝑏(𝑧𝑖) be the abnormal weighted class share in the leaf reached by feature row
+𝑧𝑖. The ensemble abnormal score is
+𝑝𝑖= 1
+240
+240
+∑︁
+𝑏=1
+𝑝𝑏(𝑧𝑖).
+(5.23)
+For example, if 180 trees returned an abnormal leaf score of one and 60 returned zero, the
+ensemble score would be 180/240 = 0.75. Real leaves can also contain both classes, giving
+values between zero and one.
+The decision threshold was selected on the 64–80% validation region of each development
+record. For each candidate threshold 𝜏, sensitivity and specificity are calculated from valida-
+tion labels, and their mean is the balanced accuracy:
+BA(𝜏) = 1
+2
+
+𝑇𝑃(𝜏)
+𝑇𝑃(𝜏) + 𝐹𝑁(𝜏) +
+𝑇𝑁(𝜏)
+𝑇𝑁(𝜏) + 𝐹𝑃(𝜏)
+
+.
+(5.24)
+The code ranks thresholds by balanced accuracy, followed by F1 and further tie-breaks. The
+selected fixed threshold is 𝜏= 0.5708333:
+𝑎𝑖= ⊮[𝑝𝑖> 𝜏],
+𝜏= 0.5708333.
+(5.25)
+If 𝑎𝑖= 0, the final output is normal class N. No subtype classifier is used for that beat. The
+threshold controls the balance between missed abnormal beats and false alarms; it is selected
+after tree fitting, not learned by a gradient update.
+5.8 Abnormal-subtype classifier
+The second supervised model is used only after the binary gate marks a beat as abnormal. It
+is fitted only on supported abnormal classes 1–5, not on N and not on unsupported MIT–BIH
+symbols. The selected subtype model is an Extra Trees classifier with:
+• 260 trees;
+• entropy split criterion;
+• fully grown trees;
+• minimum leaf size of one sample;
+• feature-sampling fraction 0.33 at each split;
+• record/class weighting with record-power 𝛼= 0.25.
+
+
+5 System Architecture and Implementation
+50
+This model’s target is one of five supported abnormal labels. It has no normal output.
+Its three candidate structures were fitted on 22,844 supported abnormal candidate beats and
+compared on 5,651 supported abnormal validation beats. The chosen structure was refitted
+on 28,758 supported abnormal development beats. The feature-sampling fraction 0.33 gives
+a nominal candidate count of ⌊0.33(242)⌋= 79 feature positions at a node. Entropy now
+sums over five classes, so a node with an exactly even five-class mixture would have 𝐻=
+log2 5 ≈2.322 bits. A split lowers this entropy when its children become more concentrated
+in particular arrhythmia groups.
+For an abnormal beat, the subtype classifier returns scores over the five supported abnormal
+outputs: PVC, PAC, LBBB, RBBB, and AFib. The final class score 𝑞𝑖𝑐is Equation 5.22 with
+𝐵= 260 and only these five training classes. The final subtype is
+b𝑦𝑖= arg max
+𝑐∈{1,...,5}𝑞𝑖𝑐.
+(5.26)
+Thus the subtype forest does not learn a second normal-versus-abnormal decision. It re-
+solves the abnormal branch by taking the largest of its five scores.
+Candidate subtype
+forests were selected by validation macro F1, which gives each of the five classes equal
+influence in the selection score, then by validation accuracy. The final saved bundle sets
+reject_low_confidence=False. Therefore the evaluated and installed final pipeline
+do not add a post-hoc “Unclassified abnormal” rejection step; every gated abnormal beat
+receives the subtype with the largest ensemble score.
+The displayed subtype confidence is conditional on the abnormal branch. It is an ensemble
+score, not a calibrated probability of disease.
+Unsupported abnormalities can receive an
+incorrect supported subtype.
+5.9 Final decision logic
+The complete prediction rule is:
+1. Validate that the input is a 512-sample MLII beat window and that 15 RR features are
+available.
+2. Reconstruct the same window with the frozen autoencoder.
+3. Build the 242-value vector from MLII shape, RR timing, and four autoencoder residual
+summaries.
+4. Calculate the abnormal score 𝑝𝑖using the 240-tree binary detector.
+5. If 𝑝𝑖≤0.5708333, output N with displayed score 1 −𝑝𝑖.
+6. If 𝑝𝑖> 0.5708333, run the 260-tree subtype model and output the supported subtype
+with the highest score.
+This is the same hierarchy used in the final temporal-holdout evaluation. The model does
+not use test labels while predicting. The labels are used only after prediction to compute
+accuracy, F1, confusion matrices, and subject-clustered uncertainty.
+
+
+5 System Architecture and Implementation
+51
+The full architecture can be written as one piecewise mathematical rule. Let 𝑧𝑖be the
+prepared 242-value row, 𝑝𝑖the binary ensemble score, and 𝑞𝑖𝑐the subtype ensemble score.
+Define the supported abnormal class set C = {PVC, PAC, LBBB, RBBB, AFib}. Then
+b𝑦𝑖=
+
+
+N,
+𝑝𝑖≤0.5708333,
+arg max
+𝑐∈C 𝑞𝑖𝑐,
+𝑝𝑖> 0.5708333.
+(5.27)
+For example, a beat with 𝑝𝑖= 0.40 is reported as N even if the subtype forest would have
+preferred PVC; that forest is not used for this beat. If 𝑝𝑖= 0.70 and its five subtype scores are
+(0.05, 0.10, 0.70, 0.10, 0.05) in the order above, the result is LBBB. These numbers illustrate the
+rule and are not measured results. The second stage’s score is conditional on the first stage
+being passed, so the two stages must be evaluated both separately and together.
+5.10 Why this architecture was selected
+Table 5.3: Reason for each major final-architecture decision.
+Decision
+Reason
+MLII-only
+supervised input
+matches the signal available in 46 eligible MIT–BIH
+records and avoids hidden two-lead assumptions
+R-peak alignment
+puts comparable cardiac events in comparable positions
+inside every 512-sample window
+Waveform and
+derivative bins
+preserve beat morphology, including sharp QRS
+changes
+Frequency powers
+and statistics
+add compact information about signal energy, scale,
+and distribution
+Fifteen RR features
+represent local rate, premature beats, rhythm
+irregularity, and recent interval trend using
+information reproducible during streaming
+Normal-only
+autoencoder
+supplies a learned measure of disagreement with
+normal ECG structure without requiring arrhythmia
+labels
+Two-stage hierarchy
+separates binary detection from subtype evaluation;
+unsupported labels enter binary scoring only, although
+runtime predictions still assign a supported subtype
+Extra Trees models
+handle mixed feature scales and non-linear interactions
+with reproducible tabular-model training
+Temporal split with
+gap
+evaluates later signal from each record while removing
+direct boundary overlap between development and test
+beats
+Chapter 6 describes model selection and performance evaluation.
+
+
+6 Experimental Method
+The main experiment evaluated later MLII beats from patients whose earlier labelled ECG was
+available during development. Beats were split in chronological order within each record. This
+design measures performance on known patients. The final segment had been viewed during
+earlier development, so the reported results form a retrospective evaluation.
+6.1 Method overview
+Figure 6.1 shows how accepted beats are allocated to model selection, final refitting, and
+testing. The normal autoencoder was already frozen from NSRDB. The supervised experiment
+then used only MITDB MLII beats. Candidate models were selected with earlier temporal
+regions, refitted before the test boundary, and evaluated only on the final 20% of accepted
+beats.
+Chronological split within each MITDB record
+Percentages refer to accepted-beat order, not elapsed recording time.
+A  Select model settings
+Fit candidate models
+First 64%
+Validate
+64-80%
+Set aside
+Final 20%
+Validation chooses the model candidates and the abnormality threshold.
+B  Refit, freeze, then evaluate
+Refit selected models on the earlier 80% (minus the test gap)
+Binary: 83,050 beats; subtype: 28,758 abnormal beats
+Final test
+20,969 beats
+The model and threshold remain fixed while scoring the final test segment.
+Hatched markers: 16 beats excluded immediately before each marked boundary.
+Markers are enlarged for visibility. The 64% gap is restored during final refitting.
+Interpretation: later beats from known patients; the test had been seen in earlier
+project development, so this is a retrospective evaluation.
+Figure 6.1: Chronological selection, refitting, and testing by accepted-beat order. Selection excludes
+16 beats before both boundaries; refitting retains only the exclusion before the test. The
+test region was observed during earlier development.
+
+
+6 Experimental Method
+53
+6.2 Research objective and success conditions
+The final experiment asks:
+After the model has access to the earlier ECG of each patient, how accurately does
+it classify that patient’s later ECG?
+The primary outcome is whole-system six-class accuracy on the final 20% temporal holdout.
+The planned success conditions were:
+1. pooled whole-system accuracy above 90%;
+2. lower bound of the equal-subject 95% confidence interval above 90%; and
+3. total confidence-interval width no greater than three percentage points.
+The secondary target was recall above 90% for each supported abnormal group. Macro F1 and
+per-class results were also examined because overall accuracy can hide poor performance on
+a smaller class.
+6.3 Input data and feature construction
+The method uses one ECG channel at every stage, but the two data sources have different
+roles. NSRDB supplies normal-reference windows for the frozen normal autoencoder. MITDB
+supplies MLII beat windows, binary labels, six-class labels, and the final temporal test. No
+NSRDB beat is scored in the final test.
+Table 6.1: Exact evidence supplied to the final supervised models.
+Evidence block
+Count
+Role
+MLII morphology and
+spectrum
+223 values
+Describes the beat-centred 512-sample
+MLII waveform. This is the direct ECG
+evidence for both supervised stages.
+RR timing context
+15 values
+Describes previous RR, next RR, local
+timing, and recent rhythm history. In
+live use the beat is scored only after this
+next-RR context is available; labels are
+never used during prediction.
+Frozen autoencoder
+residuals
+4 values
+Summarises how the frozen
+NSRDB-trained normal autoencoder
+reconstructs the same MLII beat.
+Total per MITDB beat
+242 values
+The binary detector and subtype
+classifier receive the same one-lead
+feature vector.
+
+
+6 Experimental Method
+54
+This feature construction matches the saved final model bundle: lead_count is one,
+required_lead is MLII, rr_feature_count is 15, and ae_feature_count is four.
+The method therefore does not use a second MITDB lead during training, validation, temporal
+testing, or deployment.
+6.4 Normal-reference autoencoder training procedure
+The autoencoder was trained before either supervised model. All 18 NSRDB records supplied
+first-channel ECG1 data. After filtering, four-second windowing, per-window standardisation,
+and quality checks, 15 entire subjects contributed 288,673 fitting windows and three separate
+subjects contributed 57,177 validation windows. The split is by subject, so adjacent windows
+from the same recording cannot appear on opposite sides of this validation boundary.
+One training step takes a shuffled batch of 256 clean windows, adds fresh Gaussian noise
+with standard deviation 0.03 to the inputs, reconstructs them, and computes mean squared
+error against the original clean windows. PyTorch backpropagates this error through the
+convolutional encoder and decoder; Adam updates their weights with learning rate 0.001.
+The training code repeats these steps for two complete epochs. After each epoch it disables
+dropout and measures clean-input MSE on the three subjects excluded from fitting. It saves
+the checkpoint with the lowest validation MSE. The precise objective and gradient logic are
+in Equations 4.14 and 4.15; Figure 4.5 contrasts this loop with tree fitting. The measured loss
+curve appears in Figure 5.5.
+After checkpoint selection, the model is frozen.
+For every MITDB MLII window, its
+reconstruction is compared with the input to create four residual measurements. No MITDB
+class label updates the autoencoder. The saved normal-residual threshold is descriptive for the
+normal-reference model; the final classifier uses residual measurements as features and uses
+the separately validated binary-tree threshold for its final gate.
+6.5 Temporal split
+The eligible supervised records are the 46 MITDB records that contain MLII. Records 102
+and 104 were excluded before fitting because their available leads are V5 and V2, not MLII.
+Records 201 and 202 are treated as one subject cluster for uncertainty analysis because they
+belong to the same person.
+Every eligible record is kept in chronological order. Percentages refer to accepted-beat
+counts, not exact elapsed recording time. With 𝑛𝑟accepted beats, the cuts are ⌊0.64𝑛𝑟⌋and
+⌊0.80𝑛𝑟⌋:
+1. the first 64% is the candidate-training region;
+2. a 16-beat gap is removed before validation during candidate selection;
+3. the 64–80% region is the validation region;
+4. a 16-beat gap is removed before the final temporal test; and
+
+
+6 Experimental Method
+55
+5. the final 20% is the fixed temporal test.
+For final fitting, the selected binary and subtype models are refitted on the earlier 80%
+development region after the 16-beat boundary gap before the test is removed. The test
+segment itself remains intact.
+0
+500
+1000
+1500
+2000
+2500
+3000
+3500
+Accepted MLII beats per record
+123
+117
+231
+124
+108
+232
+113
+207
+121
+101
+114
+115
+201
+119
+106
+220
+228
+103
+111
+107
+202
+219
+217
+230
+214
+100
+118
+116
+221
+122
+222
+109
+112
+105
+200
+223
+210
+205
+212
+234
+208
+203
+209
+233
+213
+215
+MITDB record
+Each horizontal bar is one record kept in chronological order. The red segment is the only fixed test region.
+Temporal split audit for every eligible MITDB MLII record
+final fitting region
+16-beat boundary gap
+final 20% temporal test
+Figure 6.2: Temporal split audit for every eligible MITDB MLII record. Blue beats are available for final
+fitting, yellow beats are the boundary gap before the test, and red beats are the held-out
+final 20% temporal test.
+The final held-out test contains 20,969 accepted beats. These are later beats from known
+patients, not beats from unseen patients. The method prevents signal overlap across the test
+boundary, but it intentionally keeps patient overlap.
+6.6 Model selection and final fitting
+Model selection uses only the earlier temporal validation region. In this rerun, the final 20%
+test region does not choose the candidate, threshold, or hyperparameters.
+Three binary Extra Trees candidates were fitted on the earlier candidate region and ranked
+by validation balanced accuracy, then by F1. Three subtype Extra Trees candidates were fitted
+only on supported abnormal candidate beats and ranked by validation macro F1, then by
+accuracy. Figure 6.3 shows the validation scores that selected the final pair.
+
+
+6 Experimental Method
+56
+The fitting sequence for each candidate is explicit:
+1. Build one 242-value row per accepted MLII beat, keeping the label and subject identifier
+outside the row. The autoencoder is already frozen.
+2. Select candidate-training rows from the first 64% of each record, subject to the 16-beat
+gap before validation. For the binary stage, use every normal/abnormal target. For the
+subtype stage, keep only supported abnormal targets.
+3. Compute class-and-record sample weights within these selected rows. At each tree
+node, propose random feature thresholds and choose the one giving the largest weighted
+entropy decrease in Equation 4.19. Continue until that candidate’s depth and leaf-size
+rules stop growth, then average all tree outputs.
+4. Score the candidate on the 64–80% validation region. For each binary candidate, choose
+an abnormal-score threshold using validation balanced accuracy and tie-breaks; com-
+pare candidates by balanced accuracy then F1. Compare subtype candidates by macro
+F1 then accuracy.
+5. Fix the winning structures and threshold. Refit the binary model on all 83,050 eligible
+development beats and the subtype model on 28,758 supported abnormal development
+beats. Apply the frozen pair once to the final temporal segment.
+Tree fitting is a recursive partitioning procedure, so the supervised models have no epoch-
+by-epoch training-loss curve. Their training criterion is node entropy; the evidence used
+for model selection is held-out validation performance. Node entropy and validation error
+therefore measure different aspects of model fitting.
+depth14
+depth22
+deep
+0.975
+0.980
+0.985
+0.990
+0.995
+1.000
+Balanced accuracy
+97.62%
+thr 0.505
+98.57%
+thr 0.537
+98.73%
+thr 0.571
+A. Binary detector candidates
+depth22
+deep_sqrt
+deep_third
+0.970
+0.975
+0.980
+0.985
+0.990
+0.995
+1.000
+Macro F1
+0.9780
+0.9762
+0.9811
+B. Subtype candidates
+Validation-region model selection
+Figure 6.3: Model selection on the 64–80% validation region.
+The binary detector is selected by
+balanced accuracy and F1; the subtype classifier is selected by macro F1 and accuracy.
+The selected binary detector was the fully grown 240-tree candidate with square-root
+feature sampling, minimum leaf size one, and record-weighting power 0.35. Its validation-
+
+
+6 Experimental Method
+57
+selected abnormal threshold was 0.5708333. The selected subtype classifier was the fully
+grown 260-tree candidate with a feature-sampling fraction of 0.33, minimum leaf size one, and
+record-weighting power 0.25. After selection, the binary model was refitted on all development
+beats, whereas the subtype model was refitted only on supported abnormal development beats.
+6.7 Evaluation order
+The deployed decision is hierarchical. First, the binary detector estimates whether a beat is
+abnormal. If the abnormal probability is not above the fixed threshold, the final output is N. If
+the beat passes the gate, the subtype classifier chooses PVC, PAC, LBBB, RBBB, or AFib.
+0
+5000
+10000
+15000
+20000
+Number of test beats
+Binary detection
+All accepted test beats
+Subtype classification
+True supported abnormal beats
+Complete system
+Normal + supported abnormal
+20,969
+7,958
+20,043
+Three distinct evaluation populations
+These groups overlap. Unsupported abnormal labels enter only binary evaluation.
+Figure 6.4: Populations used for the three evaluation questions. Conditional subtype scoring uses true
+supported abnormal beats independently of the gate. Complete-system scoring uses the
+gate and subtype model together. The populations overlap; unsupported abnormal labels
+enter only the binary evaluation.
+The temporal evaluation uses three sets of beats:
+1. binary abnormality detection on all 20,969 held-out beats, including unsupported abnor-
+mal MITDB symbols;
+2. conditional subtype classification on 7,958 true supported abnormal beats; and
+3. whole-system N/PVC/PAC/LBBB/RBBB/AFib classification on 20,043 supported held-
+out beats.
+The 926 unsupported abnormal beats are useful for testing the binary normal/abnormal gate,
+but they are not scored in the six-class whole-system confusion matrix.
+
+
+6 Experimental Method
+58
+6.8 Metrics
+For binary detection, an abnormal beat is the positive class. 𝑇𝑃and 𝑇𝑁are correctly
+classified abnormal and N beats; 𝐹𝑃is an N beat predicted as abnormal, and 𝐹𝑁is an abnormal
+beat predicted as N. The metrics are
+Accuracy =
+𝑇𝑃+𝑇𝑁
+𝑇𝑃+𝑇𝑁+ 𝐹𝑃+ 𝐹𝑁,
+(6.1)
+Sensitivity =
+𝑇𝑃
+𝑇𝑃+ 𝐹𝑁,
+(6.2)
+Specificity =
+𝑇𝑁
+𝑇𝑁+ 𝐹𝑃,
+(6.3)
+Balanced accuracy = Sensitivity + Specificity
+2
+.
+(6.4)
+For each output class 𝑐, the remaining classes are treated as negative when calculating
+Precision𝑐=
+𝑇𝑃𝑐
+𝑇𝑃𝑐+ 𝐹𝑃𝑐
+,
+(6.5)
+Recall𝑐=
+𝑇𝑃𝑐
+𝑇𝑃𝑐+ 𝐹𝑁𝑐
+,
+(6.6)
+𝐹1𝑐= 2 Precision𝑐Recall𝑐
+Precision𝑐+ Recall𝑐
+.
+(6.7)
+Macro F1 is the unweighted mean of class F1 values. It gives PAC the same weight as N even
+though N contains many more beats.
+Two accuracy summaries are reported. Pooled beat accuracy gives every beat equal weight.
+Equal-subject accuracy first calculates accuracy within each of the 45 eligible subject clusters
+and then gives every subject equal weight:
+𝐴𝑚𝑎𝑐𝑟𝑜= 1
+45
+45
+∑︁
+𝑠=1
+𝐴𝑠.
+(6.8)
+The equal-subject mean is used for uncertainty analysis so that subjects with more beats do not
+receive more weight. For conditional subtype accuracy, only subjects with supported abnormal
+test beats have a defined score; the mean uses that smaller set of subjects.
+6.9 Subject-clustered confidence interval
+The primary 95% confidence interval uses a non-parametric percentile bootstrap:
+1. keep every beat from one subject together;
+2. treat records 201 and 202 as one subject cluster;
+3. sample 45 subject clusters with replacement;
+4. calculate the equal-subject mean accuracy;
+
+
+6 Experimental Method
+59
+5. repeat 10,000 times using seed 20260801; and
+6. take the 2.5th and 97.5th percentiles.
+These intervals describe variation across the evaluated subject clusters with the fitted model
+held fixed. They do not include retraining variability, uncertainty from earlier test exposure, or
+a new population shift. Resampling individual beats can create an artificially narrow interval
+because adjacent beats from the same recording are correlated. The clustered bootstrap keeps
+that dependence [23].
+6.10 Exploratory tests against the 90% target
+The confidence interval is the primary statistical evidence.
+Two non-parametric tests
+provide supplementary, exploratory analyses. The exact one-sided sign test asks whether
+more than half of subjects exceed 90%. The one-sided Wilcoxon signed-rank test asks whether
+subject accuracies are shifted above 90%, under the additional symmetry assumption of a
+signed-rank location test. Accuracy is bounded and has ceiling effects, so the Wilcoxon
+analysis is secondary. The sign test concerns the fraction of subjects above the target, not
+pooled beat accuracy.
+These tests are interpreted together with the confidence interval,
+interval width, per-class recall, macro F1, and subject accuracy distribution.
+6.11 Reproducibility and leakage controls
+The final experiment saves the temporal boundary audit for every record, the candidate
+scores, selected models, probability threshold, final confusion matrix, per-class counts, per-
+subject accuracies, bootstrap seed, and headline metrics. The rerun used seed 20260801 and
+did not use the final 20% segment for candidate selection, threshold selection, or final refitting.
+The final 20% segment had been observed during earlier system development, so the evalua-
+tion is a retrospective rerun on previously observed data. This prior exposure can influence de-
+sign choices and cause optimism even when the present selection code excludes test rows. It is
+not a confirmatory first-use test, and the bootstrap does not correct development-selection bias.
+Patient overlap is also intentional: the test is later ECG from known patients. Therefore, the
+method supports a patient-adapted temporal-performance claim, not a patient-independent
+generalisation claim.
+The next chapter reports each evaluation population separately and examines errors at both
+stages of the hierarchy.
+
+
+7 Results and Statistical Validation
+This chapter presents the retrospective temporal results, their uncertainty, and the limited ex-
+ternal INCART check. Binary detection, conditional subtype classification, and whole-system
+classification are reported separately because they use different sets of beats. All results use
+the local window-preparation procedure described in Chapter 6. The saved experiment and
+prediction files are listed in the appendix.
+7.1 Evaluation populations and sample sizes
+The final dataset contains 104,755 accepted beats from 46 MITDB MLII records, representing
+45 subject clusters. Records 102 and 104 lack MLII and are excluded. Records 201 and 202
+form one subject cluster. The first and last eligible beat in each record are excluded because a
+preceding or following accepted R peak is unavailable. Compared with the original cache, this
+removes 92 beats before splitting. Percentages refer to accepted-beat order.
+One temporal test set; three evaluation questions
+20,969 later beats from 45 patient clusters
+12,085 normal + 7,958 supported abnormal + 926 other abnormal
+A  Binary detection: 20,969 beats
+All normal and abnormal beats, including 926 other abnormal labels.
+Question: does the gate distinguish normal from abnormal?
+B  Subtype classification: 7,958 beats
+True supported abnormal beats; score independently of the binary gate.
+Question: does the subtype model choose the correct arrhythmia group?
+C  Complete system: 20,043 beats
+Normal and supported abnormal beats; apply the gate, then subtype.
+Question: does the full hierarchy return the correct final class?
+Supported arrhythmias: PVC, PAC, LBBB, RBBB and AFib.
+The three groups overlap; each answers a separate evaluation question.
+Figure 7.1: Evaluation groups for the corrected retrospective test.
+Conditional subtype scoring
+bypasses the binary gate; complete-system scoring applies the hierarchy. Counts overlap,
+and records 201 and 202 share one patient cluster.
+
+
+7 Results and Statistical Validation
+61
+Table 7.1: Distinct denominators for the three evaluation questions.
+Evaluation
+Support and interpretation
+Binary detection
+20,969 beats: 12,085 N and 8,884 abnormal,
+including 926 unsupported abnormal beats.
+Conditional subtype
+7,958 true supported abnormal beats, scored by the
+subtype model regardless of the binary gate.
+Whole system
+20,043 beats with supported labels, evaluated
+through both stages of the hierarchy.
+Normal
+Supported
+arrhythmias
+Unsupported
+abnormal
+0
+2000
+4000
+6000
+8000
+10000
+12000
+14000
+Held-out beats
+12,085
+7,958
+926
+Unsupported abnormal symbols help test the normal/abnormal gate,
+but they are not scored in the six-class confusion matrix.
+Binary test support: 20,969 beats
+N
+PVC
+PAC
+LBBB
+RBBB
+AFib
+0
+2000
+4000
+6000
+8000
+10000
+12000
+14000
+Supported beats
+12,085
+99.5%
+1,527
+98.2%
+589
+70.6%
+1,481
+99.7%
+1,383
+98.7%
+2,978
+96.7%
+Six-class whole-system support: 20,043 beats
+reference beats
+correct final output
+What data was used for the final temporal test
+Figure 7.2: Reference-class composition of the corrected temporal test.
+7.2 Model selection
+Candidate selection uses the earlier 64–80% region after the boundary exclusions. The
+chosen binary model has 240 fully grown Extra Trees, square-root feature sampling, minimum
+leaf size one, entropy criterion, and subject/class weighting power 0.35. Its validation balanced
+accuracy is 98.73%. The chosen subtype model has 260 trees, feature sampling 0.33, minimum
+leaf size one, entropy criterion, and weighting power 0.25. Its validation macro F1 is 0.9811.
+The binary threshold is 0.5708333333. The selected models are refitted on 83,050 develop-
+ment beats and 28,758 supported abnormal development beats, respectively. The final test
+does not change this threshold.
+
+
+7 Results and Statistical Validation
+62
+7.3 Main temporal results
+Table 7.2: Corrected temporal results.
+Confidence intervals estimate equal-subject accuracy, not
+pooled beat accuracy.
+Outcome
+Pooled
+Subject mean
+95% CI
+Width
+Binary accuracy
+98.81%
+98.84%
+98.01–99.45%
+1.44 pp
+Conditional subtype
+97.63%
+94.77%
+89.03–99.08%
+10.05 pp
+Whole-system accuracy
+98.07%
+98.03%
+96.29–99.25%
+2.95 pp
+In Table 7.2, CI means confidence interval and pp means percentage points. Interval widths
+are calculated from unrounded bounds; subtracting the displayed bounds may therefore give
+a slightly different value.
+Binary balanced accuracy is 98.69%, sensitivity is 97.91%, specificity is 99.47%, precision is
+99.27%, and F1 is 0.9858. Conditional subtype macro F1 is 0.9574; whole-system macro F1 is
+0.9524.
+Abnormality
+detection
+Conditional subtype
+classification
+Whole-system
+accuracy
+Whole-system
+macro F1
+0.0
+0.2
+0.4
+0.6
+0.8
+1.0
+Pooled test score
+98.81%
+97.63%
+98.07%
+95.24%
+Final model temporal-test results
+90% target
+Figure 7.3: Pooled temporal scores after the preprocessing correction.
+For the whole system, all three primary targets were met: pooled accuracy was above 90%,
+the lower confidence bound for equal-subject accuracy was above 90%, and interval width
+was at most three percentage points. These are descriptive outcomes of the retrospective
+study. Prior test exposure prevents interpreting them as an independent confirmation of these
+targets.
+
+
+7 Results and Statistical Validation
+63
+7.4 Uncertainty and subject variation
+The bootstrap resamples 45 complete subject clusters with equal weight, 10,000 times
+using seed 20260801. It holds the fitted model fixed. For subtype accuracy, subjects without
+supported abnormal test beats have no subtype score and are omitted from that replicate’s
+mean.
+Abnormality
+detection
+Conditional subtype
+classification
+Whole system
+0.88
+0.90
+0.92
+0.94
+0.96
+0.98
+1.00
+Equal-subject accuracy
+98.84%
+[98.01, 99.45]
+94.77%
+[89.03, 99.08]
+98.03%
+[96.29, 99.25]
+Subject-clustered 95% confidence intervals
+90% target
+Figure 7.4: Equal-subject accuracy and percentile bootstrap intervals. The conditional subtype interval
+remains wide even though the whole-system width target is met.
+Forty-three of 45 subject clusters exceed 90% whole-system accuracy. The exact one-sided
+sign test gives 𝑝= 2.94 × 10−11 against the null that no more than half of subjects exceed
+the target. The secondary Wilcoxon statistic is 987, with 𝑝= 4.24 × 10−8. Its location-shift
+interpretation requires additional symmetry assumptions.
+Neither test corrects selection
+optimism or establishes new-patient performance.
+
+
+7 Results and Statistical Validation
+64
+207
+222
+114
+108
+200
+124
+221
+223
+209
+210
+201-202
+203
+105
+212
+220
+228
+100
+205
+208
+118
+109
+233
+101
+111
+213
+116
+117
+113
+112
+103
+107
+106
+214
+122
+121
+119
+123
+115
+215
+219
+217
+230
+231
+232
+234
+MIT-BIH subject/record cluster
+0.0
+0.2
+0.4
+0.6
+0.8
+1.0
+Whole-system accuracy
+Performance across the 45 known-patient temporal test clusters
+90% target
+Figure 7.5: Corrected whole-system accuracy across 45 known-patient clusters.
+The below-target clusters are 207 (67.92%) and 222 (84.85%). Cluster 207 has high binary
+accuracy but poorer subtype classification. Cluster 222 has binary accuracy 85.45%, so failures
+in the gate also matter. This variation is not visible from pooled accuracy alone.
+7.5 Errors by stage and class
+The gate detects 8,698 of 8,884 abnormal beats and correctly assigns N to 12,021 of 12,085
+N beats. Thus it produces 186 missed abnormal beats and 64 false alarms. When evaluated
+without the gate, the subtype model correctly classifies 7,769 of 7,958 supported abnormal
+beats. Gate errors can assign N to an abnormal beat even when the subtype model would have
+classified it correctly.
+Table 7.3: Whole-system performance by supported abnormal output group.
+Group
+True
+Correct
+Precision
+Recall
+F1
+PVC
+1,527
+1,499
+92.36%
+98.17%
+0.9517
+PAC
+589
+416
+98.58%
+70.63%
+0.8229
+LBBB
+1,481
+1,476
+96.72%
+99.66%
+0.9817
+RBBB
+1,383
+1,365
+99.78%
+98.70%
+0.9924
+AFib
+2,978
+2,879
+98.26%
+96.68%
+0.9746
+
+
+7 Results and Statistical Validation
+65
+PVC
+PAC
+LBBB
+RBBB
+AFib
+0
+500
+1000
+1500
+2000
+2500
+3000
+Beat count
+98.2%
+70.6%
+99.7%
+98.7%
+96.7%
+Final model: fixed 20% temporal holdout
+Labelled test beats
+Correct end-to-end
+Figure 7.6: True and correctly classified supported abnormal beats. PAC remains below the 90% recall
+target.
+Of 589 PAC-group beats, 549 pass the binary gate, 441 receive the correct subtype when the
+gate is ignored, and 416 are correct end to end. PAC errors therefore arise in both stages. AFib
+denotes the project’s AFIB/AFL rhythm grouping on normal-like beat symbols; the 96.68%
+recall is not an episode-level or AF-only sensitivity estimate.
+
+
+7 Results and Statistical Validation
+66
+N
+PVC
+PAC
+LBBB
+RBBB
+AFib
+System output
+N
+PVC
+PAC
+LBBB
+RBBB
+AFib
+Reference label
+12,021
+99.5%
+2
+0.0%
+0
+0.0%
+34
+0.3%
+2
+0.0%
+26
+0.2%
+6
+0.4%
+1,499
+98.2%
+0
+0.0%
+16
+1.0%
+0
+0.0%
+6
+0.4%
+40
+6.8%
+113
+19.2%
+416
+70.6%
+0
+0.0%
+1
+0.2%
+19
+3.2%
+1
+0.1%
+4
+0.3%
+0
+0.0%
+1,476
+99.7%
+0
+0.0%
+0
+0.0%
+15
+1.1%
+0
+0.0%
+3
+0.2%
+0
+0.0%
+1,365
+98.7%
+0
+0.0%
+91
+3.1%
+5
+0.2%
+3
+0.1%
+0
+0.0%
+0
+0.0%
+2,879
+96.7%
+Final model whole-system confusion matrix
+0
+20
+40
+60
+80
+100
+Percentage within reference class
+Figure 7.7: Whole-system confusion matrix for 20,043 supported temporal beats.
+The largest abnormal-subtype confusion is 113 PAC beats assigned to PVC. The gate sends
+91 AFib-group and 40 PAC-group beats to N. Among reference N beats, 34 become LBBB and 26
+become AFib. Unsupported abnormal beats are excluded from this matrix, but a deployed gated
+beat still receives a supported subtype because the model has no unknown-class rejection rule.
+7.6 Limited external INCART check
+After model fitting, the fixed hierarchy and threshold were applied to complete INCART
+records I01 and I02. These were the two lead-II recordings already cached locally at the start
+of the external evaluation. Selection was by local availability, not measured performance. This
+is a convenience sample. INCART contains 75 half-hour records from 32 source patients, with
+12 leads sampled at 257 Hz [35]. I01 and I02 both carry the header identifier patient 1: the two
+records represent one independent source patient.
+Standard lead II is a practical external counterpart to MITDB MLII, not an identical lead.
+This check combines source, acquisition and lead differences. Scoring uses annotated beats,
+not live R-peak detections.
+
+
+7 Results and Statistical Validation
+67
+Table 7.4: Corrected model on complete INCART I01 and I02 recordings.
+Quantity
+Value
+Records / source patients
+2 / 1
+Accepted annotated beats
+5,416
+Reference N / PVC
+4,845 / 571
+Fixed abnormal threshold
+0.5708333333
+Binary accuracy
+94.11%
+Binary balanced accuracy
+96.55%
+Sensitivity / specificity
+99.65% / 93.46%
+Binary precision / F1
+64.22% / 0.7811
+AUROC / average precision
+0.9914 / 0.9152
+TP / TN / FP / FN
+569 / 4,528 / 317 / 2
+Whole-system accuracy
+92.85%
+End-to-end PVC recall
+87.74%
+Only N and PVC occur in the reference labels. The binary model detects 569 of 571 PVC
+beats but produces 317 false alarms among 4,845 N beats. End to end, 501 PVC beats receive
+the correct label. Binary accuracies by record are 94.47% for I01 and 93.74% for I02. High
+binary sensitivity therefore coexists with lower precision and subtype errors.
+Macro F1 over the six predefined labels is 0.3039 when the four classes absent from the
+reference labels are assigned F1 values of zero. The mean over the two observed reference
+classes is 0.9116. These summaries are not directly comparable to a six-class test containing
+reference examples of every class. PAC, LBBB, RBBB and AFib sensitivity cannot be estimated
+from this subset. A patient-cluster population confidence interval is not reported because
+there is only one source patient.
+7.7 Answers to the research questions
+RQ1 The frozen autoencoder supplies four residual features, but their independent benefit
+has not been tested through a controlled comparison.
+RQ2 Binary, conditional-subtype and whole-system accuracies are 98.81%, 97.63% and 98.07%,
+respectively, on their respective evaluation sets.
+RQ3 Equal-subject whole-system accuracy is 98.03%, with a 96.29–99.25% interval and two
+below-target subject clusters.
+RQ4 The whole-system targets were met, but PAC recall remained below 90%. INCART eval-
+uation covered only one patient and two reference classes; broader external validation
+remains incomplete.
+
+
+8 Discussion and Conclusion
+8.1 Main findings
+The single-lead hierarchy achieved 98.07% pooled six-class accuracy on later accepted
+MITDB MLII beats from known patients. Equal-subject accuracy is 98.03%, with a subject-
+clustered 95% interval of 96.29–99.25%. The interval width was 2.95 percentage points, meeting
+the target of at most three percentage points. The width was calculated from unrounded
+bounds. However, PAC recall is 70.63%, and two subject clusters remain below 90% accuracy.
+A limited check of complete INCART I01 and I02 records gives 94.11% binary accuracy
+and 92.85% whole-system accuracy. Both records belong to the same source patient. Binary
+precision falls to 64.22% because 317 normal beats become false alarms. The lower precision
+shows that false alarms remain a major issue in this external sample. The one-patient design
+limits the scope of this finding.
+8.2 Interpretation of the findings
+The high pooled accuracy shows that the system classified most supported beats correctly
+in this temporal evaluation. It does not show uniform performance across classes or patients.
+PAC recall was 70.63%, compared with more than 96% for each of the other supported abnormal
+groups. The 113 PAC-to-PVC errors show that subtype confusion was a major source of failure.
+Both the binary gate and subtype model therefore need improvement for this group.
+Conditional subtype accuracy measures how well the second model classifies true supported
+abnormal beats when the gate is ignored. Whole-system accuracy also includes the gate and
+the larger N group. The two percentages have different denominators, so their difference is
+not a direct measure of the cost of the gate. The class-level counts provide a clearer view of
+those errors. Likewise, the wide conditional-subtype confidence interval shows substantial
+variation across subjects despite high pooled accuracy.
+The use of waveform and RR features follows earlier heartbeat-classification research [3].
+Normal-reference reconstruction adds another source of information, but this experiment does
+not isolate its benefit. Differences in labels, leads, and patient splits also prevent a direct
+accuracy ranking against the studies reviewed in Chapter 2.
+The INCART check shows a further limitation. High sensitivity was accompanied by 317
+false alarms and binary precision of 64.22%. Thus, detecting most abnormal beats did not
+ensure high precision among the alerts. Changes in recording conditions, lead configuration,
+and the proportion of abnormal beats may contribute to this difference, but the one-patient
+sample cannot separate their effects.
+
+
+8 Discussion and Conclusion
+69
+8.3 Achievement of the objectives
+• The prototype integrates a frozen NSRDB autoencoder and two supervised MLII ensem-
+bles, with the same local model-window preparation at training and use.
+• Pooled whole-system accuracy, the equal-subject lower confidence bound, and the
+interval-width target are met in the corrected retrospective run.
+• The requirement that every supported abnormal group exceed 90% recall is not met
+because of PAC.
+• Generalisation across independent external patients, all supported subtypes, and real
+AD8232 recordings is not established.
+8.4 Effect of the preprocessing revision
+The original supervised cache standardised complete MITDB recordings before window
+extraction. Its scale statistics therefore included the test region, and sensor chunks used a
+different scale. The corrected system filters and standardises each four-second model window
+and requires both neighbouring R peaks to be observed. Tests verify agreement between offline
+and streaming feature construction when the same peak locations are supplied.
+The original 96.86% result is retained as a historical artifact, not the headline result of the
+corrected system. The preprocessing changes, removal of two edge beats per record, and
+refitting mean that the difference between the two runs is not a controlled estimate of one
+component’s causal benefit.
+The autoencoder remains the original frozen checkpoint.
+Its decoder resizes up-block
+tensors to their skip lengths and finally interpolates from 256 to 512 samples. Chapter 5 reports
+these implemented dimensions. Altering this trained architecture would require a separate
+training study.
+8.5 Limitations
+1. Earlier labelled ECG from the same patients is available during supervised development.
+The result does not establish accuracy for patients whose data were absent from model
+development.
+2. The final segment was observed during earlier development. Correcting the preprocess-
+ing does not restore test independence. Earlier development choices may still make the
+results optimistic. Neither the bootstrap nor the reported 𝑝-values corrects this bias.
+3. The bootstrap estimates subject variation with the fitted model fixed. It does not include
+retraining variability or extrapolation to a new cohort.
+4. NSRDB is a nominally normal source cohort, with no beat-annotation screening in this
+preparation. Its ECG1 anatomical lead is unspecified. The two-epoch training record
+
+
+8 Discussion and Conclusion
+70
+does not establish optimal convergence.
+5. No controlled ablation quantifies the independent benefit of the four autoencoder resid-
+uals.
+6. Output labels are project groups. AFib includes flutter on normal-like beat symbols; PVC
+includes ventricular escape beats; N includes atrial and junctional escape beats. No AF
+episode detection is evaluated.
+7. Unsupported abnormal beats enter binary testing but are excluded from six-class scoring.
+The deployed gate has no validated unknown-class rejection.
+8. Temporal and INCART scoring use annotated R peaks. Live peak detection introduces
+errors beyond those metrics. The prepared window needs roughly 2.44 seconds of post-R
+signal and the next observed beat, plus acquisition and computation delay.
+9. INCART evaluation covers 5,416 beats but only one source patient and N/PVC reference
+support. More beats from this same patient cannot supply independent-patient evidence
+or validate absent classes.
+10. The software requires the correct lead declaration, but cannot verify physical electrode
+placement. Signal checks reject non-finite/flat inputs and reported lead-off; they do not
+certify clinical signal quality.
+8.6 Further research
+The next experiment should preregister a patient-disjoint development, validation and test
+allocation; freeze preprocessing and thresholds before external scoring; and recruit enough
+independent subjects for every target class. PAC and external false alarms need particular
+attention. A controlled comparison should evaluate the hierarchy with and without residual
+features, and prospective sensor testing should measure R-peak accuracy, classification errors,
+signal quality and end-to-end latency. Future work should treat the already viewed temporal
+and INCART records as development data and reserve separate patients for final evaluation.
+8.7 Conclusion
+This study developed a reproducible single-lead ECG prototype and evaluated its binary,
+subtype, and complete classification stages.
+The retrospective results met the aggregate
+targets, but PAC recall and external false alarms remain important weaknesses. It remains
+a research system, not a validated clinical diagnostic device [24].
+
+
+Bibliography
+[1] P. Kligfield, L. S. Gettes, J. J. Bailey, R. Childers, B. J. Deal, E. W. Hancock, G. van Herpen,
+J. A. Kors, P. Macfarlane, D. M. Mirvis, O. Pahlm, P. Rautaharju, and G. S. Wagner,
+“Recommendations for the standardization and interpretation of the electrocardiogram:
+Part i,” Journal of the American College of Cardiology, vol. 49, no. 10, pp. 1109–1127, 2007.
+→[p1], [p24]
+[2] G. B. Moody and R. G. Mark, “The impact of the MIT–BIH arrhythmia database,” IEEE
+Engineering in Medicine and Biology Magazine, vol. 20, no. 3, pp. 45–50, 2001.
+→[p1], [p6], [p11]
+[3] P. de Chazal, M. O’Dwyer, and R. B. Reilly, “Automatic classification of heartbeats
+using ECG morphology and heartbeat interval features,” IEEE Transactions on Biomedical
+Engineering, vol. 51, no. 7, pp. 1196–1206, 2004.
+→[p1], [p6], [p7], [p9], [p22], [p68]
+[4] A. L. Goldberger, L. A. N. Amaral, L. Glass, J. M. Hausdorff, P. C. Ivanov, R. G. Mark,
+J. E. Mietus, G. B. Moody, C.-K. Peng, and H. E. Stanley, “Physiobank, physiotoolkit, and
+PhysioNet: Components of a new research resource for complex physiologic signals,”
+Circulation, vol. 101, no. 23, pp. e215–e220, 2000.
+→[p6], [p11]
+[5] G. B. Moody and R. G. Mark, “MIT–BIH arrhythmia database.” https://physionet.
+org/content/mitdb/1.0.0/, 2005.
+→[p6], [p11], [p13], [p22]
+[6] G. B. Moody, “MIT–BIH normal sinus rhythm database.” https://physionet.org/
+content/nsrdb/1.0.0/, 1999.
+→[p6], [p9], [p11], [p22], [p43]
+[7] S. Mousavi and F. Afghah, “Inter- and intra-patient ECG heartbeat classification for
+arrhythmia detection: A sequence to sequence deep learning approach,” in IEEE Inter-
+national Conference on Acoustics, Speech and Signal Processing, pp. 1308–1312, 2019.
+→[p6], [p7], [p9], [p22]
+[8] J. Zhang, A. Liu, D. Liang, X. Chen, and M. Gao, “Interpatient ECG heartbeat classification
+with an adversarial convolutional neural network,” Journal of Healthcare Engineering,
+vol. 2021, p. 9946596, 2021.
+→[p6], [p7], [p9], [p30]
+[9] H. Huang, J. Liu, Q. Zhu, R. Wang, and G. Hu, “Detection of inter-patient left and
+right bundle branch block heartbeats in ECG using ensemble classifiers,” BioMedical
+Engineering OnLine, vol. 13, p. 72, 2014.
+→[p7], [p10]
+
+
+Bibliography
+72
+[10] S. Kiranyaz, T. Ince, and M. Gabbouj, “Real-time patient-specific ECG classification by
+1-d convolutional neural networks,” IEEE Transactions on Biomedical Engineering, vol. 63,
+no. 3, pp. 664–675, 2016.
+→[p7]
+[11] U. R. Acharya, H. Fujita, O. S. Lih, Y. Hagiwara, J. H. Tan, and M. Adam, “Automated
+detection of arrhythmias using different intervals of tachycardia ECG segments with
+convolutional neural network,” Information Sciences, vol. 405, pp. 81–90, 2017.
+→[p7]
+[12] A. Y. Hannun, P. Rajpurkar, M. Haghpanahi, G. H. Tison, C. Bourn, M. P. Turakhia,
+and A. Y. Ng, “Cardiologist-level arrhythmia detection and classification in ambulatory
+electrocardiograms using a deep neural network,” Nature Medicine, vol. 25, pp. 65–69,
+2019.
+→[p7]
+[13] A. H. Ribeiro, M. H. Ribeiro, G. M. M. Paixao, D. M. Oliveira, P. R. Gomes, J. A. Canazart,
+M. P. S. Ferreira, C. R. Andersson, P. W. Macfarlane, W. Meira, T. B. Schön, and A. L. P.
+Ribeiro, “Automatic diagnosis of the 12-lead ECG using a deep neural network,” Nature
+Communications, vol. 11, p. 1760, 2020.
+→[p7]
+[14] G. E. Hinton and R. R. Salakhutdinov, “Reducing the dimensionality of data with neural
+networks,” Science, vol. 313, no. 5786, pp. 504–507, 2006.
+→[p7], [p9], [p26]
+[15] P. Vincent, H. Larochelle, Y. Bengio, and P.-A. Manzagol, “Extracting and composing
+robust features with denoising autoencoders,” in Proceedings of the 25th International
+Conference on Machine Learning, pp. 1096–1103, 2008.
+→[p8], [p9], [p26], [p27], [p40]
+[16] V. Chandola, A. Banerjee, and V. Kumar, “Anomaly detection: A survey,” ACM Computing
+Surveys, vol. 41, no. 3, pp. 1–58, 2009.
+→[p8], [p26]
+[17] P. Malhotra, A. Ramakrishnan, G. Anand, L. Vig, P. Agarwal, and G. Shroff, “LSTM-
+based encoder–decoder for multi-sensor anomaly detection,” in ICML 2016 Workshop on
+Anomaly Detection, 2016.
+→[p8]
+[18] M. Thill, W. Konen, H. Wang, and T. Bäck, “Temporal convolutional autoencoder
+for unsupervised anomaly detection in time series,” Applied Soft Computing, vol. 112,
+p. 107751, 2021.
+→[p8], [p9]
+[19] J.-H. Jang, T. Y. Kim, H.-S. Lim, and D. Yoon, “Unsupervised feature learning for
+electrocardiogram data using the convolutional variational autoencoder,” PLOS ONE,
+vol. 16, no. 12, p. e0260612, 2021.
+→[p8]
+[20] L. Shan, Y. Li, H. Jiang, P. Zhou, J. Niu, R. Liu, Y. Wei, J. Peng, H. Yu, X. Sha, and S. Chang,
+“Abnormal ECG detection based on an adversarial autoencoder,” Frontiers in Physiology,
+vol. 13, p. 961724, 2022.
+→[p8]
+[21] T. Saito and M. Rehmsmeier, “The precision–recall plot is more informative than the ROC
+plot when evaluating binary classifiers on imbalanced datasets,” PLOS ONE, vol. 10, no. 3,
+p. e0118432, 2015.
+→[p8], [p10], [p34]
+
+
+Bibliography
+73
+[22] Y. Cui, M. Jia, T.-Y. Lin, Y. Song, and S. Belongie, “Class-balanced loss based on effective
+number of samples,” in Proceedings of the IEEE/CVF Conference on Computer Vision and
+Pattern Recognition, pp. 9268–9277, 2019.
+→[p8], [p32]
+[23] C. M. Rutter, “Bootstrap estimation of diagnostic accuracy with patient-clustered data,”
+Academic Radiology, vol. 7, no. 6, pp. 413–419, 2000.
+→[p8], [p10], [p34], [p59]
+[24] G. S. Collins, K. G. M. Moons, P. Dhiman, R. D. Riley, A. L. Beam, B. Van Calster,
+M. Ghassemi, X. Liu, J. B. Reitsma, M. van Smeden, A.-L. Boulesteix, J. C. Camaradou, L. A.
+Celi, S. Denaxas, A. K. Denniston, B. Glocker, R. M. Golub, H. Harvey, G. Heinze, M. M.
+Hoffman, A. P. Kengne, E. Lam, N. Lee, E. W. Loder, L. Maier-Hein, B. A. Mateen, M. D.
+McCradden, L. Oakden-Rayner, J. Ordish, R. Parnell, S. Rose, K. Singh, L. Wynants, and
+P. Logullo, “TRIPOD+AI statement: Updated guidance for reporting clinical prediction
+models that use regression or machine learning methods,” BMJ, vol. 385, p. e078378, 2024.
+→[p8], [p10], [p70]
+[25] PhysioNet, “Frequently asked questions: What do the signal names MLII, v2, ... mean?.”
+https://archive.physionet.org/faq.shtml. Accessed September 23, 2026.
+→[p13]
+[26] S. Butterworth, “On the theory of filter amplifiers,” Experimental Wireless and the Wireless
+Engineer, vol. 7, pp. 536–541, 1930.
+→[p15], [p23], [p24]
+[27] P. Virtanen et al., “SciPy 1.0: Fundamental algorithms for scientific computing in python,”
+Nature Methods, vol. 17, pp. 261–272, 2020.
+→[p15], [p23], [p33]
+[28] K. He, X. Zhang, S. Ren, and J. Sun, “Deep residual learning for image recognition,” in
+Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition, pp. 770–
+778, 2016.
+→[p27], [p42]
+[29] O. Ronneberger, P. Fischer, and T. Brox, “U-Net: Convolutional networks for biomedical
+image segmentation,” in Medical Image Computing and Computer-Assisted Intervention,
+pp. 234–241, 2015.
+→[p27]
+[30] N. Srivastava, G. Hinton, A. Krizhevsky, I. Sutskever, and R. Salakhutdinov, “Dropout: A
+simple way to prevent neural networks from overfitting,” Journal of Machine Learning
+Research, vol. 15, pp. 1929–1958, 2014.
+→[p27], [p42]
+[31] D. P. Kingma and J. Ba, “Adam: A method for stochastic optimization,” in International
+Conference on Learning Representations, 2015.
+→[p28], [p43]
+[32] P. Geurts, D. Ernst, and L. Wehenkel, “Extremely randomized trees,” Machine Learning,
+vol. 63, pp. 3–42, 2006.
+→[p30], [p46]
+[33] Analog Devices, AD8232: Single-Lead, Heart Rate Monitor Front End Data Sheet. Analog
+Devices, Inc., 2020.
+→[p32]
+
+
+Bibliography
+74
+[34] A. Paszke et al., “PyTorch: An imperative style, high-performance deep learning library,”
+in Advances in Neural Information Processing Systems, vol. 32, 2019.
+→[p33]
+[35] E. Yakushenko, “St petersburg INCART 12-lead arrhythmia database.” https://
+physionet.org/content/incartdb/1.0.0/, 2008.
+→[p66]
+
+
+A Reproducibility Record
+A.1 Experiment files
+Paths in this appendix are relative to Final_Report_Research/ unless they begin
+with backend/ or Final_Report_Research/; those paths are relative to the repository
+root. The main temporal experiment is stored in:
+• experiments/corrected_temporal_holdout.json;
+• experiments/corrected_temporal_holdout.joblib; and
+• tools/final_temporal_holdout.py.
+The normal model is documented by experiments/nsrdb_autoencoder_training.
+json, produced by tools/train_nsrdb_autoencoder.py. Its deployable checkpoint
+is backend/app/storage/models/model_nsrdb_primary_healthy.pt.
+The
+deployable copy is registered by the backend model registry and stored in the backend model
+directory.
+A.2 Frozen constants
+Table A.1: Settings used for the final experiment.
+Setting
+Value
+Experiment seed
+20260801
+Healthy-autoencoder seed
+20260802
+Autoencoder fitting/validation subjects
+15 / 3 NSRDB records
+Autoencoder fitting/validation windows
+288,673 / 57,177
+Bootstrap seed and replicates
+20260801; 10,000
+Development/test boundary
+80% / 20% per record
+Candidate training/validation
+approximately 64% / 16% per record
+Boundary gap
+16 beats before validation and test
+Binary threshold
+0.5708333333
+Binary ensemble
+240 fully grown Extra Trees
+Subtype ensemble
+260 fully grown Extra Trees
+Binary/subtype input sizes
+242 / 242
+Independent uncertainty units
+45 subject clusters
+
+
+A Reproducibility Record
+76
+A.3 Recorded evaluation targets
+The saved JSON file records that all three whole-system targets were met: pooled accuracy
+above 90%, a lower 95% confidence bound above 90%, and an interval width of at most three
+percentage points. These checks describe the retrospective evaluation; they do not establish
+independent validation.
+A.4 Safety statement
+The installed artifact is a research model. The final experiment uses patient overlap, one
+MITDB lead, and annotated R-peak locations during evaluation. It is not a certified medical
+device and must not be used to diagnose or treat a patient.
+A.5 Verification and historical record
+The following files retain the results and verification record:
+• Original August results:
+experiments/final_temporal_holdout.json.
+• Revised temporal predictions:
+experiments/corrected_test_predictions.npz.
+• Independent verification:
+experiments/final_verification.json.
+• External INCART results:
+experiments/corrected_external_incart.json.
+• External INCART predictions:
+experiments/corrected_external_predictions.npz.
+Model SHA-256 digests link the evaluated bundle to its deployed copy.
+Use the backend Python environment to run the verification script at tools/verify_
+final_results.py within the report directory. The supervised training entry point is
+tools/final_temporal_holdout.py. It uses tools/corrected_dataset.py
+and the shared preparation module at backend/app/ml/beat_preparation.py. The
+NSRDB checkpoint is frozen and is not retrained by this entry point. Running training again
+replaces the corrected artifacts, so preserve the current experiment directory before any future
+research change.

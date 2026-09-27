@@ -1,6 +1,6 @@
 \babel@toc {english}{}\relax 
 \addvspace {10\p@ }
-\contentsline {table}{\numberline {1.1}{\ignorespaces Normal rhythm and the five arrhythmia types considered in this study.}}{2}{table.caption.10}%
+\contentsline {table}{\numberline {1.1}{\ignorespaces ECG patterns underlying the six output groups considered in this study.}}{2}{table.caption.10}%
 \addvspace {10\p@ }
 \contentsline {table}{\numberline {2.1}{\ignorespaces Main papers referenced in this study and their contribution.}}{9}{table.2.1}%
 \addvspace {10\p@ }
@@ -9,20 +9,22 @@
 \contentsline {table}{\numberline {3.3}{\ignorespaces Cleaning checklist applied before a signal can become a model input.}}{15}{table.caption.16}%
 \contentsline {table}{\numberline {3.4}{\ignorespaces Training, validation, and temporal-test data supplied to each model.}}{19}{table.caption.18}%
 \addvspace {10\p@ }
-\contentsline {table}{\numberline {4.1}{\ignorespaces How the theory maps to the implemented final system.}}{28}{table.caption.25}%
+\contentsline {table}{\numberline {4.1}{\ignorespaces Technologies in the final evidence path and the mathematical task performed by each. The web interface displays results and does not train the models.}}{33}{table.caption.26}%
+\contentsline {table}{\numberline {4.2}{\ignorespaces How the theory maps to the implemented final system.}}{35}{table.caption.28}%
 \addvspace {10\p@ }
-\contentsline {table}{\numberline {5.1}{\ignorespaces Organised feature groups in the final architecture.}}{35}{table.caption.33}%
-\contentsline {table}{\numberline {5.2}{\ignorespaces Reason for each major final-architecture decision.}}{38}{table.caption.34}%
+\contentsline {table}{\numberline {5.1}{\ignorespaces Architecture, training target, and output of each fitted component.}}{38}{table.caption.31}%
+\contentsline {table}{\numberline {5.2}{\ignorespaces Organised feature groups in the final architecture.}}{46}{table.caption.37}%
+\contentsline {table}{\numberline {5.3}{\ignorespaces Reason for each major final-architecture decision.}}{51}{table.caption.39}%
 \addvspace {10\p@ }
-\contentsline {table}{\numberline {6.1}{\ignorespaces Exact evidence supplied to the final supervised models.}}{40}{table.caption.36}%
+\contentsline {table}{\numberline {6.1}{\ignorespaces Exact evidence supplied to the final supervised models.}}{53}{table.caption.41}%
 \addvspace {10\p@ }
-\contentsline {table}{\numberline {7.1}{\ignorespaces Distinct denominators for the three evaluation questions.}}{48}{table.caption.41}%
-\contentsline {table}{\numberline {7.2}{\ignorespaces Corrected temporal results. Confidence intervals estimate equal-subject accuracy, not pooled beat accuracy.}}{49}{table.caption.43}%
-\contentsline {table}{\numberline {7.3}{\ignorespaces Whole-system performance by supported abnormal output group.}}{51}{table.caption.47}%
-\contentsline {table}{\numberline {7.4}{\ignorespaces Corrected model on complete INCART I01 and I02 recordings.}}{53}{table.caption.50}%
+\contentsline {table}{\numberline {7.1}{\ignorespaces Distinct denominators for the three evaluation questions.}}{61}{table.caption.46}%
+\contentsline {table}{\numberline {7.2}{\ignorespaces Corrected temporal results. Confidence intervals estimate equal-subject accuracy, not pooled beat accuracy.}}{62}{table.caption.48}%
+\contentsline {table}{\numberline {7.3}{\ignorespaces Whole-system performance by supported abnormal output group.}}{64}{table.caption.52}%
+\contentsline {table}{\numberline {7.4}{\ignorespaces Corrected model on complete INCART I01 and I02 recordings.}}{67}{table.caption.55}%
 \addvspace {10\p@ }
 \addvspace {10\p@ }
 \def \@chapapp {\appendixname }
 \addvspace {10\p@ }
-\contentsline {table}{\numberline {A.1}{\ignorespaces Settings used for the final experiment.}}{61}{table.caption.52}%
+\contentsline {table}{\numberline {A.1}{\ignorespaces Settings used for the final experiment.}}{75}{table.caption.57}%
 \providecommand \tocbasic@end@toc@file {}\tocbasic@end@toc@file 

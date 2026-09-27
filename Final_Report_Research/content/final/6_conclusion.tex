@@ -1,18 +1,49 @@
 \chapter{Discussion and Conclusion}\label{ch:conclusion}
 
 \section{Main findings}
-The corrected one-lead hierarchy achieves 98.07\% pooled six-class accuracy
+The single-lead hierarchy achieved 98.07\% pooled six-class accuracy
 on later accepted MITDB MLII beats from known patients. Equal-subject
 accuracy is 98.03\%, with a subject-clustered 95\% interval of
-96.29--99.25\%. The 2.95-point interval width meets the three-point
-precision target. However, PAC recall is 70.63\%, and two subject clusters
+96.29--99.25\%. The interval width was 2.95 percentage points, meeting the target of at most
+three percentage points. The width was calculated from unrounded bounds. However, PAC recall is 70.63\%, and two subject clusters
 remain below 90\% accuracy.
 
 A limited check of complete INCART I01 and I02 records gives 94.11\%
 binary accuracy and 92.85\% whole-system accuracy. Both records belong to
 the same source patient. Binary precision falls to 64.22\% because 317
-normal beats become false alarms. These results support further external
-testing, not a clinical generalisation claim.
+normal beats become false alarms. The lower precision shows that false alarms remain a major issue in this
+external sample. The one-patient design limits the scope of this finding.
+
+\section{Interpretation of the findings}
+The high pooled accuracy shows that the system classified most supported
+beats correctly in this temporal evaluation. It does not show uniform
+performance across classes or patients. PAC recall was 70.63\%, compared
+with more than 96\% for each of the other supported abnormal groups. The
+113 PAC-to-PVC errors show that subtype confusion was a major source of
+failure. Both the binary gate and subtype model therefore need improvement
+for this group.
+
+Conditional subtype accuracy measures how well the second model classifies
+true supported abnormal beats when the gate is ignored. Whole-system accuracy
+also includes the gate and the larger N group. The two percentages have
+different denominators, so their difference is not a direct measure of the
+cost of the gate. The class-level counts provide a clearer view of those
+errors. Likewise, the wide conditional-subtype confidence interval shows
+substantial variation across subjects despite high pooled accuracy.
+
+The use of waveform and RR features follows earlier heartbeat-classification
+research \cite{dechazal2004heartbeat}. Normal-reference reconstruction adds
+another source of information, but this experiment does not isolate its
+benefit. Differences in labels, leads, and patient splits also prevent a
+direct accuracy ranking against the studies reviewed in
+Chapter~\ref{ch:literature}.
+
+The INCART check shows a further limitation. High sensitivity was accompanied
+by 317 false alarms and binary precision of 64.22\%. Thus, detecting most
+abnormal beats did not ensure high precision among the alerts. Changes in
+recording conditions, lead configuration, and the proportion of abnormal
+beats may contribute to this difference, but the one-patient sample cannot
+separate their effects.
 
 \section{Achievement of the objectives}
 \begin{itemize}
@@ -26,7 +57,7 @@ is not met because of PAC.
 subtypes, and real AD8232 recordings is not established.
 \end{itemize}
 
-\section{Interpretation of the corrections}
+\section{Effect of the preprocessing revision}
 The original supervised cache standardised complete MITDB recordings before
 window extraction. Its scale statistics therefore included the test region,
 and sensor chunks used a different scale. The corrected system filters and
@@ -41,17 +72,18 @@ the two runs is not a controlled estimate of one component's causal benefit.
 
 The autoencoder remains the original frozen checkpoint. Its decoder resizes
 up-block tensors to their skip lengths and finally interpolates from 256 to
-512 samples. The corrected architecture description reports those actual
-dimensions. Altering this trained architecture would require a separate
+512 samples. Chapter~\ref{ch:architecture} reports these implemented dimensions. Altering this trained architecture would require a separate
 training study.
 
-\section{Scientific limitations}
+\section{Limitations}
 \begin{enumerate}
 \item Earlier labelled ECG from the same patients is available during
-supervised development. The result cannot establish cold-start accuracy.
+supervised development. The result does not establish accuracy for patients whose data were absent
+from model development.
 \item The final segment was observed during earlier development. Correcting
-the preprocessing does not restore test independence. Selection optimism may
-remain, and neither the bootstrap nor the reported $p$-values removes it.
+the preprocessing does not restore test independence. Earlier development
+choices may still make the results optimistic. Neither the bootstrap nor the
+reported $p$-values corrects this bias.
 \item The bootstrap estimates subject variation with the fitted model fixed.
 It does not include retraining variability or extrapolation to a new cohort.
 \item NSRDB is a nominally normal source cohort, with no beat-annotation
@@ -80,15 +112,15 @@ reported lead-off; they do not certify clinical signal quality.
 The next experiment should preregister a patient-disjoint development,
 validation and test allocation; freeze preprocessing and thresholds before
 external scoring; and recruit enough independent subjects for every target
-class. PAC and external false alarms need particular attention. A matched
-ablation should compare the hierarchy with and without residual features,
+class. PAC and external false alarms need particular attention. A controlled
+comparison should evaluate the hierarchy with and without residual features,
 and prospective sensor testing should measure R-peak accuracy, classification
-errors, signal quality and end-to-end latency. The already viewed temporal
-and INCART records should be treated as development evidence in future work.
+errors, signal quality and end-to-end latency. Future work should treat the already viewed temporal and INCART records as
+development data and reserve separate patients for final evaluation.
 
-\section{Final statement}
-This thesis delivers a corrected and reproducible single-lead research
-prototype with transparent retrospective results. It satisfies the measured
-aggregate targets within the stated evaluation, while exposing persistent
-PAC and external-domain weaknesses. It remains a research system, not a
+\section{Conclusion}
+This study developed a reproducible single-lead ECG prototype and evaluated
+its binary, subtype, and complete classification stages. The retrospective
+results met the aggregate targets, but PAC recall and external false alarms
+remain important weaknesses. It remains a research system, not a
 validated clinical diagnostic device \cite{collins2024tripodai}.

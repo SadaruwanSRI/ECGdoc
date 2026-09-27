@@ -1,0 +1,94 @@
+\chapter{Discussion and Conclusion}\label{ch:conclusion}
+
+\section{Main findings}
+The corrected one-lead hierarchy achieves 98.07\% pooled six-class accuracy
+on later accepted MITDB MLII beats from known patients. Equal-subject
+accuracy is 98.03\%, with a subject-clustered 95\% interval of
+96.29--99.25\%. The 2.95-point interval width meets the three-point
+precision target. However, PAC recall is 70.63\%, and two subject clusters
+remain below 90\% accuracy.
+
+A limited check of complete INCART I01 and I02 records gives 94.11\%
+binary accuracy and 92.85\% whole-system accuracy. Both records belong to
+the same source patient. Binary precision falls to 64.22\% because 317
+normal beats become false alarms. These results support further external
+testing, not a clinical generalisation claim.
+
+\section{Achievement of the objectives}
+\begin{itemize}
+\item The prototype integrates a frozen NSRDB autoencoder and two supervised
+MLII ensembles, with the same local model-window preparation at training and use.
+\item Pooled whole-system accuracy, the equal-subject lower confidence bound,
+and the interval-width target are met in the corrected retrospective run.
+\item The requirement that every supported abnormal group exceed 90\% recall
+is not met because of PAC.
+\item Generalisation across independent external patients, all supported
+subtypes, and real AD8232 recordings is not established.
+\end{itemize}
+
+\section{Interpretation of the corrections}
+The original supervised cache standardised complete MITDB recordings before
+window extraction. Its scale statistics therefore included the test region,
+and sensor chunks used a different scale. The corrected system filters and
+standardises each four-second model window and requires both neighbouring
+R peaks to be observed. Tests verify agreement between offline and streaming
+feature construction when the same peak locations are supplied.
+
+The original 96.86\% result is retained as a historical artifact, not the
+headline result of the corrected system. The preprocessing changes, removal
+of two edge beats per record, and refitting mean that the difference between
+the two runs is not a controlled estimate of one component's causal benefit.
+
+The autoencoder remains the original frozen checkpoint. Its decoder resizes
+up-block tensors to their skip lengths and finally interpolates from 256 to
+512 samples. The corrected architecture description reports those actual
+dimensions. Altering this trained architecture would require a separate
+training study.
+
+\section{Scientific limitations}
+\begin{enumerate}
+\item Earlier labelled ECG from the same patients is available during
+supervised development. The result cannot establish cold-start accuracy.
+\item The final segment was observed during earlier development. Correcting
+the preprocessing does not restore test independence. Selection optimism may
+remain, and neither the bootstrap nor the reported $p$-values removes it.
+\item The bootstrap estimates subject variation with the fitted model fixed.
+It does not include retraining variability or extrapolation to a new cohort.
+\item NSRDB is a nominally normal source cohort, with no beat-annotation
+screening in this preparation. Its ECG1 anatomical lead is unspecified.
+The two-epoch training record does not establish optimal convergence.
+\item No controlled ablation quantifies the independent benefit of the
+four autoencoder residuals.
+\item Output labels are project groups. AFib includes flutter on normal-like
+beat symbols; PVC includes ventricular escape beats; N includes atrial and
+junctional escape beats. No AF episode detection is evaluated.
+\item Unsupported abnormal beats enter binary testing but are excluded from
+six-class scoring. The deployed gate has no validated unknown-class rejection.
+\item Temporal and INCART scoring use annotated R peaks. Live peak detection
+introduces errors beyond those metrics. The prepared window needs roughly
+2.44 seconds of post-R signal and the next observed beat, plus acquisition
+and computation delay.
+\item INCART evaluation covers 5,416 beats but only one source patient and
+N/PVC reference support. More beats from this same patient cannot supply
+independent-patient evidence or validate absent classes.
+\item The software requires the correct lead declaration, but cannot verify
+physical electrode placement. Signal checks reject non-finite/flat inputs and
+reported lead-off; they do not certify clinical signal quality.
+\end{enumerate}
+
+\section{Further research}
+The next experiment should preregister a patient-disjoint development,
+validation and test allocation; freeze preprocessing and thresholds before
+external scoring; and recruit enough independent subjects for every target
+class. PAC and external false alarms need particular attention. A matched
+ablation should compare the hierarchy with and without residual features,
+and prospective sensor testing should measure R-peak accuracy, classification
+errors, signal quality and end-to-end latency. The already viewed temporal
+and INCART records should be treated as development evidence in future work.
+
+\section{Final statement}
+This thesis delivers a corrected and reproducible single-lead research
+prototype with transparent retrospective results. It satisfies the measured
+aggregate targets within the stated evaluation, while exposing persistent
+PAC and external-domain weaknesses. It remains a research system, not a
+validated clinical diagnostic device \cite{collins2024tripodai}.

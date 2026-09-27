@@ -1,13 +1,13 @@
 \chapter{Results and Statistical Validation}\label{ch:results}
 
-This chapter reports the corrected retrospective temporal experiment in
-\nolinkurl{experiments/corrected_temporal_holdout.json}. The rerun replaces
-record-wide supervised normalisation with local window preparation, removes
-unobserved neighbouring-RR substitutions, and saves beat-level predictions.
-The original August artifact is retained for provenance. No new candidate
-family or threshold was selected from the temporal-test results.
+This chapter presents the retrospective temporal results, their uncertainty,
+and the limited external INCART check. Binary detection, conditional subtype
+classification, and whole-system classification are reported separately
+because they use different sets of beats. All results use the local
+window-preparation procedure described in Chapter~\ref{ch:method}.
+The saved experiment and prediction files are listed in the appendix.
 
-\section{Evaluation population and supports}
+\section{Evaluation populations and sample sizes}
 
 The final dataset contains 104,755 accepted beats from 46 MITDB MLII records,
 representing 45 subject clusters. Records 102 and 104 lack MLII and are excluded.
@@ -30,7 +30,7 @@ Counts overlap, and records 201 and 202 share one patient cluster.}
 \centering
 \caption{Distinct denominators for the three evaluation questions.}
 \label{tab:final-test-data}
-\begin{tabular}{lp{9cm}}
+\begin{tabular}{l>{\raggedright\arraybackslash}p{9cm}}
 \toprule
 Evaluation & Support and interpretation\\
 \midrule
@@ -38,8 +38,8 @@ Binary detection & 20,969 beats: 12,085 N and 8,884 abnormal, including
 926 unsupported abnormal beats.\\
 Conditional subtype & 7,958 true supported abnormal beats, scored by the
 subtype model regardless of the binary gate.\\
-Whole system & 20,043 supported beats, scored after the gate:
-N/PVC/PAC/LBBB/RBBB/AFib.\\
+Whole system & 20,043 beats with supported labels, evaluated through both
+stages of the hierarchy.\\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -66,7 +66,7 @@ The binary threshold is 0.5708333333. The selected models are refitted on
 83,050 development beats and 28,758 supported abnormal development beats,
 respectively. The final test does not change this threshold.
 
-\section{Headline temporal results}
+\section{Main temporal results}
 
 \begin{table}[H]
 \centering
@@ -84,6 +84,10 @@ Whole-system accuracy & 98.07\% & 98.03\% & 96.29--99.25\% & 2.95 pp\\
 \end{tabular}
 \end{table}
 
+In Table~\ref{tab:final-headline}, CI means confidence interval and pp means
+percentage points. Interval widths are calculated from unrounded bounds;
+subtracting the displayed bounds may therefore give a slightly different value.
+
 Binary balanced accuracy is 98.69\%, sensitivity is 97.91\%, specificity is
 99.47\%, precision is 99.27\%, and F1 is 0.9858. Conditional subtype macro
 F1 is 0.9574; whole-system macro F1 is 0.9524.
@@ -95,11 +99,11 @@ F1 is 0.9574; whole-system macro F1 is 0.9524.
 \label{fig:final-metrics}
 \end{figure}
 
-The three aggregate checks pass: pooled accuracy exceeds 90\%, the
-equal-subject lower confidence bound exceeds 90\%, and the interval width is
-at most three percentage points. These are descriptive outcomes of the
+For the whole system, all three primary targets were met: pooled accuracy
+was above 90\%, the lower confidence bound for equal-subject accuracy was
+above 90\%, and interval width was at most three percentage points. These are descriptive outcomes of the
 retrospective study. Prior test exposure prevents interpreting them as an
-unbiased confirmatory success.
+independent confirmation of these targets.
 
 \section{Uncertainty and subject variation}
 
@@ -138,11 +142,11 @@ is not visible from pooled accuracy alone.
 
 \section{Errors by stage and class}
 
-The gate detects 8,698 of 8,884 abnormal beats and correctly rejects
+The gate detects 8,698 of 8,884 abnormal beats and correctly assigns N to
 12,021 of 12,085 N beats. Thus it produces 186 missed abnormal beats and
-64 false alarms. The independent subtype model correctly names 7,769 of
-7,958 supported abnormal beats. Gate errors can still send correctly
-classifiable abnormalities to N.
+64 false alarms. When evaluated without the gate, the subtype model correctly classifies 7,769 of
+7,958 supported abnormal beats. Gate errors can assign N to an abnormal beat even when the subtype model
+would have classified it correctly.
 
 \begin{table}[H]
 \centering
@@ -192,14 +196,13 @@ subtype because the model has no unknown-class rejection rule.
 
 \section{Answers to the research questions}
 \begin{description}
-\item[RQ1] The frozen NSRDB autoencoder supplies four residual features.
-No controlled ablation establishes its independent benefit.
+\item[RQ1] The frozen autoencoder supplies four residual features, but their
+independent benefit has not been tested through a controlled comparison.
 \item[RQ2] Binary, conditional-subtype and whole-system accuracies are
-98.81\%, 97.63\% and 98.07\%, respectively, on their stated supports.
+98.81\%, 97.63\% and 98.07\%, respectively, on their respective evaluation sets.
 \item[RQ3] Equal-subject whole-system accuracy is 98.03\%, with a
 96.29--99.25\% interval and two below-target subject clusters.
-\item[RQ4] The three aggregate accuracy/precision checks pass, but PAC
-recall does not. The INCART convenience subset represents one source
-patient and only two reference classes, so broad external validation
-remains incomplete.
+\item[RQ4] The whole-system targets were met, but PAC recall remained below
+90\%. INCART evaluation covered only one patient and two reference classes;
+broader external validation remains incomplete.
 \end{description}
