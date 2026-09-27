@@ -175,8 +175,8 @@ and cutoffs 0.5--50 Hz uses forward--backward filtering. For supervised inputs
 this is applied within the four-second window \cite{butterworth1930filter,virtanen2020scipy}. & Reduces baseline drift and high-frequency noise while avoiding filter-induced
 phase delay.\\
 \addlinespace
-Amplitude standardisation & Each window is converted to approximately zero mean
-and unit standard deviation. & Reduces gain differences while preserving the
+Amplitude standardisation & Each supervised MLII window is converted to approximately zero mean
+and unit standard deviation; NSRDB retains its archived scaling. & Reduces gain differences while preserving the
 relative P--QRS--T shape.\\
 \addlinespace
 Window quality check & Corrected supervised windows must be finite and
@@ -208,7 +208,10 @@ this operation locally. The original experiment instead standardised each
 complete MITDB record before extracting windows. That used test-region signal
 statistics during preparation and differed from sensor chunks. The results reported here use the local
 preparation procedure. NSRDB remains the frozen
-reference checkpoint, with block filtering followed by per-window scaling.
+reference checkpoint with its archived input scaling. The real-data audit in
+Section~\ref{sec:method-real-case} shows that an archived NSRDB window is not
+unit variance; the current cache-building code must not be treated as proof
+of the older cache's normalisation.
 
 \subsection{Cleaning Yield}
 

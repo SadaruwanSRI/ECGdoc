@@ -18,6 +18,14 @@ The normal model is documented by
 The deployable copy is registered by the backend model registry and stored in
 the backend model directory.
 
+The real-data training and inference case study is reproducible from
+\nolinkurl{tools/generate_real_methodology_case.py}. Its numerical audit is
+\nolinkurl{experiments/methodology_real_case.json}, including source sample
+indices, all 242 feature values for each selected beat, actual tree routes,
+complete-forest refit checks, and unchanged model-file hashes. The new
+one-step autoencoder demonstration is identified separately from the
+original two-epoch training logs. Archived NSRDB amplitudes are preserved.
+
 \section{Frozen constants}
 
 \begin{table}[htbp]

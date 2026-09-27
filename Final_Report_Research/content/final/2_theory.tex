@@ -74,7 +74,9 @@ at an R peak. The lower cutoff attenuates slowly changing baseline, and the
 upper cutoff attenuates faster interference. It does not imply that all noise
 or motion artifact has disappeared \cite{butterworth1930filter,virtanen2020scipy}.
 The NSRDB preparation filters longer recording blocks before making windows;
-both streams then standardise each accepted window separately.
+its archived windows retain their historical scaling, as audited in
+Section~\ref{sec:method-real-case}. The local standardisation equation below
+describes the corrected supervised MLII path.
 
 If $u_t$ is the filtered voltage in one window, the model receives
 \begin{equation}

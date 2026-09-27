@@ -110,12 +110,62 @@
 \@writefile{toc}{\contentsline {subsection}{\numberline {5.10.6}Applying the saved models to an unseen beat}{58}{subsection.5.10.6}\protected@file@percent }
 \newlabel{eq:method-saved-model-collection}{{5.52}{58}{Applying the saved models to an unseen beat}{equation.5.52}{}}
 \newlabel{eq:method-unseen-inference}{{5.54}{58}{Applying the saved models to an unseen beat}{equation.5.54}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {5.11}Why this architecture was selected}{60}{section.5.11}\protected@file@percent }
-\@writefile{lot}{\contentsline {table}{\numberline {5.5}{\ignorespaces Reason for each major final-architecture decision.}}{60}{table.caption.41}\protected@file@percent }
-\newlabel{tab:final-design-rationale}{{5.5}{60}{Reason for each major final-architecture decision}{table.caption.41}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.10.7}End-to-end case study using real ECG segments}{59}{subsection.5.10.7}\protected@file@percent }
+\newlabel{sec:method-real-case}{{5.10.7}{59}{End-to-end case study using real ECG segments}{subsection.5.10.7}{}}
+\citation{nsrdb,mitdb}
+\@writefile{brf}{\backcite{nsrdb}{{60}{5.10.7}{subsection.5.10.7}}}
+\@writefile{brf}{\backcite{mitdb}{{60}{5.10.7}{subsection.5.10.7}}}
+\@writefile{lot}{\contentsline {table}{\numberline {5.5}{\ignorespaces Real ECG segments used in the training-to-prediction case study.}}{60}{table.caption.41}\protected@file@percent }
+\newlabel{tab:real-case-provenance}{{5.5}{60}{Real ECG segments used in the training-to-prediction case study}{table.caption.41}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {5.9}{\ignorespaces Real fitting and temporal-test ECG segments.}}{61}{figure.caption.42}\protected@file@percent }
+\newlabel{fig:method-real-train-test}{{5.9}{61}{Real fitting and temporal-test ECG segments}{figure.caption.42}{}}
+\newlabel{eq:real-ae-batch-loss}{{5.55}{62}{End-to-end case study using real ECG segments}{equation.5.55}{}}
+\newlabel{eq:real-ae-bias-update}{{5.59}{62}{End-to-end case study using real ECG segments}{equation.5.59}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {5.10}{\ignorespaces Real ECG through one training update and the saved autoencoder.}}{63}{figure.caption.43}\protected@file@percent }
+\newlabel{fig:method-real-ae-training}{{5.10}{63}{Real ECG through one training update and the saved autoencoder}{figure.caption.43}{}}
+\newlabel{eq:real-training-residuals}{{5.60}{64}{End-to-end case study using real ECG segments}{equation.5.60}{}}
+\newlabel{eq:real-window-extraction}{{5.61}{64}{End-to-end case study using real ECG segments}{equation.5.61}{}}
+\newlabel{eq:real-peak-scaling}{{5.62}{64}{End-to-end case study using real ECG segments}{equation.5.62}{}}
+\newlabel{eq:real-rr-intervals}{{5.64}{64}{End-to-end case study using real ECG segments}{equation.5.64}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {5.6}{\ignorespaces All 15 measured RR features for the real temporal-test PVC.}}{65}{table.caption.44}\protected@file@percent }
+\newlabel{tab:real-rr-values}{{5.6}{65}{All 15 measured RR features for the real temporal-test PVC}{table.caption.44}{}}
+\newlabel{eq:real-test-residuals}{{5.66}{65}{End-to-end case study using real ECG segments}{equation.5.66}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {5.11}{\ignorespaces Real test PVC from source ECG to subtype scores.}}{66}{figure.caption.45}\protected@file@percent }
+\newlabel{fig:method-real-prediction}{{5.11}{66}{Real test PVC from source ECG to subtype scores}{figure.caption.45}{}}
+\newlabel{eq:real-binary-weight}{{5.67}{67}{End-to-end case study using real ECG segments}{equation.5.67}{}}
+\newlabel{eq:real-binary-root-gain}{{5.68}{67}{End-to-end case study using real ECG segments}{equation.5.68}{}}
+\newlabel{eq:real-subtype-weight}{{5.69}{67}{End-to-end case study using real ECG segments}{equation.5.69}{}}
+\newlabel{eq:real-subtype-root-gain}{{5.70}{68}{End-to-end case study using real ECG segments}{equation.5.70}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {5.7}{\ignorespaces Recorded validation measurements selecting the real saved models.}}{68}{table.caption.46}\protected@file@percent }
+\newlabel{tab:real-candidate-selection}{{5.7}{68}{Recorded validation measurements selecting the real saved models}{table.caption.46}{}}
+\gdef \LT@ii {\LT@entry 
+    {1}{29.6848pt}\LT@entry 
+    {1}{125.81102pt}\LT@entry 
+    {1}{58.5812pt}\LT@entry 
+    {1}{59.09584pt}\LT@entry 
+    {1}{38.02873pt}}
+\@writefile{lot}{\contentsline {table}{\numberline {5.8}{\ignorespaces Complete route of the real test PVC through the first saved binary tree.}}{69}{table.5.8}\protected@file@percent }
+\newlabel{tab:real-binary-path}{{5.8}{69}{Complete route of the real test PVC through the first saved binary tree}{table.5.8}{}}
+\newlabel{eq:real-binary-prediction}{{5.71}{69}{End-to-end case study using real ECG segments}{equation.5.71}{}}
+\gdef \LT@iii {\LT@entry 
+    {1}{29.6848pt}\LT@entry 
+    {1}{125.81102pt}\LT@entry 
+    {1}{58.5812pt}\LT@entry 
+    {1}{59.09584pt}\LT@entry 
+    {1}{38.02873pt}}
+\@writefile{lot}{\contentsline {table}{\numberline {5.9}{\ignorespaces Complete route of the real test PVC through the first saved subtype tree.}}{70}{table.5.9}\protected@file@percent }
+\newlabel{tab:real-subtype-path}{{5.9}{70}{Complete route of the real test PVC through the first saved subtype tree}{table.5.9}{}}
+\newlabel{eq:real-subtype-prediction}{{5.72}{70}{End-to-end case study using real ECG segments}{equation.5.72}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {5.12}{\ignorespaces Real temporal-test examples of all six outputs.}}{71}{figure.caption.47}\protected@file@percent }
+\newlabel{fig:method-real-six-outputs}{{5.12}{71}{Real temporal-test examples of all six outputs}{figure.caption.47}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {5.10}{\ignorespaces Measured predictions for the six real illustrative test segments.}}{72}{table.caption.48}\protected@file@percent }
+\newlabel{tab:real-six-predictions}{{5.10}{72}{Measured predictions for the six real illustrative test segments}{table.caption.48}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {5.11}Why this architecture was selected}{73}{section.5.11}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {5.11}{\ignorespaces Reason for each major final-architecture decision.}}{73}{table.caption.49}\protected@file@percent }
+\newlabel{tab:final-design-rationale}{{5.11}{73}{Reason for each major final-architecture decision}{table.caption.49}{}}
 \@setckpt{content/final/3_architecture}{
-\setcounter{page}{61}
-\setcounter{equation}{54}
+\setcounter{page}{74}
+\setcounter{equation}{72}
 \setcounter{enumi}{5}
 \setcounter{enumii}{0}
 \setcounter{enumiii}{0}
@@ -129,8 +179,8 @@
 \setcounter{subsubsection}{0}
 \setcounter{paragraph}{0}
 \setcounter{subparagraph}{0}
-\setcounter{figure}{8}
-\setcounter{table}{5}
+\setcounter{figure}{12}
+\setcounter{table}{11}
 \setcounter{NAT@ctr}{0}
 \setcounter{parentequation}{0}
 \setcounter{ALC@unique}{0}
@@ -149,8 +199,8 @@
 \setcounter{Hfootnote}{0}
 \setcounter{bookmark@seq@number}{0}
 \setcounter{nlinenum}{0}
-\setcounter{LT@tables}{1}
-\setcounter{LT@chunks}{3}
+\setcounter{LT@tables}{3}
+\setcounter{LT@chunks}{4}
 \setcounter{float@type}{16}
 \setcounter{countitems}{6}
 \setcounter{nextitemizecount}{6}

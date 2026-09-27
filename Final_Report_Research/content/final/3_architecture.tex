@@ -647,12 +647,14 @@ forests, and apply the saved hierarchy to a new beat. The three models are
 trained sequentially; there is no joint loss that backpropagates a
 classification error through the complete system.
 
-The worked examples below use deliberately small, hypothetical numbers to
+The first six worked examples below use deliberately small, hypothetical numbers to
 make each operation visible. They are teaching examples, not additional
 experimental observations. Whenever a window or forest is simplified, the
 full implementation still uses 512 waveform samples, 242 features, and the
 model sizes stated above. The final example connects the calculations into
-one complete prediction.
+one complete prediction. Section~\ref{sec:method-real-case} then follows
+real ECG segments through measured training calculations and saved-model
+prediction, with waveform figures and complete tree routes.
 
 \subsection{Notation, targets, and separation of data}
 
@@ -1152,6 +1154,8 @@ N with displayed score $1-0.40=0.60$, and its subtype calculation is skipped.
 Neither beat needs a known diagnosis to obtain a prediction. If an expert
 label becomes available later, it can be compared with the prediction for
 evaluation; that comparison does not automatically retrain any model.
+
+\input{content/final/methodology_real_case.tex}
 
 \section{Why this architecture was selected}
 

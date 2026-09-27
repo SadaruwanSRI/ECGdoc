@@ -88,11 +88,16 @@ validation, temporal testing, or deployment.
 
 The autoencoder was trained \emph{before} either supervised model. All 18
 NSRDB records supplied first-channel ECG1 data. After filtering,
-four-second windowing, per-window standardisation, and quality checks,
+four-second windowing, archived amplitude scaling, and quality checks,
 15 entire subjects contributed 288,673 fitting windows and three separate
 subjects contributed 57,177 validation windows. The split is by subject, so
 adjacent windows from the same recording cannot appear on opposite sides of
 this validation boundary.
+
+The real-data audit in Section~\ref{sec:method-real-case} preserves the
+original cached normal windows. Their scaling is not uniformly zero mean
+and unit variance within each window, so it must be distinguished from the
+verified local standardisation used for supervised MLII beats.
 
 One training step takes a shuffled batch of 256 clean windows, adds fresh
 Gaussian noise with standard deviation 0.03 to the inputs, reconstructs them,
