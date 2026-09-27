@@ -145,7 +145,7 @@ def data_preparation():
     d.arrow((1.76,4.47),(1.76,4.19),TEAL)
     d.arrow((5.44,4.47),(5.44,4.19),NAVY)
     d.card(.2,2.85,3.12,1.34,"Clean waveform windows",
-           f"Non-overlapping 4-second windows\n512 samples per window\n{normal['training_windows']:,} fitting windows\n{normal['validation_windows']:,} validation windows",TEAL,10)
+           f"512-sample, non-overlapping windows\nRetain archived amplitude scaling\n{normal['training_windows']:,} fitting windows\n{normal['validation_windows']:,} validation windows",TEAL,10)
     d.card(3.88,2.85,3.12,1.34,"Prepare one accepted beat",
            "Extract 512 samples around the R peak.\nFilter and z-score within that window.\nMeasure previous and next RR intervals\nand earlier rhythm history.",NAVY,9.7)
     d.arrow((1.76,2.85),(1.76,2.56),TEAL)

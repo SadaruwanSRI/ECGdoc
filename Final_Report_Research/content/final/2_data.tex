@@ -1,11 +1,11 @@
-\chapter{Data and Preparation}\label{ch:data}
+\section{Data and preparation}\label{ch:data}
 
-This chapter identifies the ECG sources, explains how the signals are
+This section identifies the ECG sources, explains how the signals are
 prepared, and shows how examples enter model fitting, validation, and the
 temporal test. Keeping these roles separate prevents healthy data or test
 labels from being used in the wrong part of the study.
 
-\section{Data Sources and Roles}
+\subsection{Data sources and roles}
 
 Two public PhysioNet databases supply model development data. A separate,
 limited external INCART check is reported in the results chapter. The MIT--BIH Normal Sinus Rhythm
@@ -141,14 +141,14 @@ from six-class scoring. At runtime, a gated unsupported abnormality still
 receives one of the five available subtype labels. The prepared MLII dataset contains 104,755 accepted beats: 63,073
 in group N and 41,682 abnormal. Of these, 100,072 have a supported six-class label.
 
-\section{Data Cleaning}
+\subsection{Signal cleaning and window construction}
 
 Data preparation converts the two ECG sources into a common input shape: one four-second signal with 512 samples. The supervised preparation rules were fixed for the rerun and are also used
 during session prediction. NSRDB retains its original preparation procedure.
 Figure~\ref{fig:data-cleaning-real} shows the full transformation for one
 healthy NSRDB segment and one MITDB MLII beat.
 
-\subsection{Cleaning Checklist}
+\subsubsection{Cleaning checks}
 
 Table~\ref{tab:data-cleaning-checklist} lists the preparation steps and their
 purpose. Rejected windows do not enter model fitting or evaluation.
@@ -187,7 +187,7 @@ motion artifacts.\\
 \end{tabular}
 \end{table}
 
-\subsection{Window Construction}
+\subsubsection{Window construction}
 
 The autoencoder and supervised hierarchy build windows in different ways, but
 the final array shape is the same. The autoencoder receives consecutive,
@@ -213,7 +213,7 @@ Section~\ref{sec:method-real-case} shows that an archived NSRDB window is not
 unit variance; the current cache-building code must not be treated as proof
 of the older cache's normalisation.
 
-\subsection{Cleaning Yield}
+\subsubsection{Cleaning yield}
 
 The healthy NSRDB recordings produce many candidate windows because complete
 records are used instead of short excerpts. Across the 18 complete NSRDB
@@ -226,7 +226,7 @@ contains 104,755 beats: 63,073 in group N and 41,682 abnormal. Unsupported abnor
 symbols are still used for binary abnormality evaluation, but they are excluded
 from six-class subtype scoring.
 
-\subsection{Preparation during prediction}
+\subsubsection{Preparation during prediction}
 
 The corrected hierarchy applies the same local window filtering,
 standardisation and feature order during fitting, offline scoring and
@@ -239,21 +239,22 @@ system. Neither supervised model is retrained during prediction.
 \begin{figure}[H]
 \centering
 \includegraphics[width=.96\textwidth]{pic/generated/real_data_cleaning_pipeline.pdf}
-\caption{Cleaning real ECG for the two roles. The healthy example is the first
-channel of NSRDB record 16265. The supervised-input example is MLII from MITDB record
-100. Both become one 512-sample input, but their documented channel identities
-remain different.}
+\caption{Cleaning real ECG for the two roles. The normal-reference example is
+the first four seconds of NSRDB 16272/ECG1, with its actual archived scaling.
+The supervised example is an MLII beat from MITDB 100, filtered and
+standardised within its own window. Both become one 512-sample input;
+their channel identities remain different.}
 \label{fig:data-cleaning-real}
 \end{figure}
 
-\section{Data Preparation}
+\subsection{Model inputs and data allocation}
 
 Data preparation decides which cleaned examples are allowed to fit a model,
 which examples choose model settings, and which examples are held back for the
 final temporal result. Figure~\ref{fig:data-feed-real} shows this flow from
 raw source to frozen prediction.
 
-\subsection{Prepared Objects}
+\subsubsection{Prepared inputs}
 
 After cleaning, the study keeps two kinds of prepared object:
 \begin{itemize}
@@ -278,7 +279,7 @@ converted into the same 242-value MLII feature vector:
 The subtype model is fitted only on the five supported abnormal classes: PVC,
 PAC, LBBB, RBBB, and AFib.
 
-\subsection{Splits}
+\subsubsection{Splits}
 
 The autoencoder split is subject-disjoint. A seeded split assigns 15 complete
 NSRDB records to fitting and three different records (16420, 16483, and 16795)
@@ -302,7 +303,7 @@ The procedure checks that signal windows do not overlap across each boundary. Th
 during earlier development, making this a retrospective known-patient
 evaluation with possible optimism.
 
-\subsection{Exact Model Allocation}
+\subsubsection{Exact model allocation}
 \begin{table}[H]
 \centering
 \small
@@ -337,7 +338,7 @@ remain separate from the model input.}
 \label{fig:data-feed-real}
 \end{figure}
 
-\subsection{Feeding the Frozen System}
+\subsubsection{Inputs to the frozen system}
 
 During autoencoder fitting, Gaussian noise with standard deviation 0.03 is
 added to each input while the clean NSRDB window remains the target. During
@@ -345,5 +346,6 @@ supervised fitting, record-and-class weights reduce domination by long records
 and common classes. During prediction, one MLII window, its observed previous and next RR
 intervals, and its recent RR history are converted into the same 242-value vector used in the temporal
 experiment. A decision of N ends classification for that beat. An abnormal decision passes
-the same vector to the subtype model. The next chapter explains the theory
-behind these features and the two-stage decision.
+the same vector to the subtype model. Section~\ref{ch:theory} explains the theoretical basis of these features and
+the two-stage decision. The allocation is evaluated under the protocol in
+Section~\ref{ch:method}.

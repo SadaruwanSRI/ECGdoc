@@ -1,6 +1,6 @@
-\chapter{Theoretical Foundations}\label{ch:theory}
+\section{Theoretical foundations}\label{ch:theory}
 
-This chapter explains the theory behind the final ECG system. The system combines
+This section explains the theoretical basis of the ECG system. The system combines
 MLII waveform shape, RR timing, and autoencoder residuals in two supervised
 Extra Trees ensembles. These components provide complementary information
 about beat shape and rhythm.
@@ -13,7 +13,7 @@ an abnormal-subtype tree ensemble. The autoencoder learns by changing neural
 weights to lower reconstruction error; the tree ensembles learn by choosing
 weighted, entropy-reducing splits. These are different forms of training.
 
-\section{Why ECG evidence has more than one form}
+\subsection{Why ECG evidence has more than one form}
 
 An ECG is a voltage signal over time. For arrhythmia classification, useful
 evidence appears at two related scales. The first is beat-scale morphology:
@@ -47,7 +47,7 @@ never as input features at prediction time.}
 \label{fig:theory-learning-map}
 \end{figure}
 
-\section{From voltage to a comparable four-second window}
+\subsection{From voltage to a comparable four-second window}
 
 An electrode channel measures a sequence of voltage differences. Sampling at
 128 samples per second turns four seconds into $T=4(128)=512$ numbers. The
@@ -92,7 +92,7 @@ directly available to the model. Flat or non-finite windows are rejected.
 Because scaling is calculated inside the current window, later test signal
 statistics are not needed when preparing an earlier training beat.
 
-\section{Feature extraction theory}
+\subsection{Feature extraction theory}
 
 The raw 512-sample MLII window contains more detail than the final tree models
 need. Small changes in R-peak alignment or noise can change many raw sample
@@ -156,7 +156,7 @@ spread and maximum slope, skewness, and excess kurtosis. Skewness describes
 asymmetry and kurtosis describes unusually large deviations. The exact count
 is $64+80+60+8+11=223$. This count matches the implemented feature vector.
 
-\section{RR timing theory}
+\subsection{RR timing theory}
 
 Let $r_i$ be the time of the R peak of beat $i$. The RR interval is
 \begin{equation}
@@ -193,7 +193,7 @@ without giving a class label to the model. ``Next RR'' is available only after
 the following R peak is observed, so this system makes a delayed beat decision
 rather than an instantaneous R-peak decision.
 
-\section{Normal-only reconstruction theory}
+\subsection{Normal-only reconstruction theory}
 
 An autoencoder contains an encoder $f_\theta$ and decoder $g_\phi$. It is
 trained to reconstruct a normal ECG window $x$:
@@ -233,12 +233,12 @@ Let $e_t=x_t-\hat{x}_t$ be the residual. The four residual features are:
  e_{\Delta} &= \frac{1}{T-1}\sum_{t=2}^{T}|e_t-e_{t-1}|.
 \end{align}
 Here $Q$ is the central 240-sample region used by the feature extractor,
-defined in Chapter~\ref{ch:architecture}. The four features measure
+defined in Section~\ref{ch:architecture}. The four features measure
 whole-window mismatch, squared mismatch, central morphology
 mismatch, and residual sharpness. The final architecture appends these four
 values to the MLII waveform and RR features.
 
-\subsection{What the encoder and decoder actually compute}
+\subsubsection{What the encoder and decoder actually compute}
 
 The implemented autoencoder is a one-dimensional convolutional network. A
 convolution learns a small template and slides it across time. For output
@@ -267,7 +267,7 @@ over-reliance on individual pathways. The last layer is linear so it can
 produce both positive and negative standardised voltages
 \cite{he2016resnet,ronneberger2015unet,srivastava2014dropout}.
 
-\subsection{How the autoencoder lowers reconstruction loss}
+\subsubsection{How the autoencoder lowers reconstruction loss}
 
 Let $x^{(i)}$ be a clean normal window and let
 $\epsilon^{(i)}_t\sim\mathcal{N}(0,0.03^2)$ be freshly drawn Gaussian noise.
@@ -315,31 +315,12 @@ the autoencoder has an epoch-by-epoch reconstruction-loss curve.}
 \label{fig:theory-training-mechanisms}
 \end{figure}
 
-The concrete run used 288,673 fitting windows from 15 NSRDB subjects and
-57,177 windows from three different validation subjects. It used batches of
-256, Adam with $\eta=0.001$, and two epochs (two passes through fitting
-windows). Validation uses the clean window as both input and target, with
-dropout disabled. The checkpoint with the smaller validation mean squared
-error is kept. The saved measurements are:
-\begin{center}
-\begin{tabular}{lcc}
-\toprule
-Epoch & Noisy-input fitting MSE & Clean-input validation MSE\\
-\midrule
-1 & 0.057639 & 0.061195\\
-2 & 0.041976 & 0.061193\\
-\bottomrule
-\end{tabular}
-\end{center}
-Training MSE fell substantially, while validation MSE changed by only about
-$0.0000023$. The two curves are measured with different input conditions,
-so their gap is not a direct estimate of overfitting. The near-flat validation
-result supports selecting epoch 2 by the stated rule, but it is weak evidence
-of improved reconstruction on new normal subjects. The measured curves are in
-Figure~\ref{fig:lead-ii-ae-learning}. The frozen network is then applied to
-MLII windows; its residuals are four features, not a clinical diagnosis.
+The implemented training settings and checkpoint-selection rule are specified
+in Section~\ref{ch:architecture}. Section~\ref{sec:method-training-inference}
+demonstrates the updates numerically and distinguishes the original training
+record from the separate real-data teaching demonstration.
 
-\section{Hierarchical classification theory}
+\subsection{Hierarchical classification theory}
 
 The hierarchy divides classification into two stages. The first model assigns
 a normal or abnormal label. Beats assigned to the abnormal group then enter
@@ -358,8 +339,9 @@ For beat $i$, the binary detector returns an abnormal score $p_i$ from its
 but has not been independently calibrated as a clinical probability.
 The final threshold rule is
 \begin{equation}
- a_i=\mathbb{1}[p_i>0.5708333].
+ a_i=\mathbb{1}[p_i>\tau].
 \end{equation}
+Here $\tau$ is the operating threshold selected using validation data.
 If $a_i=0$, the output is N. If $a_i=1$, the subtype model selects the highest
 probability among PVC, PAC, LBBB, RBBB, and AFib:
 \begin{equation}
@@ -377,7 +359,7 @@ taking the abnormal branch; a large $q_{ic}$ does not repair a missed binary
 gate. This is why the report evaluates the binary detector, the conditional
 subtype model, and the complete six-class decision separately.
 
-\section{Why Extra Trees fits this feature design}
+\subsection{Why Extra Trees fits this feature design}
 
 The final 242-value vector mixes pooled waveform values, derivatives, spectral
 power, signal statistics, RR timing, and autoencoder residuals. Their
@@ -425,38 +407,14 @@ high-capacity, but it uses transparent tabular evidence and is easier to audit
 against the final temporal protocol. This does not mean that tree ensembles are
 always better than deep learning.
 
-\subsection{How the two supervised models are fitted}
+The binary model learns a normal/abnormal target from all eligible labelled
+beats. The subtype model learns only from supported abnormal groups. Both
+receive the same feature representation, while the reference labels remain
+outside that representation. Section~\ref{sec:method-training-inference}
+gives the fitting, weighting, validation, and refitting procedure for each
+model. Selection criteria are defined in Section~\ref{ch:method}.
 
-The binary model receives every eligible training beat, including abnormal
-beats whose detailed symbol is outside the five supported subtype groups. Its
-target is $y_i^{(B)}\in\{0,1\}$, meaning normal or abnormal. The subtype
-model receives only supported abnormal training beats and has target
-$y_i^{(C)}\in\{\mathrm{PVC,PAC,LBBB,RBBB,AFib}\}$. Both models use the same
-242 measurements: $223$ morphology, spectral, and statistical values, $15$
-RR values, and $4$ frozen-autoencoder residuals. The labels determine fitting
-targets and validation scores; they do not enter this input vector.
-
-The binary candidates vary tree count, maximum depth, leaf size, and record
-weighting power. The selected candidate has 240 fully grown trees, at least
-one sample per leaf, entropy splits, and approximately $\sqrt{242}$ candidate
-features at a split. The subtype candidates vary similar settings; the
-selected model has 260 fully grown trees and samples approximately one third
-of the 242 features at each split. These settings were chosen from the
-earlier validation region, then the selected structures were refitted using
-all eligible development beats. The subtype refit still excludes N and
-unsupported abnormal categories.
-
-The binary model averages its trees' abnormal scores to obtain $p_i$.
-Validation tries the distinct output scores as thresholds (along with 0,
-0.5, and 1). The primary ranking is balanced accuracy, followed by F1 and
-further tie-breaks. The selected threshold is $0.5708333$. A threshold is an
-\emph{operating point}: lowering it generally catches more abnormal beats but
-also increases false alarms. It is not a weight learned by backpropagation.
-The subtype candidates are ranked by validation macro F1, then accuracy.
-Figure~\ref{fig:method-model-selection} plots those measured validation
-comparisons.
-
-\section{Class and patient imbalance theory}
+\subsection{Class and patient imbalance theory}
 
 ECG beat datasets are imbalanced in two ways. Some classes are rare, and some
 patients contribute many more beats than others. Without weighting, a model can
@@ -478,7 +436,7 @@ record balancing is applied and is selected in validation. Class-balanced
 learning is important when rare classes would otherwise have little influence
 \cite{cui2019classbalanced}.
 
-\section{Temporal patient adaptation theory}
+\subsection{Temporal patient adaptation theory}
 
 ECG morphology contains patient-specific information such as body geometry,
 electrode placement, baseline QRS shape, conduction pattern, and background
@@ -493,7 +451,7 @@ reported as unseen-patient generalisation unless a patient-disjoint experiment
 is run. The 16-beat boundary gap reduces direct overlap at the split boundary,
 but it does not remove shared patient identity.
 
-\subsection{Why training, validation, and testing have different jobs}
+\subsubsection{Why training, validation, and testing have different jobs}
 
 Training data changes model parameters: neural weights for the autoencoder,
 and split rules and leaf scores for each tree ensemble. Validation data
@@ -506,60 +464,7 @@ development. The result is therefore a retrospective known-patient estimate,
 not a fresh confirmatory test. Figure~\ref{fig:method-workflow} shows the
 chronological allocation and boundary gaps.
 
-\section{From saved models to a live ECG decision}
-
-The implemented workflow joins signal acquisition, digital processing, model
-inference, and reporting. An AD8232 front end senses a single ECG channel;
-the Arduino demonstration sketch samples its analog output at approximately
-128~Hz and reports lead-off status \cite{ad8232}. The demonstration hardware
-does not itself certify that its electrode placement equals the MITDB MLII
-configuration. Database replay instead starts with labelled MITDB MLII data.
-Both paths must provide the expected sampling rate and one usable channel
-before the trained inference pipeline can run.
-
-The live analyser keeps a rolling signal buffer, searches for R peaks, and
-waits until the beat window and the following RR interval are observed. It
-then applies the local preparation in Equation~\ref{eq:theory-window-zscore},
-builds the 242-value vector, and loads the frozen model bundle. With detected
-peaks at sample indices $s_i$, the interval in seconds is
-\begin{equation}
- RR_i=\frac{s_i-s_{i-1}}{128}.
-\end{equation}
-Peak-detection mistakes change both alignment and RR evidence; the offline
-test used reference annotations for alignment, so live results may differ.
-The delay follows from the required input: the window includes 312 samples
-starting at the R peak (about 2.44 seconds), and the next R peak must also
-be observed.
-The larger of those requirements determines when a beat is ready to score.
-
-\begin{table}[H]
-\centering
-\small
-\caption{Technologies in the final evidence path and the mathematical task
-performed by each. The web interface displays results and does not train the
-models.}
-\label{tab:theory-technology-roles}
-\begin{tabular}{>{\raggedright\arraybackslash}p{3.2cm}>{\raggedright\arraybackslash}p{9.6cm}}
-\toprule
-Technology & Role in the implemented system\\
-\midrule
-AD8232 and Arduino & Analog acquisition, lead-off indication, and approximate
-128~Hz sample timing in the sensor demonstration\\
-WFDB and PhysioNet & Read ECG samples, lead headers, beat symbols, and rhythm
-annotations for reproducible research datasets\\
-NumPy and SciPy & Arrays, resampling, Butterworth filtering, peak detection,
-Fourier spectrum, and numerical feature calculations \cite{virtanen2020scipy}\\
-PyTorch & Convolutional autoencoder, automatic differentiation,
-mini-batch MSE, and Adam weight updates \cite{paszke2019pytorch}\\
-scikit-learn & Weighted Extra Trees fitting, ensemble scores, and validation
-metrics\\
-Backend and interface & Load saved checkpoints, build live features, apply
-the fixed gate and subtype rule, and display beat results\\
-\bottomrule
-\end{tabular}
-\end{table}
-
-\section{Validation theory}
+\subsection{Validation theory}
 
 Beat-level accuracy alone is not enough. If one patient contributes 2,000
 beats, those beats are related. They are not equivalent to 2,000 independent
@@ -583,27 +488,12 @@ the final experiment resamples complete subject clusters rather than individual
 beats, following the general diagnostic-statistics principle that clustered
 data need clustered analysis \cite{rutter2000clustered}.
 
-For binary detection, $TP$, $TN$, $FP$, and $FN$ denote true positives, true
-negatives, false positives, and false negatives. Sensitivity is $TP/(TP+FN)$
-and specificity is
-$TN/(TN+FP)$. Balanced accuracy is their mean. This gives equal importance
-to recognising abnormal and normal beats even when one group is larger.
-For a class $c$, precision asks what fraction of predicted $c$ is truly $c$;
-recall asks what fraction of true $c$ is found. Their harmonic mean is
-\begin{equation}
- F1_c=\frac{2\,\mathrm{Precision}_c\,\mathrm{Recall}_c}
- {\mathrm{Precision}_c+\mathrm{Recall}_c},\qquad
- \mathrm{MacroF1}=\frac{1}{C}\sum_{c=1}^{C}F1_c.
-\end{equation}
-A confusion matrix counts every true/predicted class pair, making a high
-overall accuracy easier to interpret. The final test also computes
-equal-subject uncertainty by resampling complete patient clusters and
-recalculating the statistic. This treats patients, rather than individual
-beats, as the independent units for the interval. It cannot correct for the
-earlier observation of the test set or demonstrate generalisation to new
-patients.
+A confusion matrix counts every true/predicted class pair, making aggregate
+accuracy easier to interpret. Section~\ref{ch:method} defines the metrics and
+bootstrap procedure. Subject-clustered uncertainty does not correct for prior
+test exposure or establish generalisation to patients absent from development.
 
-\section{Summary of the theoretical framework}
+\subsection{Summary of the theoretical framework}
 
 \begin{table}[H]
 \centering

@@ -1,17 +1,17 @@
-\chapter{Methodology}\label{ch:architecture}
+\section{System design and model implementation}\label{ch:architecture}
 
-This chapter presents the computational methodology, model training, and
-prediction procedure implemented in the ECG prototype. The system uses one
+This section specifies the model architecture and computations implemented
+in the ECG prototype. The system uses one
 MLII channel and three trained components:
 a normal-reference autoencoder, a binary abnormality detector, and an abnormal
 subtype classifier. The two supervised models use the same 242-value feature
 vector. All model parameters remain fixed during prediction.
 Section~\ref{sec:method-training-inference} connects the individual calculations
 into a mathematical account of fitting each model and applying the saved
-hierarchy to previously unscored ECG. Chapter~\ref{ch:method} gives the
+hierarchy to previously unscored ECG. Section~\ref{ch:method} gives the
 experimental protocol and evaluation measures.
 
-\section{System overview}
+\subsection{System overview}
 
 For each detected MLII heartbeat, the system takes a 512-sample window aligned
 to the R peak, builds waveform, rhythm, and normal-reconstruction features,
@@ -26,7 +26,7 @@ features; the supervised tree models make the final class decision.}
 \label{fig:architecture-current-flow}
 \end{figure}
 
-\section{Input signal and beat window}
+\subsection{Input signal and beat window}
 
 The deployed system accepts one ECG channel. For database replay and final
 testing that channel is MIT--BIH MLII, selected by signal name. Records 102 and
@@ -76,7 +76,7 @@ information.}
 \label{fig:architecture-streaming-window}
 \end{figure}
 
-\section{Three trained components}
+\subsection{Three trained components}
 
 The final system uses three trained components, stored as an autoencoder
 checkpoint and a separate hierarchy bundle:
@@ -126,9 +126,9 @@ prediction; session use does not update its parameters.}
 \label{fig:architecture-training-live}
 \end{figure}
 
-\section{Normal-only autoencoder}
+\subsection{Normal-only autoencoder}
 
-\subsection{Purpose}
+\subsubsection{Purpose}
 
 The autoencoder learns to reconstruct normal-reference ECG windows. Its
 reconstruction errors provide four input features for the supervised models.
@@ -140,7 +140,8 @@ For an input window $x\in\mathbb{R}^{512}$, the autoencoder output is
 \end{equation}
 where $f_{\theta}$ is the encoder and $g_{\phi}$ is the decoder. Training uses
 a denoising objective: Gaussian noise with standard deviation 0.03 is added to
-the input, but the target remains the clean standardised window. For a
+the input, but the target remains the clean prepared window, retaining the
+archived NSRDB scaling described in Section~\ref{sec:method-real-case}. For a
 mini-batch $\mathcal{B}$, write
 \begin{equation}
  \widetilde x^{(i)}=x^{(i)}+\epsilon^{(i)},\qquad
@@ -166,11 +167,11 @@ reconstruction is $(0.1,0.8,-0.1)$, the three squared errors are
 $0.01,0.04,0.01$ and their mean is $0.02$. The real loss applies the same
 arithmetic to every one of the 512 samples in every batch window.
 
-\subsection{Network structure}
+\subsubsection{Network structure}
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=.98\textwidth]{pic/generated/architecture_autoencoder_layers.pdf}
+\includegraphics[width=.88\textwidth]{pic/generated/architecture_autoencoder_layers.pdf}
 \caption[Autoencoder architecture with verified tensor dimensions.]{Autoencoder
 architecture with tensor dimensions verified by a forward pass through the
 2,680,641-parameter implementation. Read down the encoder, through the
@@ -191,7 +192,7 @@ restores length 512. The figure reports these actual tensor dimensions.
 The final layer is linear
 because the standardised ECG signal contains positive and negative values.
 
-\subsection{Encoder block}
+\subsubsection{Encoder block}
 
 A one-dimensional convolution applies learned filters along time. For input
 channels $c$, output channel $j$, kernel offset $m$, and time $t$, a simplified
@@ -237,7 +238,7 @@ a shorter route. Dropout randomly masks internal activations during fitting;
 it is disabled during validation and prediction
 \cite{he2016resnet,srivastava2014dropout}.
 
-\subsection{Bottleneck and decoder mathematics}
+\subsubsection{Bottleneck and decoder mathematics}
 
 Four bottleneck convolutions use kernel width three and dilation
 $d\in\{1,2,4,8\}$. A dilated convolution reads positions
@@ -263,7 +264,7 @@ waveform. The final $1\times1$ convolution produces one output channel and
 has no sigmoid or other output activation. These details explain how local
 normal structure can be reconstructed while preserving the input shape.
 
-\subsection{Normal-reference data and checkpoint}
+\subsubsection{Normal-reference data and checkpoint}
 
 The autoencoder checkpoint was developed from complete recordings of all 18
 subjects in the MIT--BIH Normal Sinus Rhythm Database. Fifteen subjects supply
@@ -278,7 +279,7 @@ value, 0.061193, after epoch 2. The autoencoder artifact also stores a
 normal-residual threshold of 0.158893, but the final hierarchy does not use
 that threshold as the final arrhythmia rule.
 
-\subsection{How the training update changes network weights}
+\subsubsection{How the training update changes network weights}
 
 For one predicted sample, the derivative of
 Equation~\ref{eq:ae-loss-final} is
@@ -322,7 +323,7 @@ loss is retained before the supervised MLII stages are trained.}
 \label{fig:lead-ii-ae-learning}
 \end{figure}
 
-\subsection{Four autoencoder residual features}
+\subsubsection{Four autoencoder residual features}
 
 Let $e_t=x_t-\widehat x_t$ be the reconstruction residual. The final feature
 system uses four scalar residual summaries:
@@ -347,7 +348,7 @@ four numerical features for the supervised detector.}
 \label{fig:final-real-ae}
 \end{figure}
 
-\section{Final 242-value feature vector}
+\subsection{Final 242-value feature vector}
 
 The saved final bundle declares 242 total features, 15 RR features, required
 autoencoder features, and four autoencoder residual values. Therefore every
@@ -398,7 +399,7 @@ values are appended. During live/session prediction, the backend builds the
 same final vector directly from 223 MLII waveform/statistical values, 15 RR
 values, and four autoencoder residual values.
 
-\section{How an Extra Trees model learns}
+\subsection{How an Extra Trees model learns}
 
 Both supervised stages use the same type of architecture: an ensemble of
 \emph{extremely randomised decision trees}. A tree asks a sequence of
@@ -408,7 +409,7 @@ values make different trees learn different partitions; among the candidate
 splits at a node, the algorithm chooses the one that best separates the
 weighted training labels \cite{geurts2006extratrees}.
 
-\subsection{Why some training rows have more weight}
+\subsubsection{Why some training rows have more weight}
 
 Rare arrhythmia classes and short patient records would otherwise contribute
 little to split decisions. For class $c$ in subject cluster $r$, the final
@@ -428,7 +429,7 @@ binary model and $\alpha=0.25$ for the subtype model. This weighting changes
 the tree's splitting calculation; it does not replicate beats or create
 new patient data.
 
-\subsection{The mathematical question at each tree node}
+\subsubsection{The mathematical question at each tree node}
 
 Let $S$ be the training beats that have reached a node, $w_i$ the weight of
 beat $i$, and $y_i$ its training label. The weighted share of class $c$ is
@@ -478,7 +479,7 @@ Real fitting uses the sample weights above.}
 \label{fig:method-tree-entropy-example}
 \end{figure}
 
-\subsection{From a tree leaf to an ensemble score}
+\subsubsection{From a tree leaf to an ensemble score}
 
 Once a tree is fitted, a new feature row follows its learned questions to a
 leaf $L_b(z)$. The score for class $c$ in tree $b$ is the weighted share of
@@ -494,7 +495,7 @@ score such as 0.8 should not be interpreted as an independently validated
 80\% clinical disease probability. Trees lower node impurity while they are
 grown. They do not have epochs, backpropagation, or a neural loss curve.
 
-\section{Binary abnormality detector}
+\subsection{Binary abnormality detector}
 
 The first supervised model is the abnormality detector. It receives all 242
 features and returns an abnormal-class score $p_i$ for beat $i$. The
@@ -548,7 +549,7 @@ for that beat.
 The threshold controls the balance between missed abnormal beats and false
 alarms; it is selected after tree fitting, not learned by a gradient update.
 
-\section{Abnormal-subtype classifier}
+\subsection{Abnormal-subtype classifier}
 
 The second supervised model is used only after the binary gate marks a beat as
 abnormal. It is fitted only on supported abnormal classes 1--5, not on N and
@@ -595,7 +596,7 @@ The displayed subtype confidence is conditional on the abnormal branch. It
 is an ensemble score, not a calibrated probability of disease. Unsupported
 abnormalities can receive an incorrect supported subtype.
 
-\section{Final decision logic}
+\subsection{Final decision logic}
 
 The complete prediction rule is:
 \begin{enumerate}
@@ -637,6 +638,98 @@ These numbers illustrate the rule and are not measured results. The second
 stage's score is conditional on the first stage being passed, so the two
 stages must be evaluated both separately and together.
 
+\subsection{From saved models to a live ECG decision}
+
+The implemented workflow joins signal acquisition, digital processing, model
+inference, and reporting. An AD8232 front end senses a single ECG channel;
+the Arduino demonstration sketch samples its analog output at approximately
+128~Hz and reports lead-off status \cite{ad8232}. The demonstration hardware
+does not itself certify that its electrode placement equals the MITDB MLII
+configuration. Database replay instead starts with labelled MITDB MLII data.
+Both paths must provide the expected sampling rate and one usable channel
+before the trained inference pipeline can run.
+
+The live analyser keeps a rolling signal buffer, searches for R peaks, and
+waits until the beat window and the following RR interval are observed. It
+then applies the local preparation in Equation~\ref{eq:theory-window-zscore},
+builds the 242-value vector, and loads the frozen model bundle. With detected
+peaks at sample indices $s_i$, the interval in seconds is
+\begin{equation}
+ RR_i=\frac{s_i-s_{i-1}}{128}.
+\end{equation}
+Peak-detection mistakes change both alignment and RR evidence; the offline
+test used reference annotations for alignment, so live results may differ.
+The delay follows from the required input: the window includes 312 samples
+starting at the R peak (about 2.44 seconds), and the next R peak must also
+be observed.
+The larger of those requirements determines when a beat is ready to score.
+
+\begin{table}[H]
+\centering
+\small
+\caption{Technologies in the final evidence path and the mathematical task
+performed by each. The web interface displays results and does not train the
+models.}
+\label{tab:theory-technology-roles}
+\begin{tabular}{>{\raggedright\arraybackslash}p{3.2cm}>{\raggedright\arraybackslash}p{9.6cm}}
+\toprule
+Technology & Role in the implemented system\\
+\midrule
+AD8232 and Arduino & Analog acquisition, lead-off indication, and approximate
+128~Hz sample timing in the sensor demonstration\\
+WFDB and PhysioNet & Read ECG samples, lead headers, beat symbols, and rhythm
+annotations for reproducible research datasets\\
+NumPy and SciPy & Arrays, resampling, Butterworth filtering, peak detection,
+Fourier spectrum, and numerical feature calculations \cite{virtanen2020scipy}\\
+PyTorch & Convolutional autoencoder, automatic differentiation,
+mini-batch MSE, and Adam weight updates \cite{paszke2019pytorch}\\
+scikit-learn & Weighted Extra Trees fitting, ensemble scores, and validation
+metrics\\
+Backend and interface & Load saved checkpoints, build live features, apply
+the fixed gate and subtype rule, and display beat results\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Why this architecture was selected}
+
+\begin{table}[H]
+\centering
+\caption{Reason for each major final-architecture decision.}
+\label{tab:final-design-rationale}
+\begin{tabular}{>{\raggedright\arraybackslash}p{3.6cm}>{\raggedright\arraybackslash}p{9.6cm}}
+\toprule
+Decision & Reason\\
+\midrule
+MLII-only supervised input & matches the signal available in 46 eligible
+MIT--BIH records and avoids hidden two-lead assumptions\\
+R-peak alignment & puts comparable cardiac events in comparable positions
+inside every 512-sample window\\
+Waveform and derivative bins & preserve beat morphology, including sharp QRS
+changes\\
+Frequency powers and statistics & add compact information about signal energy,
+scale, and distribution\\
+Fifteen RR features & represent local rate, premature beats, rhythm
+irregularity, and recent interval trend using information reproducible during
+streaming\\
+Normal-only autoencoder & supplies a learned measure of disagreement with
+normal ECG structure without requiring arrhythmia labels\\
+Two-stage hierarchy & separates binary detection from subtype evaluation;
+unsupported labels enter binary scoring only, although runtime predictions
+still assign a supported subtype\\
+Extra Trees models & handle mixed feature scales and non-linear interactions
+with reproducible tabular-model training\\
+Temporal split with gap & evaluates later signal from each record while
+removing direct boundary overlap between development and test beats\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+The following section connects these components into a complete training
+and inference procedure, first with small calculations and then with recorded
+ECG signals and the saved models.
+
 \section{Mathematical training and inference procedure}
 \label{sec:method-training-inference}
 
@@ -676,7 +769,7 @@ $b_i\in\{0,1\}$ its binary target, and $c_i$ its subtype target. Define
 \end{equation}
 Here $\bot$ means an unsupported abnormal subtype: it still has $b_i=1$ and
 can train the binary model. Targets follow the annotation mapping in
-Chapter~\ref{ch:data}; in particular, the project AFib target uses rhythm
+Section~\ref{ch:data}; in particular, the project AFib target uses rhythm
 annotations. Neither a target nor a subject identifier is an input feature.
 
 For record $r$ with $n_r$ accepted beats, use zero-based chronological index
@@ -1157,38 +1250,7 @@ evaluation; that comparison does not automatically retrain any model.
 
 \input{content/final/methodology_real_case.tex}
 
-\section{Why this architecture was selected}
 
-\begin{table}[H]
-\centering
-\caption{Reason for each major final-architecture decision.}
-\label{tab:final-design-rationale}
-\begin{tabular}{>{\raggedright\arraybackslash}p{3.6cm}>{\raggedright\arraybackslash}p{9.6cm}}
-\toprule
-Decision & Reason\\
-\midrule
-MLII-only supervised input & matches the signal available in 46 eligible
-MIT--BIH records and avoids hidden two-lead assumptions\\
-R-peak alignment & puts comparable cardiac events in comparable positions
-inside every 512-sample window\\
-Waveform and derivative bins & preserve beat morphology, including sharp QRS
-changes\\
-Frequency powers and statistics & add compact information about signal energy,
-scale, and distribution\\
-Fifteen RR features & represent local rate, premature beats, rhythm
-irregularity, and recent interval trend using information reproducible during
-streaming\\
-Normal-only autoencoder & supplies a learned measure of disagreement with
-normal ECG structure without requiring arrhythmia labels\\
-Two-stage hierarchy & separates binary detection from subtype evaluation;
-unsupported labels enter binary scoring only, although runtime predictions
-still assign a supported subtype\\
-Extra Trees models & handle mixed feature scales and non-linear interactions
-with reproducible tabular-model training\\
-Temporal split with gap & evaluates later signal from each record while
-removing direct boundary overlap between development and test beats\\
-\bottomrule
-\end{tabular}
-\end{table}
-
-Chapter~\ref{ch:method} describes model selection and performance evaluation.
+The examples explain how the fixed hierarchy produces a label. Its overall
+performance must be assessed on the complete evaluation populations rather
+than on selected examples. Section~\ref{ch:method} defines that assessment.

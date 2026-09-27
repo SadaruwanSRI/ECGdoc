@@ -1,34 +1,11 @@
 \chapter{Reproducibility Record}
-
-\section{Experiment files}
-
-Paths in this appendix are relative to \nolinkurl{Final_Report_Research/}
-unless they begin with \nolinkurl{backend/} or
-\nolinkurl{Final_Report_Research/}; those paths are relative to the repository
-root. The main temporal experiment is stored in:
-\begin{itemize}
-    \item \nolinkurl{experiments/corrected_temporal_holdout.json};
-    \item \nolinkurl{experiments/corrected_temporal_holdout.joblib}; and
-    \item \nolinkurl{tools/final_temporal_holdout.py}.
-\end{itemize}
-The normal model is documented by
-\nolinkurl{experiments/nsrdb_autoencoder_training.json}, produced by
-\nolinkurl{tools/train_nsrdb_autoencoder.py}. Its deployable checkpoint is
-\nolinkurl{backend/app/storage/models/model_nsrdb_primary_healthy.pt}.
-The deployable copy is registered by the backend model registry and stored in
-the backend model directory.
-
-The real-data training and inference case study is reproducible from
-\nolinkurl{tools/generate_real_methodology_case.py}. Its numerical audit is
-\nolinkurl{experiments/methodology_real_case.json}, including source sample
-indices, all 242 feature values for each selected beat, actual tree routes,
-complete-forest refit checks, and unchanged model-file hashes. The new
-one-step autoencoder demonstration is identified separately from the
-original two-epoch training logs. Archived NSRDB amplitudes are preserved.
+\begingroup
+\small
+\setlist[itemize]{itemsep=0.1\baselineskip}
 
 \section{Frozen constants}
 
-\begin{table}[htbp]
+\begin{table}[H]
 \centering
 \caption{Settings used for the final experiment.}
 \begin{tabular}{ll}
@@ -51,6 +28,32 @@ Independent uncertainty units & 45 subject clusters\\
 \bottomrule
 \end{tabular}
 \end{table}
+
+\section{Experiment files}
+
+Unless stated otherwise, paths are relative to the report directory.
+Paths beginning with \nolinkurl{backend/} or
+\nolinkurl{Final_Report_Research/} start at the repository root.
+The main temporal experiment is stored in:
+\begin{itemize}
+    \item \nolinkurl{experiments/corrected_temporal_holdout.json};
+    \item \nolinkurl{experiments/corrected_temporal_holdout.joblib}; and
+    \item \nolinkurl{tools/final_temporal_holdout.py}.
+\end{itemize}
+The normal model is documented by
+\nolinkurl{experiments/nsrdb_autoencoder_training.json}, produced by
+\nolinkurl{tools/train_nsrdb_autoencoder.py}. Its deployable checkpoint is
+\nolinkurl{backend/app/storage/models/model_nsrdb_primary_healthy.pt}.
+The deployable copy is registered by the backend model registry and stored in
+the backend model directory.
+
+The real-data training and inference case study is reproducible from
+\nolinkurl{tools/generate_real_methodology_case.py}. Its numerical audit is
+\nolinkurl{experiments/methodology_real_case.json}, including source sample
+indices, all 242 feature values for each selected beat, actual tree routes,
+complete-forest refit checks, and unchanged model-file hashes. The new
+one-step autoencoder demonstration is identified separately from the
+original two-epoch training logs. Archived NSRDB amplitudes are preserved.
 
 \section{Recorded evaluation targets}
 
@@ -91,3 +94,4 @@ module at \nolinkurl{backend/app/ml/beat_preparation.py}.
 The NSRDB checkpoint is frozen and is not retrained by this entry point.
 Running training again replaces the corrected artifacts, so preserve the
 current experiment directory before any future research change.
+\endgroup

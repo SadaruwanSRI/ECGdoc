@@ -1,0 +1,381 @@
+\relax 
+\providecommand\hyper@newdestlabel[2]{}
+\citation{goldberger2000physionet,nsrdb,mitdb}
+\citation{nsrdb}
+\citation{mitdb,moody2001impact}
+\@writefile{toc}{\contentsline {chapter}{\numberline {3}Methodology}{11}{chapter.3}\protected@file@percent }
+\@writefile{lof}{\addvspace {10\p@ }}
+\@writefile{lot}{\addvspace {10\p@ }}
+\@writefile{lol}{\addvspace {10\p@ }}
+\newlabel{ch:methodology}{{3}{11}{Methodology}{chapter.3}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {3.1}Data and preparation}{11}{section.3.1}\protected@file@percent }
+\newlabel{ch:data}{{3.1}{11}{Data and preparation}{section.3.1}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.1.1}Data sources and roles}{11}{subsection.3.1.1}\protected@file@percent }
+\@writefile{brf}{\backcite{goldberger2000physionet}{{11}{3.1.1}{subsection.3.1.1}}}
+\@writefile{brf}{\backcite{nsrdb}{{11}{3.1.1}{subsection.3.1.1}}}
+\@writefile{brf}{\backcite{mitdb}{{11}{3.1.1}{subsection.3.1.1}}}
+\@writefile{lot}{\contentsline {table}{\numberline {3.1}{\ignorespaces Data sources and their strictly separated roles.}}{12}{table.caption.12}\protected@file@percent }
+\newlabel{tab:data-source-role}{{3.1}{12}{Data sources and their strictly separated roles}{table.caption.12}{}}
+\@writefile{brf}{\backcite{nsrdb}{{12}{3.1}{table.caption.12}}}
+\@writefile{brf}{\backcite{mitdb}{{12}{3.1}{table.caption.12}}}
+\@writefile{brf}{\backcite{moody2001impact}{{12}{3.1}{table.caption.12}}}
+\citation{physionetLeadFAQ,mitdb}
+\@writefile{lof}{\contentsline {figure}{\numberline {3.1}{\ignorespaces Dataset roles and evaluation boundaries. The healthy NSRDB channel creates the frozen normal model. MITDB MLII creates the supervised feature table and is split chronologically into development and temporal-test regions.}}{13}{figure.caption.13}\protected@file@percent }
+\newlabel{fig:data-source-overview}{{3.1}{13}{Dataset roles and evaluation boundaries. The healthy NSRDB channel creates the frozen normal model. MITDB MLII creates the supervised feature table and is split chronologically into development and temporal-test regions}{figure.caption.13}{}}
+\@writefile{brf}{\backcite{physionetLeadFAQ}{{13}{3.1.1}{figure.caption.13}}}
+\@writefile{brf}{\backcite{mitdb}{{13}{3.1.1}{figure.caption.13}}}
+\citation{physionetLeadFAQ}
+\@writefile{lof}{\contentsline {figure}{\numberline {3.2}{\ignorespaces MLII polarity and the channel used by each model.}}{14}{figure.caption.14}\protected@file@percent }
+\@writefile{brf}{\backcite{physionetLeadFAQ}{{14}{3.2}{figure.caption.14}}}
+\newlabel{fig:data-lead-positions}{{3.2}{14}{MLII polarity and the channel used by each model}{figure.caption.14}{}}
+\citation{butterworth1930filter,virtanen2020scipy}
+\@writefile{lot}{\contentsline {table}{\numberline {3.2}{\ignorespaces Mapping from MITDB expert annotations to project outputs.}}{15}{table.caption.15}\protected@file@percent }
+\newlabel{tab:data-label-map}{{3.2}{15}{Mapping from MITDB expert annotations to project outputs}{table.caption.15}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.1.2}Signal cleaning and window construction}{15}{subsection.3.1.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\nonumberline Cleaning checks}{15}{subsubsection*.16}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {3.3}{\ignorespaces Cleaning checklist applied before a signal can become a model input.}}{16}{table.caption.17}\protected@file@percent }
+\newlabel{tab:data-cleaning-checklist}{{3.3}{16}{Cleaning checklist applied before a signal can become a model input}{table.caption.17}{}}
+\@writefile{brf}{\backcite{butterworth1930filter}{{16}{3.3}{table.caption.17}}}
+\@writefile{brf}{\backcite{virtanen2020scipy}{{16}{3.3}{table.caption.17}}}
+\@writefile{toc}{\contentsline {subsubsection}{\nonumberline Window construction}{16}{subsubsection*.18}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\nonumberline Cleaning yield}{17}{subsubsection*.19}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\nonumberline Preparation during prediction}{17}{subsubsection*.20}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {3.3}{\ignorespaces Cleaning real ECG for the two roles. The normal-reference example is the first four seconds of NSRDB 16272/ECG1, with its actual archived scaling. The supervised example is an MLII beat from MITDB 100, filtered and standardised within its own window. Both become one 512-sample input; their channel identities remain different.}}{18}{figure.caption.21}\protected@file@percent }
+\newlabel{fig:data-cleaning-real}{{3.3}{18}{Cleaning real ECG for the two roles. The normal-reference example is the first four seconds of NSRDB 16272/ECG1, with its actual archived scaling. The supervised example is an MLII beat from MITDB 100, filtered and standardised within its own window. Both become one 512-sample input; their channel identities remain different}{figure.caption.21}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.1.3}Model inputs and data allocation}{18}{subsection.3.1.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\nonumberline Prepared inputs}{18}{subsubsection*.22}\protected@file@percent }
+\newlabel{countitems@1}{{2}{18}{Prepared inputs}{subsubsection*.22}{}}
+\@writefile{toc}{\contentsline {subsubsection}{\nonumberline Splits}{19}{subsubsection*.23}\protected@file@percent }
+\newlabel{countitems@2}{{4}{19}{Splits}{subsubsection*.23}{}}
+\@writefile{toc}{\contentsline {subsubsection}{\nonumberline Exact model allocation}{20}{subsubsection*.24}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {3.4}{\ignorespaces Training, validation, and temporal-test data supplied to each model.}}{20}{table.caption.25}\protected@file@percent }
+\newlabel{tab:data-model-allocation}{{3.4}{20}{Training, validation, and temporal-test data supplied to each model}{table.caption.25}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {3.4}{\ignorespaces Preparation of normal-reference windows and labelled MLII beats.}}{21}{figure.caption.26}\protected@file@percent }
+\newlabel{fig:data-feed-real}{{3.4}{21}{Preparation of normal-reference windows and labelled MLII beats}{figure.caption.26}{}}
+\@writefile{toc}{\contentsline {subsubsection}{\nonumberline Inputs to the frozen system}{21}{subsubsection*.27}\protected@file@percent }
+\citation{dechazal2004heartbeat,mousavi2019seq2seq}
+\@writefile{toc}{\contentsline {section}{\numberline {3.2}Theoretical foundations}{22}{section.3.2}\protected@file@percent }
+\newlabel{ch:theory}{{3.2}{22}{Theoretical foundations}{section.3.2}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.2.1}Why ECG evidence has more than one form}{22}{subsection.3.2.1}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {3.5}{\ignorespaces Two evidence scales used by the final model. Morphology describes the local shape of a beat; RR timing describes rhythm context around the beat.}}{22}{figure.caption.28}\protected@file@percent }
+\newlabel{fig:theory-evidence-scales}{{3.5}{22}{Two evidence scales used by the final model. Morphology describes the local shape of a beat; RR timing describes rhythm context around the beat}{figure.caption.28}{}}
+\@writefile{brf}{\backcite{dechazal2004heartbeat}{{22}{3.2.1}{figure.caption.28}}}
+\@writefile{brf}{\backcite{mousavi2019seq2seq}{{22}{3.2.1}{figure.caption.28}}}
+\citation{mitdb,nsrdb}
+\citation{butterworth1930filter,virtanen2020scipy}
+\@writefile{lof}{\contentsline {figure}{\numberline {3.6}{\ignorespaces Learning map for the final ECG system.}}{23}{figure.caption.29}\protected@file@percent }
+\newlabel{fig:theory-learning-map}{{3.6}{23}{Learning map for the final ECG system}{figure.caption.29}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.2.2}From voltage to a comparable four-second window}{23}{subsection.3.2.2}\protected@file@percent }
+\@writefile{brf}{\backcite{mitdb}{{23}{3.2.2}{subsection.3.2.2}}}
+\@writefile{brf}{\backcite{nsrdb}{{23}{3.2.2}{subsection.3.2.2}}}
+\@writefile{brf}{\backcite{butterworth1930filter}{{24}{3.2.2}{subsection.3.2.2}}}
+\@writefile{brf}{\backcite{virtanen2020scipy}{{24}{3.2.2}{subsection.3.2.2}}}
+\newlabel{eq:theory-window-zscore}{{3.2}{24}{From voltage to a comparable four-second window}{equation.3.2}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.2.3}Feature extraction theory}{24}{subsection.3.2.3}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {3.7}{\ignorespaces Feature-extraction operations behind the final 242-value vector. The tree models learn from compact numerical evidence, not from raw ECG samples directly.}}{24}{figure.caption.30}\protected@file@percent }
+\newlabel{fig:theory-feature-math}{{3.7}{24}{Feature-extraction operations behind the final 242-value vector. The tree models learn from compact numerical evidence, not from raw ECG samples directly}{figure.caption.30}{}}
+\citation{kligfield2007standardization,butterworth1930filter}
+\@writefile{brf}{\backcite{kligfield2007standardization}{{25}{3.2.3}{equation.3.5}}}
+\@writefile{brf}{\backcite{butterworth1930filter}{{25}{3.2.3}{equation.3.5}}}
+\newlabel{eq:theory-dft}{{3.6}{25}{Feature extraction theory}{equation.3.6}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.2.4}RR timing theory}{25}{subsection.3.2.4}\protected@file@percent }
+\citation{hinton2006autoencoder}
+\citation{vincent2008denoising}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.2.5}Normal-only reconstruction theory}{26}{subsection.3.2.5}\protected@file@percent }
+\newlabel{eq:ae-objective}{{3.9}{26}{Normal-only reconstruction theory}{equation.3.9}{}}
+\@writefile{brf}{\backcite{hinton2006autoencoder}{{26}{3.2.5}{equation.3.9}}}
+\@writefile{brf}{\backcite{vincent2008denoising}{{26}{3.2.5}{equation.3.9}}}
+\citation{chandola2009anomaly}
+\@writefile{lof}{\contentsline {figure}{\numberline {3.8}{\ignorespaces Normal-only reconstruction principle. A larger residual can indicate novelty, but it is evidence only; the final arrhythmia decision is made by the supervised hierarchy.}}{27}{figure.caption.31}\protected@file@percent }
+\newlabel{fig:theory-reconstruction-principle}{{3.8}{27}{Normal-only reconstruction principle. A larger residual can indicate novelty, but it is evidence only; the final arrhythmia decision is made by the supervised hierarchy}{figure.caption.31}{}}
+\@writefile{brf}{\backcite{chandola2009anomaly}{{27}{3.2.5}{figure.caption.31}}}
+\@writefile{toc}{\contentsline {subsubsection}{\nonumberline What the encoder and decoder actually compute}{27}{subsubsection*.32}\protected@file@percent }
+\citation{he2016resnet,ronneberger2015unet,srivastava2014dropout}
+\citation{vincent2008denoising}
+\citation{kingma2015adam}
+\newlabel{eq:theory-convolution}{{3.14}{28}{What the encoder and decoder actually compute}{equation.3.14}{}}
+\@writefile{brf}{\backcite{he2016resnet}{{28}{3.2.5}{equation.3.14}}}
+\@writefile{brf}{\backcite{ronneberger2015unet}{{28}{3.2.5}{equation.3.14}}}
+\@writefile{brf}{\backcite{srivastava2014dropout}{{28}{3.2.5}{equation.3.14}}}
+\@writefile{toc}{\contentsline {subsubsection}{\nonumberline How the autoencoder lowers reconstruction loss}{28}{subsubsection*.33}\protected@file@percent }
+\newlabel{eq:theory-denoising-loss}{{3.15}{28}{How the autoencoder lowers reconstruction loss}{equation.3.15}{}}
+\@writefile{brf}{\backcite{vincent2008denoising}{{28}{3.2.5}{equation.3.15}}}
+\newlabel{eq:theory-adam}{{3.16}{28}{How the autoencoder lowers reconstruction loss}{equation.3.16}{}}
+\@writefile{brf}{\backcite{kingma2015adam}{{29}{3.2.5}{equation.3.16}}}
+\@writefile{lof}{\contentsline {figure}{\numberline {3.9}{\ignorespaces Autoencoder and Extra Trees training mechanisms.}}{29}{figure.caption.34}\protected@file@percent }
+\newlabel{fig:theory-training-mechanisms}{{3.9}{29}{Autoencoder and Extra Trees training mechanisms}{figure.caption.34}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.2.6}Hierarchical classification theory}{29}{subsection.3.2.6}\protected@file@percent }
+\citation{geurts2006extratrees}
+\@writefile{lof}{\contentsline {figure}{\numberline {3.10}{\ignorespaces Probability logic of the final hierarchy. The subtype model is conditional: it is used only after the abnormality gate is passed.}}{30}{figure.caption.35}\protected@file@percent }
+\newlabel{fig:theory-hierarchy-probability}{{3.10}{30}{Probability logic of the final hierarchy. The subtype model is conditional: it is used only after the abnormality gate is passed}{figure.caption.35}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.2.7}Why Extra Trees fits this feature design}{30}{subsection.3.2.7}\protected@file@percent }
+\citation{geurts2006extratrees}
+\citation{zhang2021interpatient}
+\@writefile{brf}{\backcite{geurts2006extratrees}{{31}{3.2.7}{subsection.3.2.7}}}
+\newlabel{eq:theory-weighted-entropy}{{3.19}{31}{Why Extra Trees fits this feature design}{equation.3.19}{}}
+\newlabel{eq:theory-information-gain}{{3.20}{31}{Why Extra Trees fits this feature design}{equation.3.20}{}}
+\@writefile{brf}{\backcite{geurts2006extratrees}{{31}{3.2.7}{equation.3.20}}}
+\@writefile{brf}{\backcite{zhang2021interpatient}{{31}{3.2.7}{equation.3.20}}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.2.8}Class and patient imbalance theory}{31}{subsection.3.2.8}\protected@file@percent }
+\citation{cui2019classbalanced}
+\newlabel{eq:record-weight}{{3.21}{32}{Class and patient imbalance theory}{equation.3.21}{}}
+\@writefile{brf}{\backcite{cui2019classbalanced}{{32}{3.2.8}{equation.3.21}}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.2.9}Temporal patient adaptation theory}{32}{subsection.3.2.9}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\nonumberline Why training, validation, and testing have different jobs}{32}{subsubsection*.36}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.2.10}Validation theory}{32}{subsection.3.2.10}\protected@file@percent }
+\citation{saito2015pr}
+\citation{rutter2000clustered}
+\@writefile{lof}{\contentsline {figure}{\numberline {3.11}{\ignorespaces Theoretical reason for subject-clustered validation. Clustered resampling prevents one long record from being treated as many independent people.}}{33}{figure.caption.37}\protected@file@percent }
+\newlabel{fig:theory-validation-units}{{3.11}{33}{Theoretical reason for subject-clustered validation. Clustered resampling prevents one long record from being treated as many independent people}{figure.caption.37}{}}
+\@writefile{brf}{\backcite{saito2015pr}{{33}{3.2.10}{figure.caption.37}}}
+\@writefile{brf}{\backcite{rutter2000clustered}{{33}{3.2.10}{figure.caption.37}}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.2.11}Summary of the theoretical framework}{34}{subsection.3.2.11}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {3.5}{\ignorespaces How the theory maps to the implemented final system.}}{34}{table.caption.38}\protected@file@percent }
+\newlabel{tab:theory-system-alignment}{{3.5}{34}{How the theory maps to the implemented final system}{table.caption.38}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {3.3}System design and model implementation}{34}{section.3.3}\protected@file@percent }
+\newlabel{ch:architecture}{{3.3}{34}{System design and model implementation}{section.3.3}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.3.1}System overview}{34}{subsection.3.3.1}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {3.12}{\ignorespaces Exact runtime order of the final ECG system. The autoencoder supplies features; the supervised tree models make the final class decision.}}{35}{figure.caption.39}\protected@file@percent }
+\newlabel{fig:architecture-current-flow}{{3.12}{35}{Exact runtime order of the final ECG system. The autoencoder supplies features; the supervised tree models make the final class decision}{figure.caption.39}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.3.2}Input signal and beat window}{35}{subsection.3.3.2}\protected@file@percent }
+\newlabel{countitems@3}{{3}{35}{Input signal and beat window}{subsection.3.3.2}{}}
+\newlabel{eq:method-beat-window}{{3.22}{35}{Input signal and beat window}{equation.3.22}{}}
+\newlabel{eq:method-window-scaling}{{3.23}{36}{Input signal and beat window}{equation.3.23}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {3.13}{\ignorespaces R-peak-aligned beat window used by the final model. The R peak is at sample index 200, giving the model pre-QRS context and post-QRS recovery information.}}{36}{figure.caption.40}\protected@file@percent }
+\newlabel{fig:architecture-streaming-window}{{3.13}{36}{R-peak-aligned beat window used by the final model. The R peak is at sample index 200, giving the model pre-QRS context and post-QRS recovery information}{figure.caption.40}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.3.3}Three trained components}{36}{subsection.3.3.3}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {3.6}{\ignorespaces Architecture, training target, and output of each fitted component.}}{37}{table.caption.41}\protected@file@percent }
+\newlabel{tab:method-three-models}{{3.6}{37}{Architecture, training target, and output of each fitted component}{table.caption.41}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {3.14}{\ignorespaces Training and use of the saved three-component model.}}{38}{figure.caption.42}\protected@file@percent }
+\newlabel{fig:architecture-training-live}{{3.14}{38}{Training and use of the saved three-component model}{figure.caption.42}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.3.4}Normal-only autoencoder}{38}{subsection.3.3.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\nonumberline Purpose}{38}{subsubsection*.43}\protected@file@percent }
+\citation{vincent2008denoising}
+\newlabel{eq:ae-loss-final}{{3.26}{39}{Purpose}{equation.3.26}{}}
+\@writefile{brf}{\backcite{vincent2008denoising}{{39}{3.3.4}{equation.3.26}}}
+\@writefile{toc}{\contentsline {subsubsection}{\nonumberline Network structure}{39}{subsubsection*.44}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {3.15}{\ignorespaces Autoencoder architecture with verified tensor dimensions.}}{39}{figure.caption.45}\protected@file@percent }
+\newlabel{fig:final-ae-layers}{{3.15}{39}{Autoencoder architecture with verified tensor dimensions}{figure.caption.45}{}}
+\citation{he2016resnet,srivastava2014dropout}
+\@writefile{toc}{\contentsline {subsubsection}{\nonumberline Encoder block}{40}{subsubsection*.46}\protected@file@percent }
+\newlabel{eq:method-convolution}{{3.27}{40}{Encoder block}{equation.3.27}{}}
+\newlabel{eq:method-conv-length}{{3.28}{40}{Encoder block}{equation.3.28}{}}
+\newlabel{eq:method-residual-block}{{3.30}{40}{Encoder block}{equation.3.30}{}}
+\@writefile{brf}{\backcite{he2016resnet}{{40}{3.3.4}{equation.3.30}}}
+\@writefile{brf}{\backcite{srivastava2014dropout}{{40}{3.3.4}{equation.3.30}}}
+\citation{nsrdb}
+\citation{kingma2015adam}
+\@writefile{toc}{\contentsline {subsubsection}{\nonumberline Bottleneck and decoder mathematics}{41}{subsubsection*.47}\protected@file@percent }
+\newlabel{eq:method-decoder-skip}{{3.31}{41}{Bottleneck and decoder mathematics}{equation.3.31}{}}
+\@writefile{toc}{\contentsline {subsubsection}{\nonumberline Normal-reference data and checkpoint}{41}{subsubsection*.48}\protected@file@percent }
+\@writefile{brf}{\backcite{nsrdb}{{41}{3.3.4}{subsubsection*.48}}}
+\@writefile{toc}{\contentsline {subsubsection}{\nonumberline How the training update changes network weights}{41}{subsubsection*.49}\protected@file@percent }
+\newlabel{eq:method-ae-output-gradient}{{3.32}{41}{How the training update changes network weights}{equation.3.32}{}}
+\newlabel{eq:method-ae-adam}{{3.33}{41}{How the training update changes network weights}{equation.3.33}{}}
+\@writefile{brf}{\backcite{kingma2015adam}{{42}{3.3.4}{equation.3.33}}}
+\@writefile{lof}{\contentsline {figure}{\numberline {3.16}{\ignorespaces Autoencoder fitting and validation loss.}}{42}{figure.caption.50}\protected@file@percent }
+\newlabel{fig:lead-ii-ae-learning}{{3.16}{42}{Autoencoder fitting and validation loss}{figure.caption.50}{}}
+\@writefile{toc}{\contentsline {subsubsection}{\nonumberline Four autoencoder residual features}{42}{subsubsection*.51}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {3.17}{\ignorespaces Real healthy and abnormal ECG examples through the frozen autoencoder. The residual between input and reconstruction is converted into four numerical features for the supervised detector.}}{43}{figure.caption.52}\protected@file@percent }
+\newlabel{fig:final-real-ae}{{3.17}{43}{Real healthy and abnormal ECG examples through the frozen autoencoder. The residual between input and reconstruction is converted into four numerical features for the supervised detector}{figure.caption.52}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.3.5}Final 242-value feature vector}{43}{subsection.3.3.5}\protected@file@percent }
+\citation{geurts2006extratrees}
+\@writefile{lof}{\contentsline {figure}{\numberline {3.18}{\ignorespaces Feature-vector layout used by both supervised models. The same 242-value vector is passed first to the abnormality detector and, if required, to the subtype classifier.}}{44}{figure.caption.53}\protected@file@percent }
+\newlabel{fig:architecture-feature-vector}{{3.18}{44}{Feature-vector layout used by both supervised models. The same 242-value vector is passed first to the abnormality detector and, if required, to the subtype classifier}{figure.caption.53}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {3.7}{\ignorespaces Organised feature groups in the final architecture.}}{44}{table.caption.54}\protected@file@percent }
+\newlabel{tab:final-feature-vector}{{3.7}{44}{Organised feature groups in the final architecture}{table.caption.54}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.3.6}How an Extra Trees model learns}{44}{subsection.3.3.6}\protected@file@percent }
+\@writefile{brf}{\backcite{geurts2006extratrees}{{44}{3.3.6}{subsection.3.3.6}}}
+\@writefile{toc}{\contentsline {subsubsection}{\nonumberline Why some training rows have more weight}{45}{subsubsection*.55}\protected@file@percent }
+\newlabel{eq:method-record-weight}{{3.39}{45}{Why some training rows have more weight}{equation.3.39}{}}
+\@writefile{toc}{\contentsline {subsubsection}{\nonumberline The mathematical question at each tree node}{45}{subsubsection*.56}\protected@file@percent }
+\newlabel{eq:method-node-class-share}{{3.40}{45}{The mathematical question at each tree node}{equation.3.40}{}}
+\newlabel{eq:method-node-entropy}{{3.41}{45}{The mathematical question at each tree node}{equation.3.41}{}}
+\newlabel{eq:method-tree-gain}{{3.42}{45}{The mathematical question at each tree node}{equation.3.42}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {3.19}{\ignorespaces Worked example of entropy reduction in a tree.}}{46}{figure.caption.57}\protected@file@percent }
+\newlabel{fig:method-tree-entropy-example}{{3.19}{46}{Worked example of entropy reduction in a tree}{figure.caption.57}{}}
+\@writefile{toc}{\contentsline {subsubsection}{\nonumberline From a tree leaf to an ensemble score}{46}{subsubsection*.58}\protected@file@percent }
+\newlabel{eq:method-forest-score}{{3.43}{46}{From a tree leaf to an ensemble score}{equation.3.43}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.3.7}Binary abnormality detector}{46}{subsection.3.3.7}\protected@file@percent }
+\newlabel{countitems@4}{{6}{46}{Binary abnormality detector}{subsection.3.3.7}{}}
+\newlabel{eq:method-binary-score}{{3.44}{47}{Binary abnormality detector}{equation.3.44}{}}
+\newlabel{eq:method-threshold-ba}{{3.45}{47}{Binary abnormality detector}{equation.3.45}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.3.8}Abnormal-subtype classifier}{47}{subsection.3.3.8}\protected@file@percent }
+\newlabel{countitems@5}{{6}{47}{Abnormal-subtype classifier}{subsection.3.3.8}{}}
+\newlabel{eq:final-decision}{{3.47}{48}{Abnormal-subtype classifier}{equation.3.47}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.3.9}Final decision logic}{48}{subsection.3.3.9}\protected@file@percent }
+\citation{ad8232}
+\citation{virtanen2020scipy}
+\citation{paszke2019pytorch}
+\newlabel{eq:method-complete-decision}{{3.48}{49}{Final decision logic}{equation.3.48}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.3.10}From saved models to a live ECG decision}{49}{subsection.3.3.10}\protected@file@percent }
+\@writefile{brf}{\backcite{ad8232}{{49}{3.3.10}{subsection.3.3.10}}}
+\@writefile{lot}{\contentsline {table}{\numberline {3.8}{\ignorespaces Technologies in the final evidence path and the mathematical task performed by each. The web interface displays results and does not train the models.}}{50}{table.caption.59}\protected@file@percent }
+\newlabel{tab:theory-technology-roles}{{3.8}{50}{Technologies in the final evidence path and the mathematical task performed by each. The web interface displays results and does not train the models}{table.caption.59}{}}
+\@writefile{brf}{\backcite{virtanen2020scipy}{{50}{3.8}{table.caption.59}}}
+\@writefile{brf}{\backcite{paszke2019pytorch}{{50}{3.8}{table.caption.59}}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.3.11}Why this architecture was selected}{51}{subsection.3.3.11}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {3.9}{\ignorespaces Reason for each major final-architecture decision.}}{51}{table.caption.60}\protected@file@percent }
+\newlabel{tab:final-design-rationale}{{3.9}{51}{Reason for each major final-architecture decision}{table.caption.60}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {3.4}Mathematical training and inference procedure}{51}{section.3.4}\protected@file@percent }
+\newlabel{sec:method-training-inference}{{3.4}{51}{Mathematical training and inference procedure}{section.3.4}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.4.1}Notation, targets, and separation of data}{52}{subsection.3.4.1}\protected@file@percent }
+\newlabel{eq:method-target-sets}{{3.50}{52}{Notation, targets, and separation of data}{equation.3.50}{}}
+\newlabel{eq:method-training-index-sets}{{3.52}{52}{Notation, targets, and separation of data}{equation.3.52}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {3.10}{\ignorespaces Illustrative allocation of a record containing 1,000 accepted beats.}}{53}{table.caption.61}\protected@file@percent }
+\newlabel{tab:method-example-split}{{3.10}{53}{Illustrative allocation of a record containing 1,000 accepted beats}{table.caption.61}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.4.2}Model 1: learning and freezing the autoencoder}{53}{subsection.3.4.2}\protected@file@percent }
+\newlabel{eq:method-sequential-ae-loss}{{3.53}{53}{Model 1: learning and freezing the autoencoder}{equation.3.53}{}}
+\newlabel{eq:method-ae-checkpoint-selection}{{3.54}{53}{Model 1: learning and freezing the autoencoder}{equation.3.54}{}}
+\newlabel{eq:method-example-ae-loss}{{3.55}{54}{Model 1: learning and freezing the autoencoder}{equation.3.55}{}}
+\newlabel{eq:method-example-adam-step}{{3.58}{54}{Model 1: learning and freezing the autoencoder}{equation.3.58}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.4.3}Core calculation shared by training and prediction}{54}{subsection.3.4.3}\protected@file@percent }
+\newlabel{eq:method-shared-feature-map}{{3.59}{54}{Core calculation shared by training and prediction}{equation.3.59}{}}
+\newlabel{eq:method-feature-pooling}{{3.60}{54}{Core calculation shared by training and prediction}{equation.3.60}{}}
+\newlabel{eq:method-feature-spectrum}{{3.61}{55}{Core calculation shared by training and prediction}{equation.3.61}{}}
+\newlabel{eq:method-base-rr-calculation}{{3.62}{55}{Core calculation shared by training and prediction}{equation.3.62}{}}
+\newlabel{eq:method-example-rr}{{3.63}{55}{Core calculation shared by training and prediction}{equation.3.63}{}}
+\newlabel{eq:method-example-residual-totals}{{3.64}{56}{Core calculation shared by training and prediction}{equation.3.64}{}}
+\newlabel{eq:method-example-residual-features}{{3.65}{56}{Core calculation shared by training and prediction}{equation.3.65}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.4.4}Model 2: fitting and selecting the binary detector}{56}{subsection.3.4.4}\protected@file@percent }
+\newlabel{eq:method-randomised-node-fit}{{3.66}{56}{Model 2: fitting and selecting the binary detector}{equation.3.66}{}}
+\newlabel{eq:method-validation-threshold-selection}{{3.67}{56}{Model 2: fitting and selecting the binary detector}{equation.3.67}{}}
+\newlabel{eq:method-example-weighted-entropy}{{3.68}{57}{Model 2: fitting and selecting the binary detector}{equation.3.68}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {3.11}{\ignorespaces Illustrative validation comparison of three binary-score thresholds.}}{57}{table.caption.62}\protected@file@percent }
+\newlabel{tab:method-example-threshold}{{3.11}{57}{Illustrative validation comparison of three binary-score thresholds}{table.caption.62}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.4.5}Model 3: fitting the abnormal-subtype classifier}{57}{subsection.3.4.5}\protected@file@percent }
+\newlabel{eq:method-subtype-training-population}{{3.69}{57}{Model 3: fitting the abnormal-subtype classifier}{equation.3.69}{}}
+\newlabel{eq:method-subtype-selection-objective}{{3.70}{57}{Model 3: fitting the abnormal-subtype classifier}{equation.3.70}{}}
+\newlabel{eq:method-example-subtype-gain}{{3.71}{58}{Model 3: fitting the abnormal-subtype classifier}{equation.3.71}{}}
+\newlabel{eq:method-example-subtype-selection}{{3.73}{58}{Model 3: fitting the abnormal-subtype classifier}{equation.3.73}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.4.6}Applying the saved models to an unseen beat}{58}{subsection.3.4.6}\protected@file@percent }
+\newlabel{eq:method-saved-model-collection}{{3.74}{58}{Applying the saved models to an unseen beat}{equation.3.74}{}}
+\newlabel{eq:method-unseen-inference}{{3.76}{58}{Applying the saved models to an unseen beat}{equation.3.76}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.4.7}End-to-end case study using real ECG segments}{60}{subsection.3.4.7}\protected@file@percent }
+\newlabel{sec:method-real-case}{{3.4.7}{60}{End-to-end case study using real ECG segments}{subsection.3.4.7}{}}
+\citation{nsrdb,mitdb}
+\@writefile{brf}{\backcite{nsrdb}{{61}{3.4.7}{subsection.3.4.7}}}
+\@writefile{brf}{\backcite{mitdb}{{61}{3.4.7}{subsection.3.4.7}}}
+\@writefile{lot}{\contentsline {table}{\numberline {3.12}{\ignorespaces Real ECG segments used in the training-to-prediction case study.}}{61}{table.caption.63}\protected@file@percent }
+\newlabel{tab:real-case-provenance}{{3.12}{61}{Real ECG segments used in the training-to-prediction case study}{table.caption.63}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {3.20}{\ignorespaces Real fitting and temporal-test ECG segments.}}{62}{figure.caption.64}\protected@file@percent }
+\newlabel{fig:method-real-train-test}{{3.20}{62}{Real fitting and temporal-test ECG segments}{figure.caption.64}{}}
+\newlabel{eq:real-ae-batch-loss}{{3.77}{63}{End-to-end case study using real ECG segments}{equation.3.77}{}}
+\newlabel{eq:real-ae-bias-update}{{3.81}{63}{End-to-end case study using real ECG segments}{equation.3.81}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {3.21}{\ignorespaces Real ECG through one training update and the saved autoencoder.}}{64}{figure.caption.65}\protected@file@percent }
+\newlabel{fig:method-real-ae-training}{{3.21}{64}{Real ECG through one training update and the saved autoencoder}{figure.caption.65}{}}
+\newlabel{eq:real-training-residuals}{{3.82}{65}{End-to-end case study using real ECG segments}{equation.3.82}{}}
+\newlabel{eq:real-window-extraction}{{3.83}{65}{End-to-end case study using real ECG segments}{equation.3.83}{}}
+\newlabel{eq:real-peak-scaling}{{3.84}{65}{End-to-end case study using real ECG segments}{equation.3.84}{}}
+\newlabel{eq:real-rr-intervals}{{3.86}{65}{End-to-end case study using real ECG segments}{equation.3.86}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {3.13}{\ignorespaces All 15 measured RR features for the real temporal-test PVC.}}{66}{table.caption.66}\protected@file@percent }
+\newlabel{tab:real-rr-values}{{3.13}{66}{All 15 measured RR features for the real temporal-test PVC}{table.caption.66}{}}
+\newlabel{eq:real-test-residuals}{{3.88}{66}{End-to-end case study using real ECG segments}{equation.3.88}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {3.22}{\ignorespaces Real test PVC from source ECG to subtype scores.}}{67}{figure.caption.67}\protected@file@percent }
+\newlabel{fig:method-real-prediction}{{3.22}{67}{Real test PVC from source ECG to subtype scores}{figure.caption.67}{}}
+\newlabel{eq:real-binary-weight}{{3.89}{68}{End-to-end case study using real ECG segments}{equation.3.89}{}}
+\newlabel{eq:real-binary-root-gain}{{3.90}{68}{End-to-end case study using real ECG segments}{equation.3.90}{}}
+\newlabel{eq:real-subtype-weight}{{3.91}{68}{End-to-end case study using real ECG segments}{equation.3.91}{}}
+\newlabel{eq:real-subtype-root-gain}{{3.92}{69}{End-to-end case study using real ECG segments}{equation.3.92}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {3.14}{\ignorespaces Recorded validation measurements selecting the real saved models.}}{69}{table.caption.68}\protected@file@percent }
+\newlabel{tab:real-candidate-selection}{{3.14}{69}{Recorded validation measurements selecting the real saved models}{table.caption.68}{}}
+\gdef \LT@ii {\LT@entry 
+    {1}{29.6848pt}\LT@entry 
+    {1}{125.81102pt}\LT@entry 
+    {1}{58.5812pt}\LT@entry 
+    {1}{59.09584pt}\LT@entry 
+    {1}{38.02873pt}}
+\@writefile{lot}{\contentsline {table}{\numberline {3.15}{\ignorespaces Complete route of the real test PVC through the first saved binary tree.}}{70}{table.3.15}\protected@file@percent }
+\newlabel{tab:real-binary-path}{{3.15}{70}{Complete route of the real test PVC through the first saved binary tree}{table.3.15}{}}
+\newlabel{eq:real-binary-prediction}{{3.93}{70}{End-to-end case study using real ECG segments}{equation.3.93}{}}
+\gdef \LT@iii {\LT@entry 
+    {1}{29.6848pt}\LT@entry 
+    {1}{125.81102pt}\LT@entry 
+    {1}{58.5812pt}\LT@entry 
+    {1}{59.09584pt}\LT@entry 
+    {1}{38.02873pt}}
+\@writefile{lot}{\contentsline {table}{\numberline {3.16}{\ignorespaces Complete route of the real test PVC through the first saved subtype tree.}}{71}{table.3.16}\protected@file@percent }
+\newlabel{tab:real-subtype-path}{{3.16}{71}{Complete route of the real test PVC through the first saved subtype tree}{table.3.16}{}}
+\newlabel{eq:real-subtype-prediction}{{3.94}{71}{End-to-end case study using real ECG segments}{equation.3.94}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {3.23}{\ignorespaces Real temporal-test examples of all six outputs.}}{72}{figure.caption.69}\protected@file@percent }
+\newlabel{fig:method-real-six-outputs}{{3.23}{72}{Real temporal-test examples of all six outputs}{figure.caption.69}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {3.17}{\ignorespaces Measured predictions for the six real illustrative test segments.}}{73}{table.caption.70}\protected@file@percent }
+\newlabel{tab:real-six-predictions}{{3.17}{73}{Measured predictions for the six real illustrative test segments}{table.caption.70}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {3.5}Experimental design and evaluation}{73}{section.3.5}\protected@file@percent }
+\newlabel{ch:method}{{3.5}{73}{Experimental design and evaluation}{section.3.5}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.5.1}Evaluation workflow}{74}{subsection.3.5.1}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {3.24}{\ignorespaces Chronological model selection, refitting, and final testing.}}{74}{figure.caption.71}\protected@file@percent }
+\newlabel{fig:method-workflow}{{3.24}{74}{Chronological model selection, refitting, and final testing}{figure.caption.71}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.5.2}Research objective and success conditions}{74}{subsection.3.5.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.5.3}Separation of normal-reference and supervised development}{75}{subsection.3.5.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.5.4}Temporal split}{75}{subsection.3.5.4}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {3.25}{\ignorespaces Temporal split audit for every eligible MITDB MLII record. Blue beats are available for final fitting, yellow beats are the boundary gap before the test, and red beats are the held-out final 20\% temporal test.}}{76}{figure.caption.72}\protected@file@percent }
+\newlabel{fig:method-split-audit}{{3.25}{76}{Temporal split audit for every eligible MITDB MLII record. Blue beats are available for final fitting, yellow beats are the boundary gap before the test, and red beats are the held-out final 20\% temporal test}{figure.caption.72}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.5.5}Model selection and final fitting}{76}{subsection.3.5.5}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {3.26}{\ignorespaces Model selection on the 64--80\% validation region. The binary detector is selected by balanced accuracy and F1; the subtype classifier is selected by macro F1 and accuracy.}}{77}{figure.caption.73}\protected@file@percent }
+\newlabel{fig:method-model-selection}{{3.26}{77}{Model selection on the 64--80\% validation region. The binary detector is selected by balanced accuracy and F1; the subtype classifier is selected by macro F1 and accuracy}{figure.caption.73}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.5.6}Evaluation order}{77}{subsection.3.5.6}\protected@file@percent }
+\citation{incartdb}
+\@writefile{lof}{\contentsline {figure}{\numberline {3.27}{\ignorespaces Populations used for the three evaluation questions.}}{78}{figure.caption.74}\protected@file@percent }
+\newlabel{fig:method-evaluation-order}{{3.27}{78}{Populations used for the three evaluation questions}{figure.caption.74}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.5.7}Limited external evaluation protocol}{78}{subsection.3.5.7}\protected@file@percent }
+\newlabel{sec:external-protocol}{{3.5.7}{78}{Limited external evaluation protocol}{subsection.3.5.7}{}}
+\@writefile{brf}{\backcite{incartdb}{{78}{3.5.7}{subsection.3.5.7}}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.5.8}Metrics}{79}{subsection.3.5.8}\protected@file@percent }
+\newlabel{eq:subject-macro}{{3.102}{79}{Metrics}{equation.3.102}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.5.9}Subject-clustered confidence interval}{79}{subsection.3.5.9}\protected@file@percent }
+\citation{rutter2000clustered}
+\@writefile{brf}{\backcite{rutter2000clustered}{{80}{3.5.9}{Item.46}}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.5.10}Exploratory tests against the 90\% target}{80}{subsection.3.5.10}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.5.11}Reproducibility and leakage controls}{80}{subsection.3.5.11}\protected@file@percent }
+\@setckpt{content/final/3_methodology}{
+\setcounter{page}{81}
+\setcounter{equation}{102}
+\setcounter{enumi}{6}
+\setcounter{enumii}{0}
+\setcounter{enumiii}{0}
+\setcounter{enumiv}{0}
+\setcounter{footnote}{0}
+\setcounter{mpfootnote}{0}
+\setcounter{part}{0}
+\setcounter{chapter}{3}
+\setcounter{section}{5}
+\setcounter{subsection}{11}
+\setcounter{subsubsection}{0}
+\setcounter{paragraph}{0}
+\setcounter{subparagraph}{0}
+\setcounter{figure}{27}
+\setcounter{table}{17}
+\setcounter{NAT@ctr}{0}
+\setcounter{parentequation}{0}
+\setcounter{ALC@unique}{0}
+\setcounter{ALC@line}{0}
+\setcounter{ALC@rem}{0}
+\setcounter{ALC@depth}{0}
+\setcounter{AM@survey}{0}
+\setcounter{lstnumber}{1}
+\setcounter{FancyVerbLine}{0}
+\setcounter{caption@flags}{2}
+\setcounter{continuedfloat}{0}
+\setcounter{subfigure}{0}
+\setcounter{subtable}{0}
+\setcounter{section@level}{0}
+\setcounter{Item}{46}
+\setcounter{Hfootnote}{0}
+\setcounter{bookmark@seq@number}{0}
+\setcounter{nlinenum}{0}
+\setcounter{LT@tables}{3}
+\setcounter{LT@chunks}{4}
+\setcounter{float@type}{16}
+\setcounter{countitems}{6}
+\setcounter{nextitemizecount}{6}
+\setcounter{tcbbreakpart}{1}
+\setcounter{tcblayer}{0}
+\setcounter{tcolorbox@number}{1}
+\setcounter{tcbrastercolumn}{1}
+\setcounter{tcbrasterrow}{1}
+\setcounter{tcbrasternum}{1}
+\setcounter{tcbraster}{0}
+\setcounter{tcblisting}{0}
+\setcounter{lstlisting}{0}
+}

@@ -11,14 +11,8 @@ Reallocating 'name_of_file' (item size: 1) to 33 items.
 A level-1 auxiliary file: content/final/1_introduction.aux
 Reallocating 'name_of_file' (item size: 1) to 38 items.
 A level-1 auxiliary file: content/final/2_literature_review.aux
-Reallocating 'name_of_file' (item size: 1) to 25 items.
-A level-1 auxiliary file: content/final/2_data.aux
-Reallocating 'name_of_file' (item size: 1) to 27 items.
-A level-1 auxiliary file: content/final/2_theory.aux
-Reallocating 'name_of_file' (item size: 1) to 33 items.
-A level-1 auxiliary file: content/final/3_architecture.aux
-Reallocating 'name_of_file' (item size: 1) to 27 items.
-A level-1 auxiliary file: content/final/4_method.aux
+Reallocating 'name_of_file' (item size: 1) to 32 items.
+A level-1 auxiliary file: content/final/3_methodology.aux
 Reallocating 'name_of_file' (item size: 1) to 28 items.
 A level-1 auxiliary file: content/final/5_results.aux
 Reallocating 'name_of_file' (item size: 1) to 31 items.
@@ -31,7 +25,7 @@ A level-1 auxiliary file: content/final/appendix.aux
 Database file #1: bib/library.bib
 You've used 35 entries,
             1876 wiz_defined-function locations,
-            698 strings with 11832 characters,
+            695 strings with 11755 characters,
 and the built_in function-call counts, 11245 in all, are:
 = -- 1062
 > -- 580

@@ -1,4 +1,4 @@
-\chapter{Discussion and Conclusion}\label{ch:conclusion}
+\chapter[head=Discussion and conclusions]{Discussion, Conclusions and Recommendations}\label{ch:conclusion}
 
 \section{Main findings}
 The single-lead hierarchy achieved 98.07\% pooled six-class accuracy
@@ -15,13 +15,9 @@ normal beats become false alarms. The lower precision shows that false alarms re
 external sample. The one-patient design limits the scope of this finding.
 
 \section{Interpretation of the findings}
-The high pooled accuracy shows that the system classified most supported
-beats correctly in this temporal evaluation. It does not show uniform
-performance across classes or patients. PAC recall was 70.63\%, compared
-with more than 96\% for each of the other supported abnormal groups. The
-113 PAC-to-PVC errors show that subtype confusion was a major source of
-failure. Both the binary gate and subtype model therefore need improvement
-for this group.
+High pooled accuracy conceals uneven performance across classes and patients.
+The 113 PAC-to-PVC errors identify subtype confusion as a major failure mode.
+The missed PAC beats at the gate show that both stages need improvement.
 
 Conditional subtype accuracy measures how well the second model classifies
 true supported abnormal beats when the gate is ignored. Whole-system accuracy
@@ -48,7 +44,8 @@ separate their effects.
 \section{Achievement of the objectives}
 \begin{itemize}
 \item The prototype integrates a frozen NSRDB autoencoder and two supervised
-MLII ensembles, with the same local model-window preparation at training and use.
+MLII ensembles. The supervised models use the same local window preparation
+during fitting and prediction.
 \item Pooled whole-system accuracy, the equal-subject lower confidence bound,
 and the interval-width target are met in the corrected retrospective run.
 \item The requirement that every supported abnormal group exceed 90\% recall
@@ -72,11 +69,11 @@ the two runs is not a controlled estimate of one component's causal benefit.
 
 The autoencoder remains the original frozen checkpoint. Its decoder resizes
 up-block tensors to their skip lengths and finally interpolates from 256 to
-512 samples. Chapter~\ref{ch:architecture} reports these implemented dimensions. Altering this trained architecture would require a separate
+512 samples. Section~\ref{ch:architecture} reports these implemented dimensions. Altering this trained architecture would require a separate
 training study.
 
 \section{Limitations}
-\begin{enumerate}
+\begin{enumerate}[itemsep=0.1\baselineskip]
 \item Earlier labelled ECG from the same patients is available during
 supervised development. The result does not establish accuracy for patients whose data were absent
 from model development.
@@ -89,6 +86,11 @@ It does not include retraining variability or extrapolation to a new cohort.
 \item NSRDB is a nominally normal source cohort, with no beat-annotation
 screening in this preparation. Its ECG1 anatomical lead is unspecified.
 The two-epoch training record does not establish optimal convergence.
+The archived NSRDB windows also retain a historical amplitude scaling that
+differs from the current per-window standardisation path. Reusing those
+caches reproduces the documented experiment, but a fresh reconstruction of
+the normal-reference training data requires resolving that preprocessing
+history. This limits reproducibility from raw NSRDB signals alone.
 \item No controlled ablation quantifies the independent benefit of the
 four autoencoder residuals.
 \item Output labels are project groups. AFib includes flutter on normal-like
@@ -108,7 +110,7 @@ physical electrode placement. Signal checks reject non-finite/flat inputs and
 reported lead-off; they do not certify clinical signal quality.
 \end{enumerate}
 
-\section{Further research}
+\section{Recommendations for further research}
 The next experiment should preregister a patient-disjoint development,
 validation and test allocation; freeze preprocessing and thresholds before
 external scoring; and recruit enough independent subjects for every target

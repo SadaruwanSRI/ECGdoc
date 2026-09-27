@@ -1,6 +1,7 @@
 """Generate Chapter 3 figures from the locally stored PhysioNet ECG data."""
 
 from pathlib import Path
+import sys
 
 try:
     from . import thesis_diagrams
@@ -51,16 +52,22 @@ def style_axis(axis, ylabel: str) -> None:
 
 def cleaning_figure() -> None:
     import wfdb
+    sys.path.insert(0, str(REPORT.parent / "backend"))
+    from app.ml.data import bandpass_filter, resample_to
+    from app.ml.beat_preparation import prepare_beat
 
-    # Healthy example: a real piece from the first stored NSRDB channel.
-    healthy = wfdb.rdrecord(str(DATA / "nsrdb" / "16265"))
-    healthy_fs = int(healthy.fs)
-    healthy_start = 60 * 60 * healthy_fs
-    healthy_raw = healthy.p_signal[
-        healthy_start:healthy_start + 8 * healthy_fs, 0
-    ].astype(np.float32)
-    healthy_filtered = bandpass(resample(healthy_raw, healthy_fs))
-    healthy_window = standardise(healthy_filtered[2 * FS:2 * FS + WINDOW])
+    # Preserve the archived normal example used in the real-data audit.
+    healthy_source = np.load(DATA / "nsrdb/16272.npy", mmap_mode="r")
+    healthy_raw = np.asarray(healthy_source[:WINDOW])
+    healthy_filtered = bandpass_filter(
+        np.array(healthy_source[:30 * 60 * FS + WINDOW]), FS
+    )[:WINDOW]
+    healthy_window = np.array(np.load(
+        DATA / "nsrdb-primary-full/16272_primary_full.npy", mmap_mode="r"
+    )[0])
+    design = np.column_stack([healthy_filtered, np.ones(WINDOW)])
+    affine = np.linalg.lstsq(design, healthy_window, rcond=None)[0]
+    np.testing.assert_allclose(design @ affine, healthy_window, atol=2e-6)
 
     # Arrhythmia-system example: a real annotated MLII beat from MITDB record 100.
     abnormal = wfdb.rdrecord(str(DATA / "mitdb" / "100"))
@@ -69,36 +76,37 @@ def cleaning_figure() -> None:
     eligible = annotation.sample[(annotation.sample > 60 * abnormal_fs) &
                                  (annotation.sample < 120 * abnormal_fs)]
     raw_peak = int(eligible[len(eligible) // 2])
-    abnormal_raw = abnormal.p_signal[
-        raw_peak - 4 * abnormal_fs:raw_peak + 4 * abnormal_fs, 0
-    ].astype(np.float32)
-    abnormal_filtered = bandpass(resample(abnormal_raw, abnormal_fs))
-    peak = 4 * FS
-    abnormal_window = standardise(
-        abnormal_filtered[peak - R_BEFORE:peak - R_BEFORE + WINDOW]
-    )
+    resampled = resample_to(abnormal.p_signal[:, 0].astype(np.float32), abnormal_fs, FS)
+    peak = int(round(raw_peak * FS / abnormal_fs))
+    abnormal_raw = resampled[peak - R_BEFORE:peak - R_BEFORE + WINDOW]
+    sos = butter(4, [0.5, 50.0], btype="bandpass", fs=FS, output="sos")
+    abnormal_filtered = sosfiltfilt(sos, abnormal_raw.astype(np.float64))
+    abnormal_window = prepare_beat(abnormal_raw)
+    np.testing.assert_allclose(standardise(abnormal_filtered), abnormal_window)
 
     fig, axes = plt.subplots(3, 2, figsize=(8.2, 6.2), sharex="row",
                              constrained_layout=True)
     fig.suptitle("Real ECG cleaning for the two one-channel model inputs",
                  fontsize=13, fontweight="bold", color=NAVY)
     columns = [
-        ("A. Autoencoder: NSRDB record 16265, first channel (ECG1)",
-         healthy_raw, healthy_fs, healthy_filtered, healthy_window, False),
+        ("A. Autoencoder: NSRDB 16272 / ECG1",
+         healthy_raw, FS, healthy_filtered, healthy_window, False),
         ("B. Detector/classifier: MITDB record 100, MLII",
-         abnormal_raw, abnormal_fs, abnormal_filtered, abnormal_window, True),
+         abnormal_raw, FS, abnormal_filtered, abnormal_window, True),
     ]
     for col, (title, raw, source_rate, filtered, window, aligned) in enumerate(columns):
         axes[0, col].plot(np.arange(raw.size) / source_rate, raw,
                           color=GREY, linewidth=0.75)
-        axes[0, col].set_title(title + "\n1. Raw source signal",
+        axes[0, col].set_title(title + "\n1. Unfiltered four-second segment at 128 Hz",
                                fontsize=8.2, fontweight="bold", color=NAVY)
         style_axis(axes[0, col], "mV")
         axes[0, col].set_xlabel("source time (s)", fontsize=7, color=NAVY)
 
         axes[1, col].plot(np.arange(filtered.size) / FS, filtered,
                           color=TEAL, linewidth=0.8)
-        axes[1, col].set_title("2. Resample to 128 Hz + 0.5--50 Hz band-pass",
+        filter_title = ("2. Filter this beat window: 0.5--50 Hz" if aligned else
+                        "2. Filter source block; retain first four seconds")
+        axes[1, col].set_title(filter_title,
                                fontsize=8.2, fontweight="bold", color=NAVY)
         style_axis(axes[1, col], "mV")
         axes[1, col].set_xlabel("time after resampling (s)", fontsize=7, color=NAVY)
@@ -112,9 +120,9 @@ def cleaning_figure() -> None:
             axes[2, col].legend(loc="upper right", fontsize=6.5, frameon=False)
             end_text = "3. Standardise each R-aligned 4 s beat window"
         else:
-            end_text = "3. Standardise each non-overlapping 4 s window"
+            end_text = "3. Actual cached input; retain archived scaling"
         axes[2, col].set_title(end_text, fontsize=8.2, fontweight="bold", color=NAVY)
-        style_axis(axes[2, col], "z score")
+        style_axis(axes[2, col], "z score" if aligned else "cached amplitude")
         axes[2, col].set_xlabel("model-window time (s)", fontsize=7, color=NAVY)
 
     OUTPUT.mkdir(parents=True, exist_ok=True)

@@ -1,5 +1,9 @@
 # Thesis figure review
 
+Historical review: the figure numbers below refer to the earlier eight-chapter
+layout. The 27 September submission revision consolidates the report into five
+chapters and corrects the preprocessing illustrations; see `SUBMISSION_REVIEW.md`.
+
 Reviewed 23 September 2026. The six requested figures were recreated as vector
 PDFs with consistent typography, restrained colours, readable labels and explicit
 arrow meanings. Their numbering is unchanged.

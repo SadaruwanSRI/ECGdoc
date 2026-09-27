@@ -4,35 +4,31 @@
 \addvspace {10\p@ }
 \contentsline {table}{\numberline {2.1}{\ignorespaces Main papers referenced in this study and their contribution.}}{9}{table.2.1}%
 \addvspace {10\p@ }
-\contentsline {table}{\numberline {3.1}{\ignorespaces Data sources and their strictly separated roles.}}{11}{table.caption.12}%
-\contentsline {table}{\numberline {3.2}{\ignorespaces Mapping from MITDB expert annotations to project outputs.}}{14}{table.caption.15}%
-\contentsline {table}{\numberline {3.3}{\ignorespaces Cleaning checklist applied before a signal can become a model input.}}{15}{table.caption.16}%
-\contentsline {table}{\numberline {3.4}{\ignorespaces Training, validation, and temporal-test data supplied to each model.}}{19}{table.caption.18}%
+\contentsline {table}{\numberline {3.1}{\ignorespaces Data sources and their strictly separated roles.}}{12}{table.caption.12}%
+\contentsline {table}{\numberline {3.2}{\ignorespaces Mapping from MITDB expert annotations to project outputs.}}{15}{table.caption.15}%
+\contentsline {table}{\numberline {3.3}{\ignorespaces Cleaning checklist applied before a signal can become a model input.}}{16}{table.caption.17}%
+\contentsline {table}{\numberline {3.4}{\ignorespaces Training, validation, and temporal-test data supplied to each model.}}{20}{table.caption.25}%
+\contentsline {table}{\numberline {3.5}{\ignorespaces How the theory maps to the implemented final system.}}{34}{table.caption.38}%
+\contentsline {table}{\numberline {3.6}{\ignorespaces Architecture, training target, and output of each fitted component.}}{37}{table.caption.41}%
+\contentsline {table}{\numberline {3.7}{\ignorespaces Organised feature groups in the final architecture.}}{44}{table.caption.54}%
+\contentsline {table}{\numberline {3.8}{\ignorespaces Technologies in the final evidence path and the mathematical task performed by each. The web interface displays results and does not train the models.}}{50}{table.caption.59}%
+\contentsline {table}{\numberline {3.9}{\ignorespaces Reason for each major final-architecture decision.}}{51}{table.caption.60}%
+\contentsline {table}{\numberline {3.10}{\ignorespaces Illustrative allocation of a record containing 1,000 accepted beats.}}{53}{table.caption.61}%
+\contentsline {table}{\numberline {3.11}{\ignorespaces Illustrative validation comparison of three binary-score thresholds.}}{57}{table.caption.62}%
+\contentsline {table}{\numberline {3.12}{\ignorespaces Real ECG segments used in the training-to-prediction case study.}}{61}{table.caption.63}%
+\contentsline {table}{\numberline {3.13}{\ignorespaces All 15 measured RR features for the real temporal-test PVC.}}{66}{table.caption.66}%
+\contentsline {table}{\numberline {3.14}{\ignorespaces Recorded validation measurements selecting the real saved models.}}{69}{table.caption.68}%
+\contentsline {table}{\numberline {3.15}{\ignorespaces Complete route of the real test PVC through the first saved binary tree.}}{70}{table.3.15}%
+\contentsline {table}{\numberline {3.16}{\ignorespaces Complete route of the real test PVC through the first saved subtype tree.}}{71}{table.3.16}%
+\contentsline {table}{\numberline {3.17}{\ignorespaces Measured predictions for the six real illustrative test segments.}}{73}{table.caption.70}%
 \addvspace {10\p@ }
-\contentsline {table}{\numberline {4.1}{\ignorespaces Technologies in the final evidence path and the mathematical task performed by each. The web interface displays results and does not train the models.}}{33}{table.caption.26}%
-\contentsline {table}{\numberline {4.2}{\ignorespaces How the theory maps to the implemented final system.}}{35}{table.caption.28}%
-\addvspace {10\p@ }
-\contentsline {table}{\numberline {5.1}{\ignorespaces Architecture, training target, and output of each fitted component.}}{38}{table.caption.31}%
-\contentsline {table}{\numberline {5.2}{\ignorespaces Organised feature groups in the final architecture.}}{46}{table.caption.37}%
-\contentsline {table}{\numberline {5.3}{\ignorespaces Illustrative allocation of a record containing 1,000 accepted beats.}}{52}{table.caption.39}%
-\contentsline {table}{\numberline {5.4}{\ignorespaces Illustrative validation comparison of three binary-score thresholds.}}{56}{table.caption.40}%
-\contentsline {table}{\numberline {5.5}{\ignorespaces Real ECG segments used in the training-to-prediction case study.}}{60}{table.caption.41}%
-\contentsline {table}{\numberline {5.6}{\ignorespaces All 15 measured RR features for the real temporal-test PVC.}}{65}{table.caption.44}%
-\contentsline {table}{\numberline {5.7}{\ignorespaces Recorded validation measurements selecting the real saved models.}}{68}{table.caption.46}%
-\contentsline {table}{\numberline {5.8}{\ignorespaces Complete route of the real test PVC through the first saved binary tree.}}{69}{table.5.8}%
-\contentsline {table}{\numberline {5.9}{\ignorespaces Complete route of the real test PVC through the first saved subtype tree.}}{70}{table.5.9}%
-\contentsline {table}{\numberline {5.10}{\ignorespaces Measured predictions for the six real illustrative test segments.}}{72}{table.caption.48}%
-\contentsline {table}{\numberline {5.11}{\ignorespaces Reason for each major final-architecture decision.}}{73}{table.caption.49}%
-\addvspace {10\p@ }
-\contentsline {table}{\numberline {6.1}{\ignorespaces Exact evidence supplied to the final supervised models.}}{75}{table.caption.51}%
-\addvspace {10\p@ }
-\contentsline {table}{\numberline {7.1}{\ignorespaces Distinct denominators for the three evaluation questions.}}{84}{table.caption.56}%
-\contentsline {table}{\numberline {7.2}{\ignorespaces Corrected temporal results. Confidence intervals estimate equal-subject accuracy, not pooled beat accuracy.}}{85}{table.caption.58}%
-\contentsline {table}{\numberline {7.3}{\ignorespaces Whole-system performance by supported abnormal output group.}}{87}{table.caption.62}%
-\contentsline {table}{\numberline {7.4}{\ignorespaces Corrected model on complete INCART I01 and I02 recordings.}}{90}{table.caption.65}%
+\contentsline {table}{\numberline {4.1}{\ignorespaces Distinct denominators for the three evaluation questions.}}{82}{table.caption.76}%
+\contentsline {table}{\numberline {4.2}{\ignorespaces Corrected temporal results. Confidence intervals estimate equal-subject accuracy, not pooled beat accuracy.}}{83}{table.caption.78}%
+\contentsline {table}{\numberline {4.3}{\ignorespaces Whole-system performance by supported abnormal output group.}}{85}{table.caption.82}%
+\contentsline {table}{\numberline {4.4}{\ignorespaces Corrected model on complete INCART I01 and I02 recordings.}}{88}{table.caption.85}%
 \addvspace {10\p@ }
 \addvspace {10\p@ }
 \def \@chapapp {\appendixname }
 \addvspace {10\p@ }
-\contentsline {table}{\numberline {A.1}{\ignorespaces Settings used for the final experiment.}}{99}{table.caption.67}%
+\contentsline {table}{\numberline {A.1}{\ignorespaces Settings used for the final experiment.}}{95}{table.caption.87}%
 \providecommand \tocbasic@end@toc@file {}\tocbasic@end@toc@file 
